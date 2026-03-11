@@ -367,6 +367,39 @@
             gap: 0.5rem;
         }
 
+        .realtime-stats {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .realtime-stats span {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .realtime-stats #fps-display {
+            color: var(--success);
+        }
+
+        .realtime-stats #latency-display {
+            color: var(--accent);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .realtime-active {
+            animation: pulse 1s infinite;
+        }
+
         .loading {
             display: none;
             align-items: center;
@@ -528,15 +561,47 @@
                 <div class="card">
                     <div class="card-header">
                         <div class="card-icon">📷</div>
-                        <h2 class="card-title">Camera Capture</h2>
+                        <h2 class="card-title">Real-time CNN</h2>
                     </div>
 
                     <div class="camera-container">
                         <video id="camera-video" autoplay playsinline></video>
+                        <div id="realtime-stats" class="realtime-stats hidden">
+                            <span id="fps-display">0 FPS</span>
+                            <span id="latency-display">0ms</span>
+                        </div>
                         <div class="camera-overlay">
                             <button class="btn" id="start-camera-btn">Start Camera</button>
                             <button class="btn btn-secondary hidden" id="capture-btn">📸 Capture</button>
+                            <button class="btn hidden" id="realtime-btn">⚡ Real-time</button>
                             <button class="btn btn-secondary hidden" id="stop-camera-btn">Stop</button>
+                        </div>
+                    </div>
+
+                    <div id="realtime-panel" class="hidden" style="margin-top: 1rem;">
+                        <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                            <div class="stat-card" style="flex: 1;">
+                                <div class="stat-value" id="rt-fps">0</div>
+                                <div class="stat-label">FPS</div>
+                            </div>
+                            <div class="stat-card" style="flex: 1;">
+                                <div class="stat-value" id="rt-latency">0ms</div>
+                                <div class="stat-label">Latency</div>
+                            </div>
+                            <div class="stat-card" style="flex: 1;">
+                                <div class="stat-value" id="rt-similarity">-</div>
+                                <div class="stat-label">Similarity</div>
+                            </div>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.5rem;">
+                            Live embedding (updates every frame):
+                        </p>
+                        <div class="embedding-viz" style="height: 80px;">
+                            <div class="embedding-bars" id="realtime-bars"></div>
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-secondary" id="set-reference-btn">📌 Set as Reference</button>
+                            <button class="btn btn-secondary" id="stop-realtime-btn">⏹️ Stop Real-time</button>
                         </div>
                     </div>
                 </div>
@@ -630,6 +695,20 @@
         const captureBtn = document.getElementById('capture-btn');
         const stopCameraBtn = document.getElementById('stop-camera-btn');
         const sampleImagesContainer = document.getElementById('sample-images');
+        const realtimeBtn = document.getElementById('realtime-btn');
+        const realtimePanel = document.getElementById('realtime-panel');
+        const realtimeBars = document.getElementById('realtime-bars');
+        const realtimeStats = document.getElementById('realtime-stats');
+        const setReferenceBtn = document.getElementById('set-reference-btn');
+        const stopRealtimeBtn = document.getElementById('stop-realtime-btn');
+
+        // Real-time state
+        let isRealtime = false;
+        let realtimeAnimationId = null;
+        let referenceEmbedding = null;
+        let frameCount = 0;
+        let lastFpsUpdate = 0;
+        let currentFps = 0;
 
         // Console logging
         function log(message, type = 'info') {
@@ -938,6 +1017,7 @@
 
                 startCameraBtn.classList.add('hidden');
                 captureBtn.classList.remove('hidden');
+                realtimeBtn.classList.remove('hidden');
                 stopCameraBtn.classList.remove('hidden');
 
                 log('Camera started', 'success');
@@ -947,6 +1027,7 @@
         }
 
         function stopCamera() {
+            stopRealtime();
             if (cameraStream) {
                 cameraStream.getTracks().forEach(track => track.stop());
                 cameraStream = null;
@@ -955,7 +1036,10 @@
 
             startCameraBtn.classList.remove('hidden');
             captureBtn.classList.add('hidden');
+            realtimeBtn.classList.add('hidden');
             stopCameraBtn.classList.add('hidden');
+            realtimePanel.classList.add('hidden');
+            realtimeStats.classList.add('hidden');
         }
 
         function captureFrame() {
@@ -971,6 +1055,163 @@
                 log('Captured frame from camera', 'success');
             };
             img.src = canvas.toDataURL();
+        }
+
+        // Real-time CNN processing
+        function startRealtime() {
+            if (!embedder) {
+                log('WASM not loaded - using demo mode', 'warning');
+                return;
+            }
+
+            isRealtime = true;
+            frameCount = 0;
+            lastFpsUpdate = performance.now();
+
+            realtimeBtn.classList.add('hidden');
+            captureBtn.classList.add('hidden');
+            realtimePanel.classList.remove('hidden');
+            realtimeStats.classList.remove('hidden');
+            cameraVideo.classList.add('realtime-active');
+
+            log('Real-time CNN started', 'success');
+            processRealtimeFrame();
+        }
+
+        function stopRealtime() {
+            isRealtime = false;
+            if (realtimeAnimationId) {
+                cancelAnimationFrame(realtimeAnimationId);
+                realtimeAnimationId = null;
+            }
+
+            cameraVideo.classList.remove('realtime-active');
+
+            if (cameraStream) {
+                realtimeBtn.classList.remove('hidden');
+                captureBtn.classList.remove('hidden');
+            }
+            realtimePanel.classList.add('hidden');
+            realtimeStats.classList.add('hidden');
+
+            log('Real-time CNN stopped', 'info');
+        }
+
+        function processRealtimeFrame() {
+            if (!isRealtime || !cameraStream) return;
+
+            const start = performance.now();
+
+            // Capture frame to canvas
+            const canvas = document.createElement('canvas');
+            canvas.width = 224;
+            canvas.height = 224;
+            const ctx = canvas.getContext('2d');
+
+            // Center crop to square
+            const vw = cameraVideo.videoWidth;
+            const vh = cameraVideo.videoHeight;
+            const size = Math.min(vw, vh);
+            const sx = (vw - size) / 2;
+            const sy = (vh - size) / 2;
+            ctx.drawImage(cameraVideo, sx, sy, size, size, 0, 0, 224, 224);
+
+            // Get RGB data
+            const imageData = ctx.getImageData(0, 0, 224, 224);
+            const rgb = new Uint8Array(224 * 224 * 3);
+            for (let i = 0, j = 0; i < imageData.data.length; i += 4, j += 3) {
+                rgb[j] = imageData.data[i];
+                rgb[j + 1] = imageData.data[i + 1];
+                rgb[j + 2] = imageData.data[i + 2];
+            }
+
+            // Extract embedding
+            const embedding = embedder.extract(rgb, 224, 224);
+            const latency = performance.now() - start;
+
+            // Update FPS
+            frameCount++;
+            const now = performance.now();
+            if (now - lastFpsUpdate >= 1000) {
+                currentFps = Math.round(frameCount * 1000 / (now - lastFpsUpdate));
+                frameCount = 0;
+                lastFpsUpdate = now;
+            }
+
+            // Update UI
+            document.getElementById('rt-fps').textContent = currentFps;
+            document.getElementById('rt-latency').textContent = `${latency.toFixed(1)}ms`;
+            document.getElementById('fps-display').textContent = `${currentFps} FPS`;
+            document.getElementById('latency-display').textContent = `${latency.toFixed(1)}ms`;
+
+            // Compare to reference if set
+            if (referenceEmbedding) {
+                const similarity = embedder.cosine_similarity(embedding, referenceEmbedding);
+                document.getElementById('rt-similarity').textContent = similarity.toFixed(3);
+
+                // Color code similarity
+                const simEl = document.getElementById('rt-similarity');
+                if (similarity > 0.8) {
+                    simEl.style.color = 'var(--success)';
+                } else if (similarity > 0.5) {
+                    simEl.style.color = 'var(--warning)';
+                } else {
+                    simEl.style.color = 'var(--accent)';
+                }
+            } else {
+                document.getElementById('rt-similarity').textContent = '-';
+            }
+
+            // Visualize embedding
+            visualizeRealtimeEmbedding(embedding);
+
+            // Schedule next frame
+            realtimeAnimationId = requestAnimationFrame(processRealtimeFrame);
+        }
+
+        function visualizeRealtimeEmbedding(embedding) {
+            realtimeBars.innerHTML = '';
+
+            // Downsample to 64 bars for real-time visualization
+            const step = Math.floor(embedding.length / 64);
+
+            for (let i = 0; i < 64; i++) {
+                const value = embedding[i * step];
+                const height = Math.abs(value) * 100;
+                const bar = document.createElement('div');
+                bar.className = 'embedding-bar';
+                bar.style.height = `${Math.max(2, height)}%`;
+                bar.style.opacity = 0.5 + Math.abs(value) * 0.5;
+                realtimeBars.appendChild(bar);
+            }
+        }
+
+        function setReferenceEmbedding() {
+            if (!embedder || !cameraStream) return;
+
+            // Capture current frame
+            const canvas = document.createElement('canvas');
+            canvas.width = 224;
+            canvas.height = 224;
+            const ctx = canvas.getContext('2d');
+
+            const vw = cameraVideo.videoWidth;
+            const vh = cameraVideo.videoHeight;
+            const size = Math.min(vw, vh);
+            const sx = (vw - size) / 2;
+            const sy = (vh - size) / 2;
+            ctx.drawImage(cameraVideo, sx, sy, size, size, 0, 0, 224, 224);
+
+            const imageData = ctx.getImageData(0, 0, 224, 224);
+            const rgb = new Uint8Array(224 * 224 * 3);
+            for (let i = 0, j = 0; i < imageData.data.length; i += 4, j += 3) {
+                rgb[j] = imageData.data[i];
+                rgb[j + 1] = imageData.data[i + 1];
+                rgb[j + 2] = imageData.data[i + 2];
+            }
+
+            referenceEmbedding = embedder.extract(rgb, 224, 224);
+            log('Reference embedding set - showing live similarity', 'success');
         }
 
         // Drag and drop
@@ -1029,6 +1270,9 @@
         startCameraBtn.addEventListener('click', startCamera);
         stopCameraBtn.addEventListener('click', stopCamera);
         captureBtn.addEventListener('click', captureFrame);
+        realtimeBtn.addEventListener('click', startRealtime);
+        stopRealtimeBtn.addEventListener('click', stopRealtime);
+        setReferenceBtn.addEventListener('click', setReferenceEmbedding);
 
         // Initialize
         loadSampleImages();
