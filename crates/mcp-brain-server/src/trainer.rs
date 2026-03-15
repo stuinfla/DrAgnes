@@ -244,10 +244,12 @@ impl BrainTrainer {
         }
     }
 
-    /// Space science: NASA Exoplanet Archive anomaly detection
+    /// Space science: NASA Exoplanet Archive, NEO asteroids,
+    /// NOAA solar weather, LIGO gravitational waves
     async fn discover_space(&self) -> Result<Vec<Discovery>, String> {
         let mut discoveries = Vec::new();
 
+        // --- NASA Exoplanet Archive anomaly detection ---
         let url = "https://exoplanetarchive.ipac.caltech.edu/TAP/sync?\
             query=SELECT+pl_name,pl_bmassj,pl_orbper,pl_orbeccen,pl_eqt,\
             disc_year,discoverymethod+FROM+ps+WHERE+disc_year>=2024\
@@ -366,10 +368,280 @@ impl BrainTrainer {
             Err(e) => tracing::warn!("Exoplanet API: {e}"),
         }
 
+        // --- NASA Near-Earth Object (NEO) close approaches ---
+        let today = Utc::now().format("%Y-%m-%d").to_string();
+        let neo_url = format!(
+            "https://api.nasa.gov/neo/rest/v1/feed?\
+             start_date={today}&end_date={today}&api_key=DEMO_KEY"
+        );
+        match self.fetch_json(&neo_url).await {
+            Ok(data) => {
+                if let Some(neo_objects) = data
+                    .get("near_earth_objects")
+                    .and_then(|n| n.as_object())
+                {
+                    for (_date, objects) in neo_objects {
+                        if let Some(arr) = objects.as_array() {
+                            for neo in arr {
+                                let name = neo
+                                    .get("name")
+                                    .and_then(|v| v.as_str())
+                                    .unwrap_or("unknown");
+                                let hazardous = neo
+                                    .get(
+                                        "is_potentially_hazardous_asteroid",
+                                    )
+                                    .and_then(|v| v.as_bool())
+                                    .unwrap_or(false);
+                                let miss_km = neo
+                                    .get("close_approach_data")
+                                    .and_then(|c| c.as_array())
+                                    .and_then(|a| a.first())
+                                    .and_then(|a| {
+                                        a.get("miss_distance")
+                                    })
+                                    .and_then(|m| m.get("kilometers"))
+                                    .and_then(|k| k.as_str())
+                                    .and_then(|s| s.parse::<f64>().ok())
+                                    .unwrap_or(0.0);
+                                let velocity = neo
+                                    .get("close_approach_data")
+                                    .and_then(|c| c.as_array())
+                                    .and_then(|a| a.first())
+                                    .and_then(|a| {
+                                        a.get("relative_velocity")
+                                    })
+                                    .and_then(|v| {
+                                        v.get("kilometers_per_hour")
+                                    })
+                                    .and_then(|k| k.as_str())
+                                    .and_then(|s| s.parse::<f64>().ok())
+                                    .unwrap_or(0.0);
+                                let diameter_max = neo
+                                    .get("estimated_diameter")
+                                    .and_then(|d| d.get("meters"))
+                                    .and_then(|m| {
+                                        m.get("estimated_diameter_max")
+                                    })
+                                    .and_then(|v| v.as_f64())
+                                    .unwrap_or(0.0);
+
+                                // Only report close or hazardous objects
+                                if hazardous || miss_km < 5_000_000.0 {
+                                    let confidence = if hazardous {
+                                        0.95
+                                    } else {
+                                        0.80
+                                    };
+                                    discoveries.push(Discovery {
+                                        id: Uuid::new_v4(),
+                                        domain:
+                                            DiscoveryDomain::SpaceScience,
+                                        title: format!(
+                                            "NEO close approach: {name}{}",
+                                            if hazardous {
+                                                " [HAZARDOUS]"
+                                            } else {
+                                                ""
+                                            }
+                                        ),
+                                        content: format!(
+                                            "Asteroid {name} passes \
+                                             Earth at {miss_km:.0} km \
+                                             ({:.2} lunar distances). \
+                                             Velocity: {velocity:.0} \
+                                             km/h. Est. diameter: \
+                                             {diameter_max:.0}m. \
+                                             Hazardous: {hazardous}.",
+                                            miss_km / 384_400.0
+                                        ),
+                                        tags: vec![
+                                            "space".into(),
+                                            "neo".into(),
+                                            "asteroid".into(),
+                                            if hazardous {
+                                                "hazardous".into()
+                                            } else {
+                                                "close-approach".into()
+                                            },
+                                        ],
+                                        confidence,
+                                        data_points: arr.len(),
+                                        source_api: "NASA NEO API".into(),
+                                        timestamp: Utc::now(),
+                                        witness_hash: None,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => tracing::warn!("NASA NEO API: {e}"),
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(
+            self.config.api_delay_ms,
+        ))
+        .await;
+
+        // --- NOAA SWPC solar weather (X-ray flare events) ---
+        let solar_url = "https://services.swpc.noaa.gov/json/goes/\
+                         primary/xray-flares-latest.json";
+        match self.fetch_json(solar_url).await {
+            Ok(data) => {
+                if let Some(flares) = data.as_array() {
+                    for flare in flares.iter().take(20) {
+                        let class = flare
+                            .get("max_class")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+                        let begin = flare
+                            .get("begin_time")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("unknown");
+                        let max_time = flare
+                            .get("max_time")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("unknown");
+                        let max_flux = flare
+                            .get("max_xrlong")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0);
+
+                        // Only report M- and X-class flares (significant)
+                        let is_significant = class.starts_with('M')
+                            || class.starts_with('X');
+                        if is_significant {
+                            let confidence = if class.starts_with('X') {
+                                0.98
+                            } else {
+                                0.85
+                            };
+                            discoveries.push(Discovery {
+                                id: Uuid::new_v4(),
+                                domain: DiscoveryDomain::SpaceScience,
+                                title: format!(
+                                    "Solar flare: {class}-class event"
+                                ),
+                                content: format!(
+                                    "{class}-class solar X-ray flare \
+                                     detected. Begin: {begin}, peak: \
+                                     {max_time}. Peak flux: \
+                                     {max_flux:.2e} W/m\u{00b2}. \
+                                     {}",
+                                    if class.starts_with('X') {
+                                        "X-class flares can disrupt \
+                                         HF radio, GPS, and power \
+                                         grids."
+                                    } else {
+                                        "M-class flares may cause \
+                                         brief HF radio blackouts at \
+                                         high latitudes."
+                                    }
+                                ),
+                                tags: vec![
+                                    "space".into(),
+                                    "solar".into(),
+                                    "flare".into(),
+                                    class.to_lowercase(),
+                                ],
+                                confidence,
+                                data_points: flares.len(),
+                                source_api: "NOAA SWPC".into(),
+                                timestamp: Utc::now(),
+                                witness_hash: None,
+                            });
+                        }
+                    }
+                }
+            }
+            Err(e) => tracing::warn!("NOAA SWPC solar API: {e}"),
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(
+            self.config.api_delay_ms,
+        ))
+        .await;
+
+        // --- LIGO/GraceDB gravitational wave events ---
+        let gw_url = "https://gracedb.ligo.org/api/superevents/\
+                      ?query=far+%3C+1e-6&format=json&count=10";
+        match self.fetch_json(gw_url).await {
+            Ok(data) => {
+                if let Some(events) = data
+                    .get("superevents")
+                    .and_then(|s| s.as_array())
+                {
+                    for event in events.iter().take(10) {
+                        let superevent_id = event
+                            .get("superevent_id")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("unknown");
+                        let far = event
+                            .get("far")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(1.0);
+                        let t_start = event
+                            .get("t_start")
+                            .and_then(|v| v.as_f64())
+                            .unwrap_or(0.0);
+                        let category = event
+                            .get("category")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("unknown");
+                        let preferred = event
+                            .get("preferred_event")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+                        let pipeline = event
+                            .get("pipeline_preferred_event")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("");
+
+                        let confidence =
+                            (1.0 - far.log10().abs() / 20.0).clamp(
+                                0.70,
+                                0.99,
+                            );
+
+                        discoveries.push(Discovery {
+                            id: Uuid::new_v4(),
+                            domain: DiscoveryDomain::SpaceScience,
+                            title: format!(
+                                "Gravitational wave: {superevent_id}"
+                            ),
+                            content: format!(
+                                "GW superevent {superevent_id} \
+                                 (category: {category}). False alarm \
+                                 rate: {far:.2e} Hz. GPS time: \
+                                 {t_start:.1}. Preferred event: \
+                                 {preferred}. Pipeline: {pipeline}. \
+                                 Detected by LIGO/Virgo/KAGRA network."
+                            ),
+                            tags: vec![
+                                "space".into(),
+                                "gravitational-wave".into(),
+                                category.to_lowercase(),
+                                "ligo".into(),
+                            ],
+                            confidence,
+                            data_points: events.len(),
+                            source_api: "LIGO GraceDB".into(),
+                            timestamp: Utc::now(),
+                            witness_hash: None,
+                        });
+                    }
+                }
+            }
+            Err(e) => tracing::warn!("LIGO GraceDB API: {e}"),
+        }
+
         Ok(discoveries)
     }
 
-    /// Earth science: USGS earthquakes, NOAA climate anomalies
+    /// Earth science: USGS earthquakes, NOAA climate anomalies,
+    /// ocean temperature
     async fn discover_earth(&self) -> Result<Vec<Discovery>, String> {
         let mut discoveries = Vec::new();
 
@@ -504,6 +776,99 @@ impl BrainTrainer {
                 }
             }
             Err(e) => tracing::warn!("NOAA API: {e}"),
+        }
+
+        tokio::time::sleep(std::time::Duration::from_millis(
+            self.config.api_delay_ms,
+        ))
+        .await;
+
+        // --- NOAA OISST sea surface temperature anomalies ---
+        // Uses NOAA ERDDAP for ocean temperature data (Optimum
+        // Interpolation Sea Surface Temperature)
+        let sst_url = "https://coastwatch.pfeg.noaa.gov/erddap/\
+            griddap/ncdcOisst21Agg.json?\
+            anom[(last)][(0.0)][(0.0):(60.0):(30.0)]\
+            [(-180.0):(180.0):(60.0)]";
+        match self.fetch_json(sst_url).await {
+            Ok(data) => {
+                if let Some(table) = data
+                    .get("table")
+                    .and_then(|t| t.get("rows"))
+                    .and_then(|r| r.as_array())
+                {
+                    let anomalies: Vec<(f64, f64, f64)> = table
+                        .iter()
+                        .filter_map(|row| {
+                            let arr = row.as_array()?;
+                            // columns: time, zlev, lat, lon, anom
+                            let lat = arr.get(2)?.as_f64()?;
+                            let lon = arr.get(3)?.as_f64()?;
+                            let anom = arr.get(4)?.as_f64()?;
+                            Some((lat, lon, anom))
+                        })
+                        .collect();
+
+                    if !anomalies.is_empty() {
+                        let max_anom = anomalies
+                            .iter()
+                            .max_by(|a, b| {
+                                a.2.abs()
+                                    .partial_cmp(&b.2.abs())
+                                    .unwrap_or(std::cmp::Ordering::Equal)
+                            })
+                            .unwrap();
+                        let mean_anom = anomalies
+                            .iter()
+                            .map(|a| a.2)
+                            .sum::<f64>()
+                            / anomalies.len() as f64;
+                        let positive_count = anomalies
+                            .iter()
+                            .filter(|a| a.2 > 0.0)
+                            .count();
+
+                        discoveries.push(Discovery {
+                            id: Uuid::new_v4(),
+                            domain: DiscoveryDomain::EarthScience,
+                            title: format!(
+                                "SST anomaly: mean {mean_anom:+.2}\
+                                 \u{00b0}C, max {:.2}\u{00b0}C",
+                                max_anom.2
+                            ),
+                            content: format!(
+                                "NOAA OISST sea surface temperature \
+                                 anomaly snapshot: {len} grid points \
+                                 sampled. Mean anomaly: \
+                                 {mean_anom:+.2}\u{00b0}C. \
+                                 Max anomaly: {:.2}\u{00b0}C at \
+                                 ({:.1}\u{00b0}N, {:.1}\u{00b0}E). \
+                                 {positive_count}/{len} points show \
+                                 warming ({:.0}%).",
+                                max_anom.2,
+                                max_anom.0,
+                                max_anom.1,
+                                positive_count as f64
+                                    / anomalies.len() as f64
+                                    * 100.0,
+                                len = anomalies.len()
+                            ),
+                            tags: vec![
+                                "ocean".into(),
+                                "sst".into(),
+                                "temperature".into(),
+                                "anomaly".into(),
+                            ],
+                            confidence: 0.90,
+                            data_points: anomalies.len(),
+                            source_api: "NOAA OISST/ERDDAP".into(),
+                            timestamp: Utc::now(),
+                            witness_hash: None,
+                        });
+                    }
+                }
+            }
+            Err(e) => tracing::warn!("NOAA OISST API: {e}"),
         }
 
         Ok(discoveries)
