@@ -45,7 +45,55 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicU64, Ordering};
 use wasm_bindgen::prelude::*;
+
+/// Simple xorshift64 PRNG for WASM-safe random number generation
+/// Avoids js_sys::Math::random() which can cause type mismatches in wasm-bindgen
+static PRNG_STATE: AtomicU64 = AtomicU64::new(0x853c49e6748fea9b);
+
+fn wasm_random_u64() -> u64 {
+    let mut s = PRNG_STATE.load(Ordering::Relaxed);
+    // Mix in some additional entropy on first call
+    if s == 0x853c49e6748fea9b {
+        s = s.wrapping_add(0x9e3779b97f4a7c15);
+    }
+    // xorshift64
+    s ^= s >> 12;
+    s ^= s << 25;
+    s ^= s >> 27;
+    PRNG_STATE.store(s, Ordering::Relaxed);
+    s.wrapping_mul(0x2545F4914F6CDD1D)
+}
+
+/// WASM-safe natural log approximation using integer bit manipulation
+/// Avoids calling external log() which causes WASM type mismatches
+/// Uses the fact that for IEEE 754 doubles: log(x) ≈ (bits - bias) * scale
+#[inline(never)]
+fn wasm_ln(x: f64) -> f64 {
+    if x <= 0.0 {
+        return f64::NEG_INFINITY;
+    }
+    if x == 1.0 {
+        return 0.0;
+    }
+
+    // Use bit manipulation to approximate ln
+    // ln(x) ≈ (exponent - 1023) * ln(2) + ln(1 + mantissa/2^52)
+    let bits = x.to_bits();
+    let exponent = ((bits >> 52) & 0x7FF) as i64 - 1023;
+    let mantissa = (bits & 0x000F_FFFF_FFFF_FFFF) as f64 / (1u64 << 52) as f64;
+
+    // ln(2) ≈ 0.693147180559945
+    const LN2: f64 = 0.693147180559945;
+
+    // Approximate ln(1+m) using Padé approximant for m in [0, 1]
+    // ln(1+m) ≈ m * (6 + m) / (6 + 4*m) for better accuracy
+    let m = mantissa;
+    let ln_1_plus_m = m * (6.0 + m) / (6.0 + 4.0 * m);
+
+    (exponent as f64) * LN2 + ln_1_plus_m
+}
 
 /// Maximum connections per node in the HNSW graph (M parameter)
 const DEFAULT_M: usize = 16;
@@ -210,9 +258,36 @@ impl HnswGraph {
     }
 
     /// Select layer for new node using exponential decay
+    /// Uses integer-based geometric distribution to avoid WASM f64::ln() issues
+    #[inline(never)]
     fn select_layer(&self) -> usize {
-        let ml = 1.0 / (self.m as f64).ln();
-        let level = (-js_sys::Math::random().ln() * ml).floor() as usize;
+        // Use geometric distribution via integer math to avoid ln() calls
+        // For M=16, probability of each layer is 1/M
+        // Layer L has probability (1/M)^L * (1 - 1/M)
+        let r = wasm_random_u64();
+
+        // Count leading zeros gives us geometric distribution
+        // Probability of layer L is 2^(-L-1)
+        // Scale by log2(M) to match HNSW distribution
+        let leading_zeros = r.leading_zeros() as usize;
+
+        // Map leading zeros to layer: layer = floor(leading_zeros / log2(M))
+        // For M=16, log2(16) = 4
+        let m_log2 = if self.m <= 2 {
+            1
+        } else if self.m <= 4 {
+            2
+        } else if self.m <= 8 {
+            3
+        } else if self.m <= 16 {
+            4
+        } else if self.m <= 32 {
+            5
+        } else {
+            6
+        };
+
+        let level = leading_zeros / m_log2;
         level.min(self.max_layer + 1)
     }
 
