@@ -499,12 +499,24 @@ pub struct CdxRecord {
     pub status: String,
     #[serde(default)]
     pub mime: String,
-    #[serde(default)]
+    /// Length in bytes (CDX returns as string, we parse to u64)
+    #[serde(default, deserialize_with = "deserialize_string_to_u64")]
     pub length: u64,
-    #[serde(default)]
+    /// Offset in WARC file (CDX returns as string, we parse to u64)
+    #[serde(default, deserialize_with = "deserialize_string_to_u64")]
     pub offset: u64,
     #[serde(default)]
     pub filename: String,
+}
+
+/// Deserialize a string to u64 (CDX API returns numeric fields as strings)
+fn deserialize_string_to_u64<'de, D>(deserializer: D) -> Result<u64, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    use serde::Deserialize;
+    let s: String = String::deserialize(deserializer)?;
+    s.parse().map_err(serde::de::Error::custom)
 }
 
 /// Query parameters for Common Crawl CDX index.
