@@ -1,12 +1,15 @@
 //! In-memory knowledge graph with similarity edges
 //!
-//! Integrates ruvector-mincut for real graph partitioning and
-//! ruvector-solver for PPR-based ranked search.
+//! Integrates ruvector-mincut for real graph partitioning,
+//! ruvector-solver for PPR-based ranked search, and
+//! ruvector-sparsifier for compressed spectral analytics (ADR-116).
 
 use crate::types::*;
 use ruvector_mincut::{DynamicMinCut, MinCutBuilder};
 use ruvector_solver::forward_push::ForwardPushSolver;
 use ruvector_solver::types::CsrMatrix;
+use ruvector_sparsifier::{AdaptiveGeoSpar, SparseGraph, SparsifierConfig};
+use ruvector_sparsifier::traits::Sparsifier;
 use std::collections::HashMap;
 use uuid::Uuid;
 
@@ -25,6 +28,8 @@ pub struct KnowledgeGraph {
     node_index: HashMap<Uuid, usize>,
     /// Whether the CSR cache needs rebuilding
     csr_dirty: bool,
+    /// Spectral sparsifier for compressed graph analytics (ADR-116)
+    sparsifier: Option<AdaptiveGeoSpar>,
 }
 
 struct GraphNode {
@@ -49,6 +54,7 @@ impl KnowledgeGraph {
             node_ids: Vec::new(),
             node_index: HashMap::new(),
             csr_dirty: false,
+            sparsifier: None,
         }
     }
 
@@ -87,6 +93,16 @@ impl KnowledgeGraph {
         self.nodes.insert(memory.id, new_node);
         self.node_index.insert(memory.id, new_idx);
         self.node_ids.push(memory.id);
+
+        // Update sparsifier with new edges (ADR-116)
+        if let Some(ref mut spar) = self.sparsifier {
+            for edge in &new_edges {
+                if let Some(&v_pos) = self.node_index.get(&edge.target) {
+                    let _ = spar.insert_edge(new_idx, v_pos, edge.weight);
+                }
+            }
+        }
+
         self.edges.extend(new_edges);
 
         // Mark CSR as dirty — deferred rebuild until next query
@@ -95,6 +111,24 @@ impl KnowledgeGraph {
 
     /// Remove a memory from the graph
     pub fn remove_memory(&mut self, id: &Uuid) {
+        // Collect edges to delete from sparsifier before removing them
+        if let Some(ref mut spar) = self.sparsifier {
+            if let Some(&u_pos) = self.node_index.get(id) {
+                for edge in &self.edges {
+                    let (src, tgt) = if edge.source == *id {
+                        (u_pos, self.node_index.get(&edge.target).copied())
+                    } else if edge.target == *id {
+                        (u_pos, self.node_index.get(&edge.source).copied())
+                    } else {
+                        continue;
+                    };
+                    if let Some(v_pos) = tgt {
+                        let _ = spar.delete_edge(src, v_pos);
+                    }
+                }
+            }
+        }
+
         self.nodes.remove(id);
         self.edges.retain(|e| e.source != *id && e.target != *id);
         self.node_ids.retain(|nid| nid != id);
@@ -107,6 +141,8 @@ impl KnowledgeGraph {
         self.mincut = None;
         self.csr_cache = None;
         self.csr_dirty = false;
+        // Sparsifier indices are now stale after compaction — rebuild lazily
+        self.sparsifier = None;
     }
 
     /// Get top-k similar memories by graph traversal.
@@ -505,6 +541,100 @@ impl KnowledgeGraph {
     pub fn edge_count(&self) -> usize {
         self.edges.len()
     }
+
+    // ----- Sparsifier (ADR-116) -----------------------------------------------
+
+    /// Initialize or rebuild the spectral sparsifier from current edges.
+    pub fn rebuild_sparsifier(&mut self) {
+        if self.node_ids.is_empty() {
+            self.sparsifier = None;
+            return;
+        }
+
+        let mut sg = SparseGraph::with_capacity(self.node_ids.len());
+        for edge in &self.edges {
+            if let (Some(&u), Some(&v)) = (
+                self.node_index.get(&edge.source),
+                self.node_index.get(&edge.target),
+            ) {
+                let _ = sg.insert_or_update_edge(u, v, edge.weight);
+            }
+        }
+
+        let config = SparsifierConfig {
+            epsilon: 0.2,
+            edge_budget_factor: 8,
+            audit_interval: 500,
+            walk_length: 6,
+            num_walks: 10,
+            n_audit_probes: 30,
+            auto_rebuild_on_audit_failure: true,
+            ..Default::default()
+        };
+
+        match AdaptiveGeoSpar::build(&sg, config) {
+            Ok(spar) => {
+                tracing::info!(
+                    full_edges = self.edges.len(),
+                    sparsified_edges = spar.sparsifier().num_edges(),
+                    compression = %format!("{:.1}x", spar.compression_ratio()),
+                    "Sparsifier built"
+                );
+                self.sparsifier = Some(spar);
+            }
+            Err(e) => {
+                tracing::warn!("Sparsifier build failed: {e}");
+                self.sparsifier = None;
+            }
+        }
+    }
+
+    /// Ensure the sparsifier is initialized (lazy build on first access).
+    pub fn ensure_sparsifier(&mut self) {
+        if self.sparsifier.is_none() && !self.edges.is_empty() {
+            self.rebuild_sparsifier();
+        }
+    }
+
+    /// Get sparsifier stats for monitoring, or None if not initialized.
+    pub fn sparsifier_stats(&self) -> Option<SparsifierStatsInfo> {
+        let spar = self.sparsifier.as_ref()?;
+        let stats = spar.stats();
+        Some(SparsifierStatsInfo {
+            full_edges: stats.full_edge_count,
+            sparsified_edges: stats.edge_count,
+            compression_ratio: spar.compression_ratio(),
+            insertions: stats.insertions,
+            deletions: stats.deletions,
+            audits: stats.audit_count,
+            audit_pass_rate: if stats.audit_count > 0 {
+                stats.audit_pass_count as f64 / stats.audit_count as f64
+            } else {
+                1.0
+            },
+            full_rebuilds: stats.full_rebuilds,
+        })
+    }
+
+    /// Run a spectral audit on the sparsifier, returning pass/fail and error.
+    pub fn sparsifier_audit(&self) -> Option<(bool, f64)> {
+        let spar = self.sparsifier.as_ref()?;
+        let result = spar.audit();
+        Some((result.passed, result.max_error))
+    }
+}
+
+/// Sparsifier stats for the status endpoint (ADR-116).
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct SparsifierStatsInfo {
+    pub full_edges: usize,
+    pub sparsified_edges: usize,
+    pub compression_ratio: f64,
+    pub insertions: u64,
+    pub deletions: u64,
+    pub audits: u64,
+    pub audit_pass_rate: f64,
+    pub full_rebuilds: u64,
 }
 
 impl Default for KnowledgeGraph {

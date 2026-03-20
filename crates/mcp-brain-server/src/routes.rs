@@ -118,6 +118,8 @@ pub async fn create_router() -> (Router, AppState) {
             g.add_memory(mem);
         }
         tracing::info!("Graph rebuilt: {} nodes, {} edges", g.node_count(), g.edge_count());
+        // ADR-116: Build spectral sparsifier for analytics
+        g.rebuild_sparsifier();
     }
 
     // Hydrate vote tracker from persisted quality scores (prevent re-voting)
@@ -1742,6 +1744,8 @@ async fn status(
         midstream_scheduler_ticks: state.nano_scheduler.metrics().total_ticks,
         midstream_attractor_categories: state.attractor_results.read().len(),
         midstream_strange_loop_version: strange_loop::VERSION.to_string(),
+        sparsifier_compression: graph.sparsifier_stats().map(|s| s.compression_ratio).unwrap_or(0.0),
+        sparsifier_edges: graph.sparsifier_stats().map(|s| s.sparsified_edges).unwrap_or(0),
     })
 }
 
@@ -2711,6 +2715,7 @@ async fn pipeline_optimize(
                 for mem in &all_mems {
                     graph.add_memory(mem);
                 }
+                graph.rebuild_sparsifier();
                 (true, format!("Graph rebuilt: {} nodes, {} edges", graph.node_count(), graph.edge_count()))
             }
             "cleanup" => {

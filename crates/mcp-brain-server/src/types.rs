@@ -379,6 +379,11 @@ pub struct StatusResponse {
     pub midstream_attractor_categories: usize,
     /// Strange-loop engine version
     pub midstream_strange_loop_version: String,
+    // ── Spectral Sparsifier (ADR-116) ──
+    /// Sparsifier compression ratio (full_edges / sparsified_edges), 0 if not active
+    pub sparsifier_compression: f64,
+    /// Number of edges in the sparsified graph
+    pub sparsifier_edges: usize,
 }
 
 /// Response for GET /v1/temporal — temporal delta tracking stats

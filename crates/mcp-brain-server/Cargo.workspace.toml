@@ -10,6 +10,7 @@ members = [
     "crates/ruvector-domain-expansion",
     "crates/ruvector-delta-core",
     "crates/ruvector-solver",
+    "crates/ruvector-sparsifier",
     "crates/ruvllm",
     "crates/ruvector-core",
     "crates/rvf/rvf-types",
