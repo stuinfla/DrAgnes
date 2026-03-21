@@ -152,6 +152,7 @@
 		connections.forEach((c) => {
 			const p1 = particles[c.from];
 			const p2 = particles[c.to];
+			if (!p1 || !p2) return;
 			ctx.beginPath();
 			ctx.moveTo(p1.x, p1.y);
 			ctx.lineTo(p2.x, p2.y);
