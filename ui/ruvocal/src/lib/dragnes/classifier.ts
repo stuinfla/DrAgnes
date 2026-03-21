@@ -254,11 +254,23 @@ export class DermClassifier {
 			// df: firm brownish, small — low everything
 			brownRatio * 0.5 - redRatio * 0.5 - darkRatio * 0.5,
 			// mel: REQUIRES multiple features simultaneously (Platt-calibrated)
-			// High threshold: needs dark + blue + multiple colors + high variance
-			(darkRatio > 0.15 ? darkRatio * 1.5 : 0) +
-			(blueRatio > 0.03 ? blueRatio * 2.0 : 0) +
-			(colorCount >= 3 ? 0.3 : 0) +
-			(colorVariance > 0.25 ? colorVariance * 1.0 : -0.3),
+			// Key insight from brain: melanoma has BOTH dark areas AND color diversity.
+			// A uniformly dark lesion is NOT melanoma — it needs multi-color + variance.
+			// Gate: at least 2 of [dark, blue, multicolor, high-variance] must be true
+			(() => {
+				const hasDark = darkRatio > 0.15;
+				const hasBlue = blueRatio > 0.03;
+				const hasMultiColor = colorCount >= 3;
+				const hasHighVariance = colorVariance > 0.25;
+				const evidenceCount = [hasDark, hasBlue, hasMultiColor, hasHighVariance]
+					.filter(Boolean).length;
+				// Need ≥2 concurrent melanoma features to overcome prior
+				if (evidenceCount < 2) return -0.5;
+				return (hasDark ? darkRatio * 1.2 : 0) +
+					(hasBlue ? blueRatio * 2.0 : 0) +
+					(hasMultiColor ? 0.3 : 0) +
+					(hasHighVariance ? colorVariance * 0.8 : 0);
+			})(),
 			// nv: uniform brown, symmetric — brown dominant, low variance
 			brownRatio * 1.2 + (1 - darkRatio) * 0.3 - colorVariance * 1.5 + 0.2,
 			// vasc: red/purple dominant — high red, possibly blue
