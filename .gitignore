@@ -40,8 +40,9 @@ index.d.ts
 
 # Environment variables and secrets
 .env
-.env.local
-.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 *.key
 *.pem
 credentials.json
