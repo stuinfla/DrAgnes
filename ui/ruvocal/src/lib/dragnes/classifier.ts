@@ -17,6 +17,7 @@ import type {
 } from "./types";
 import { LESION_LABELS } from "./types";
 import { preprocessImage, resizeBilinear, toNCHWTensor } from "./preprocessing";
+import { adjustForDemographics, getClinicalRecommendation } from "./ham10000-knowledge";
 
 /** All HAM10000 classes in canonical order */
 const CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
@@ -110,6 +111,82 @@ export class DermClassifier {
 			modelId: this.usesWasm ? "mobilenetv3-small-wasm" : "demo-color-texture",
 			inferenceTimeMs,
 			usedWasm: this.usesWasm,
+		};
+	}
+
+	/**
+	 * Classify with demographic adjustment using HAM10000 knowledge.
+	 *
+	 * Runs standard classification then applies Bayesian demographic
+	 * adjustment based on patient age, sex, and lesion body site.
+	 * Returns both raw and adjusted probabilities for transparency.
+	 *
+	 * @param imageData - RGBA ImageData from canvas
+	 * @param demographics - Optional patient demographics
+	 * @returns Classification result with adjusted probabilities
+	 */
+	async classifyWithDemographics(
+		imageData: ImageData,
+		demographics?: {
+			age?: number;
+			sex?: "male" | "female";
+			localization?: string;
+		},
+	): Promise<ClassificationResult & {
+		rawProbabilities: ClassProbability[];
+		demographicAdjusted: boolean;
+		clinicalRecommendation?: {
+			recommendation: "biopsy" | "urgent_referral" | "monitor" | "reassurance";
+			malignantProbability: number;
+			melanomaProbability: number;
+			reasoning: string;
+		};
+	}> {
+		const result = await this.classify(imageData);
+
+		if (!demographics || (!demographics.age && !demographics.sex && !demographics.localization)) {
+			return {
+				...result,
+				rawProbabilities: result.probabilities,
+				demographicAdjusted: false,
+			};
+		}
+
+		// Build probability map from raw result
+		const rawProbMap: Record<string, number> = {};
+		for (const p of result.probabilities) {
+			rawProbMap[p.className] = p.probability;
+		}
+
+		// Apply HAM10000 Bayesian demographic adjustment
+		const adjustedMap = adjustForDemographics(
+			rawProbMap,
+			demographics.age,
+			demographics.sex,
+			demographics.localization,
+		);
+
+		// Build adjusted probabilities array
+		const adjustedProbabilities: ClassProbability[] = CLASSES.map((cls) => ({
+			className: cls,
+			probability: adjustedMap[cls] ?? 0,
+			label: LESION_LABELS[cls],
+		})).sort((a, b) => b.probability - a.probability);
+
+		const topClass = adjustedProbabilities[0].className;
+		const confidence = adjustedProbabilities[0].probability;
+
+		// Get clinical recommendation from adjusted probabilities
+		const clinicalRecommendation = getClinicalRecommendation(adjustedMap);
+
+		return {
+			...result,
+			topClass,
+			confidence,
+			probabilities: adjustedProbabilities,
+			rawProbabilities: result.probabilities,
+			demographicAdjusted: true,
+			clinicalRecommendation,
 		};
 	}
 
