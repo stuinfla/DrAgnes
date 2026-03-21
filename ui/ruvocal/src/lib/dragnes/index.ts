@@ -26,6 +26,10 @@ export {
 // Privacy pipeline
 export { PrivacyPipeline } from "./privacy";
 
+// Configuration
+export { DRAGNES_CONFIG } from "./config";
+export type { DrAgnesConfig } from "./config";
+
 // Types
 export type {
 	ABCDEScores,
