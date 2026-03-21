@@ -227,16 +227,6 @@
 		</div>
 	{/if}
 	<a
-		href="{base}/dragnes"
-		class="flex h-9 flex-none items-center gap-1.5 rounded-lg pl-2.5 pr-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gold-500/10 dark:hover:text-gold-400"
-		onclick={handleNavItemClick}
-	>
-		DrAgnes
-		<span
-			class="ml-auto rounded-md bg-blue-500/10 px-1.5 py-0.5 text-xs text-blue-500 dark:bg-blue-500/20 dark:text-blue-400"
-		>AI</span>
-	</a>
-	<a
 		href="{base}/models"
 		class="flex h-9 flex-none items-center gap-1.5 rounded-lg pl-2.5 pr-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gold-500/10 dark:hover:text-gold-400"
 		onclick={handleNavItemClick}
