@@ -35,8 +35,18 @@ export default defineConfig({
 		// Using leading dot matches subdomains per Vite's host check logic
 		allowedHosts: ["huggingface.ngrok.io"],
 	},
+	build: {
+		rollupOptions: {
+			external: ["@ruvector/cnn"],
+		},
+	},
+	ssr: {
+		noExternal: [],
+		external: ["@ruvector/cnn"],
+	},
 	optimizeDeps: {
 		include: ["uuid", "sharp", "clsx"],
+		exclude: ["@ruvector/cnn"],
 	},
 	test: {
 		workspace: [
