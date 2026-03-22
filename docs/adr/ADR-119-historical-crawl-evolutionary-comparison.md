@@ -106,3 +106,36 @@ CC-MAIN-2026-06, CC-MAIN-2026-08
 - Historical CC CDX can be slow (older indices, less maintained)
 - Some URLs may not appear in every crawl snapshot
 - Content extraction quality varies across crawl periods
+
+---
+
+## Implementation Status (2026-03-22)
+
+### Content Imported
+
+30+ temporal articles covering the 2020-2026 period have been injected into the brain via the direct inject pipeline. Content spans:
+
+- **AI/ML evolution (2020-2026)**: Transformer scaling laws, GPT progression, reinforcement learning advances, LLM agent architectures, multimodal models
+- **Dermatology/medical evolution (2020-2026)**: AI-assisted diagnosis adoption, teledermatology growth during COVID, updated melanoma screening guidelines, dermoscopy AI tools
+- **Computer science evolution (2020-2026)**: Distributed systems trends, database paradigm shifts, WebAssembly adoption, edge computing growth
+
+### Search Verification
+
+Temporal queries return time-ordered results from the brain:
+- Queries for "how has AI changed since 2020" return chronologically relevant results
+- Queries for "dermatology AI evolution" surface articles across multiple years
+- Cross-domain temporal queries (e.g., "technology changes 2020 to 2026") return results from multiple categories
+
+### Pipeline Used
+
+All historical content was imported via the direct inject pipeline (`POST /v1/discover` with `inject: true`), not the CDX historical crawler. The CDX pipeline can query historical indices (CC-MAIN-2020-16 through CC-MAIN-2026-08) but the HTML extractor needs improvement for archived content before it can be used for automated historical imports.
+
+### Status vs Acceptance Criteria
+
+| Criterion | Target | Status |
+|-----------|--------|--------|
+| Import >=100 pages across >=4 quarterly crawl snapshots | 100 pages, 4 snapshots | Partial: 30+ articles covering 2020-2026, but via direct inject not CDX snapshots |
+| Compute WebPageDelta with embedding_drift | Per-URL drift | Pending: temporal deltas exist (8 in brain) but full drift computation not yet automated |
+| Store temporal chain with crawl_timestamp | Time-ordered storage | Done: articles tagged with temporal metadata |
+| Search returns time-ordered results | Temporal query support | Done: verified working |
+| Total cost <= $15 | Under $15 | Done: ~$3-7 total |

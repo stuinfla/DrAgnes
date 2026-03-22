@@ -1,6 +1,6 @@
 # ADR-118: Cost-Effective Common Crawl Strategy with Sparsifier-Aware Guardrails
 
-**Status**: Accepted
+**Status**: Phase 1 Active
 **Date**: 2026-03-21
 **Authors**: RuVector Team
 **Deciders**: ruv
@@ -458,3 +458,45 @@ The weekly cost report (triggered by `brain-cost-report` scheduler job) is share
 - [Cloud Run Pricing](https://cloud.google.com/run/pricing)
 - [Firestore Pricing](https://cloud.google.com/firestore/pricing)
 - [Cloud Scheduler Pricing](https://cloud.google.com/scheduler/pricing)
+
+---
+
+## 12. Phase 1 Implementation Notes (2026-03-22)
+
+### 12.1 Scheduler Jobs Deployed
+
+The following Cloud Scheduler jobs are defined for Phase 1:
+
+| Job Name | Schedule | Target | Status |
+|----------|----------|--------|--------|
+| `brain-crawl-medical` | Daily 2AM UTC | `/v1/pipeline/crawl/ingest` (6 medical domains) | Defined |
+| `brain-crawl-derm` | Daily 3AM UTC | `/v1/pipeline/crawl/ingest` (5 dermatology domains) | Defined |
+| `brain-partition-recompute` | Hourly | `/v1/partition/recompute` (sparsified) | Defined |
+| `brain-cost-report` | Weekly Sunday 6AM UTC | `/v1/pipeline/cost/report` | Defined |
+
+### 12.2 CDX Pipeline Issue
+
+The CDX pipeline successfully queries Common Crawl indices and retrieves WARC content via range-GET. However, the HTML extractor returns empty titles when parsing Wayback Machine archived content. The archived HTML structure differs from live pages (different DOM layout, missing meta tags, Wayback toolbar injection). This does not block discovery but degrades content quality for automated ingestion.
+
+**Workaround**: Use the direct inject pipeline for curated content until the HTML extractor is updated to handle archived HTML formats.
+
+### 12.3 Direct Inject Workaround
+
+The direct inject pipeline via `POST /v1/discover` with `inject: true` is fully operational and was used as the primary import method for Phase 1. Key details:
+
+- The `inject: true` flag is **required** in the discover request body for content to be stored (not just indexed)
+- Batch inject supports a `source` field on each item for provenance tracking
+- Each item in the batch should include: `title`, `body`, `source`, and optionally `tags`
+- This pipeline bypasses CDX/WARC entirely, making it suitable for curated and pre-processed content
+
+### 12.4 Cost: Actual vs Projected
+
+| Metric | Projected (Phase 1) | Actual (2026-03-22) |
+|--------|---------------------|---------------------|
+| Monthly budget | $11-28 | ~$3-7 so far |
+| Memories imported | 5K-15K/month target | 1,588 total |
+| Graph edges | Up to 500K limit | 372,210 |
+| Sparsifier compression | ~27x expected | 28.7x actual |
+| Firestore writes | Up to 5K/day | Well under limit |
+
+Cost is significantly below projections because direct inject avoids the heavier CDX+WARC compute path. As automated scheduler jobs ramp up, costs will approach the projected $11-28/month range.

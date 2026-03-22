@@ -1,6 +1,6 @@
 # ADR-115: Common Crawl Integration with Semantic Compression
 
-**Status**: POC Validated, Phase 1 Ready
+**Status**: Phase 1 Implemented
 **Date**: 2026-03-17
 **Authors**: RuVector Team
 **Deciders**: ruv
@@ -899,3 +899,73 @@ impl CachedPartition {
 **Conservative framing**: Turn the open web into a compact, queryable, time-aware semantic memory layer for agents.
 
 **Exotic framing**: We're not compressing pages. We're compressing the web's evolving conceptual structure.
+
+---
+
+## 17. Phase 1 Implementation Results (2026-03-22)
+
+### 17.1 Brain State After Phase 1 Import
+
+| Metric | Value |
+|--------|-------|
+| Total memories | 1,588 |
+| Graph edges | 372,210 |
+| Sparsifier compression | 28.7x (372K -> 12,960 edges) |
+| Graph nodes | 1,588 |
+| Clusters | 20 |
+| Contributors | 76 |
+| Embedding engine | ruvllm::RlmEmbedder (128-dim, CPU) |
+| Temporal deltas | 8 |
+| Knowledge velocity | 8.0 |
+| Average quality | 0.554 |
+
+### 17.2 Categories Covered
+
+Phase 1 imports covered four primary knowledge domains:
+
+1. **Dermatology** -- skin cancer screening, melanoma detection, dermoscopy, treatment protocols (DermNet NZ, AAD, Skin Cancer Foundation)
+2. **AI/ML** -- transformer architectures, reinforcement learning, LLM agents, neural network optimization
+3. **Computer Science** -- distributed systems, database internals, algorithm design, systems programming
+4. **Historical Evolution** -- temporal articles spanning 2020-2026 tracking how medical guidelines, AI capabilities, and treatment protocols evolved over time
+
+### 17.3 Pipeline Status
+
+**CDX Pipeline (Common Crawl Index)**:
+- CDX queries execute successfully against CC-MAIN indices
+- WARC range-GET retrieves raw content from S3
+- Issue: HTML extractor returns empty titles when parsing Wayback Machine content; raw HTML structure differs from live pages
+- Status: Working for discovery, but content extraction needs improvement for archived HTML formats
+
+**Direct Inject Pipeline**:
+- Fully operational via `POST /v1/discover` with `inject: true` flag
+- Batch inject with `source` field on each item for provenance tracking
+- Used as primary import method for Phase 1 content
+- Status: Fully working, used for all successful imports
+
+### 17.4 Search Verification
+
+Search queries verified across imported domains:
+- Dermatology queries (e.g., "melanoma detection", "skin cancer screening") return relevant results
+- AI/ML queries (e.g., "transformer architecture", "reinforcement learning") return relevant results
+- Temporal queries (e.g., "how has AI evolved since 2020") return time-ordered results
+- Cross-domain queries return results from multiple categories
+
+### 17.5 Cost to Date
+
+| Item | Cost |
+|------|------|
+| Cloud Run compute (import jobs) | ~$2-5 |
+| Firestore operations (1,588 memories) | ~$1-2 |
+| CDX queries + WARC range-GET | $0 (public bucket) |
+| RlmEmbedder (CPU, 128-dim) | $0 (in-process) |
+| **Total Phase 1 cost** | **~$3-7** |
+
+Phase 1 cost is well below the projected $11-28/month budget, primarily because the direct inject pipeline avoids the heavier CDX+WARC processing path.
+
+### 17.6 Lessons Learned
+
+1. **Direct inject is faster than CDX pipeline** for curated content -- bypasses HTML extraction issues
+2. **`inject: true` flag is required** on discover requests for content to be stored, not just indexed
+3. **Source field per item** in batch inject provides clean provenance tracking
+4. **Sparsifier scales well** -- 28.7x compression at 372K edges, up from 27x at 340K edges
+5. **HTML extraction from Wayback content** needs a dedicated parser that handles archived HTML structure (missing titles, different DOM layout)
