@@ -79,6 +79,39 @@ const DEFAULT_DOMAINS = [
   'simonsfoundation.org', 'perimeterinstitute.ca',
   'kitp.ucsb.edu', 'slac.stanford.edu',
   'fermilab.gov', 'bnl.gov', 'ornl.gov',
+  // GitHub & Code Intelligence
+  'github.com', 'github.blog', 'docs.github.com',
+  // Stack Overflow / Stack Exchange
+  'stackoverflow.com', 'stackexchange.com',
+  'stats.stackexchange.com', 'math.stackexchange.com',
+  'physics.stackexchange.com', 'biology.stackexchange.com',
+  'cs.stackexchange.com', 'datascience.stackexchange.com',
+  // Patents & IP
+  'patents.google.com', 'patft.uspto.gov',
+  'worldwide.espacenet.com',
+  // Preprint Servers (beyond arXiv)
+  'biorxiv.org', 'medrxiv.org', 'chemrxiv.org',
+  'ssrn.com', 'preprints.org', 'researchsquare.com',
+  // Wikipedia & Reference
+  'en.wikipedia.org', 'wikidata.org', 'wikimedia.org',
+  // Regulatory & Government
+  'regulations.gov', 'sec.gov', 'epa.gov',
+  'energy.gov', 'nsf.gov', 'darpa.mil',
+  // News & Analysis (science/tech)
+  'techcrunch.com', 'arstechnica.com', 'wired.com',
+  'technologyreview.com', 'newscientist.com',
+  'sciencemag.org', 'scientificamerican.com',
+  // Additional Academic
+  'jstor.org', 'tandfonline.com', 'sagepub.com',
+  'degruyter.com', 'oxfordjournals.org',
+  'cambridge.org', 'royalsocietypublishing.org',
+  // Data & Statistics
+  'data.gov', 'kaggle.com', 'dataverse.harvard.edu',
+  'zenodo.org', 'figshare.com', 'datadryad.org',
+  // Additional Tech
+  'medium.com', 'towardsdatascience.com', 'distill.pub',
+  'lilianweng.github.io', 'colah.github.io',
+  'karpathy.github.io', 'jalammar.github.io',
 ];
 
 function matchesDomain(url) {
@@ -142,6 +175,34 @@ function generateTags(url, content) {
   else if (url.includes('quantamagazine') || url.includes('physicsworld')) tags.push('physics', 'popular');
   else if (url.includes('fermilab') || url.includes('slac.stanford') || url.includes('bnl.gov')) tags.push('physics', 'national-lab');
   else if (url.includes('perimeterinstitute') || url.includes('kitp.ucsb') || url.includes('simonsfoundation')) tags.push('physics', 'institute');
+  // GitHub & Code
+  else if (url.includes('github.com')) tags.push('code', 'github');
+  // Stack Exchange
+  else if (url.includes('stackoverflow') || url.includes('stackexchange')) tags.push('qa', 'community');
+  // Patents
+  else if (url.includes('patents') || url.includes('patft.uspto') || url.includes('espacenet')) tags.push('patents', 'ip');
+  // Preprints
+  else if (url.includes('biorxiv')) tags.push('preprint', 'biology');
+  else if (url.includes('medrxiv')) tags.push('preprint', 'medical');
+  else if (url.includes('chemrxiv')) tags.push('preprint', 'chemistry');
+  else if (url.includes('ssrn.com')) tags.push('preprint', 'social-science');
+  // Wikipedia
+  else if (url.includes('wikipedia.org')) tags.push('wikipedia', 'reference');
+  // Government & Regulatory
+  else if (url.includes('nsf.gov') || url.includes('darpa.mil')) tags.push('government', 'funding');
+  else if (url.includes('energy.gov') || url.includes('epa.gov')) tags.push('government', 'policy');
+  else if (url.includes('sec.gov')) tags.push('regulatory', 'finance');
+  // Science News
+  else if (url.includes('sciencemag') || url.includes('scientificamerican') || url.includes('newscientist')) tags.push('science-news');
+  else if (url.includes('technologyreview') || url.includes('wired') || url.includes('arstechnica')) tags.push('tech-news');
+  // Data Repositories
+  else if (url.includes('kaggle') || url.includes('zenodo') || url.includes('figshare') || url.includes('datadryad')) tags.push('data', 'dataset');
+  else if (url.includes('dataverse') || url.includes('data.gov')) tags.push('data', 'open-data');
+  // Academic Publishers
+  else if (url.includes('jstor') || url.includes('tandfonline') || url.includes('sagepub') || url.includes('cambridge.org')) tags.push('journal', 'academic');
+  // Tech Blogs
+  else if (url.includes('medium.com') || url.includes('towardsdatascience')) tags.push('blog', 'tech');
+  else if (url.includes('lilianweng') || url.includes('colah') || url.includes('karpathy') || url.includes('jalammar')) tags.push('blog', 'ml-explainer');
 
   const lower = content.toLowerCase();
   if (lower.includes('melanoma')) tags.push('melanoma');
