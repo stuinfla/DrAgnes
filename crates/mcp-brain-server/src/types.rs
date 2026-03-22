@@ -1262,6 +1262,7 @@ impl Default for PipelineState {
 /// Request to inject a single item into the pipeline.
 #[derive(Debug, Deserialize)]
 pub struct InjectRequest {
+    #[serde(default)]
     pub source: String,
     pub title: String,
     pub content: String,
