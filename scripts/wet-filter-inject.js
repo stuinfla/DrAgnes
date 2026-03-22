@@ -187,12 +187,16 @@ const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity 
 let recordUrl = '';
 let recordContent = '';
 let inRecord = false;
-const pendingRecords = [];
+// Process records inline to avoid OOM — never buffer all records
+let processQueue = Promise.resolve();
 
 rl.on('line', (line) => {
   if (line.startsWith('WARC/1.0')) {
     if (recordUrl && recordContent) {
-      pendingRecords.push({ url: recordUrl, content: recordContent });
+      // Process immediately, don't accumulate
+      const url = recordUrl;
+      const content = recordContent;
+      processQueue = processQueue.then(() => processRecord(url, content));
     }
     recordUrl = '';
     recordContent = '';
@@ -202,19 +206,20 @@ rl.on('line', (line) => {
   } else if (line.startsWith('Content-Length:')) {
     inRecord = true;
   } else if (inRecord) {
-    recordContent += line + '\n';
+    // Limit content accumulation per record to prevent single-record bloat
+    if (recordContent.length < MAX_CONTENT_LENGTH * 2) {
+      recordContent += line + '\n';
+    }
   }
 });
 
 rl.on('close', async () => {
   // Process last record
   if (recordUrl && recordContent) {
-    pendingRecords.push({ url: recordUrl, content: recordContent });
-  }
-
-  // Process all records sequentially
-  for (const rec of pendingRecords) {
-    await processRecord(rec.url, rec.content);
+    await processQueue;
+    await processRecord(recordUrl, recordContent);
+  } else {
+    await processQueue;
   }
 
   // Flush remaining batch

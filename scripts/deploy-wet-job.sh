@@ -62,7 +62,7 @@ echo "Crawl index: $CRAWL_INDEX"
 
 curl -sL "https://data.commoncrawl.org/$WET_PATH" \
   | gunzip \
-  | node /app/filter.js \
+  | node --max-old-space-size=1536 /app/filter.js \
     --brain-url "$BRAIN_URL" \
     --auth "$AUTH_HEADER" \
     --batch-size "$BATCH_SIZE" \
@@ -92,7 +92,7 @@ gcloud run jobs deploy "$JOB_NAME" \
   --parallelism=10 \
   --max-retries=1 \
   --cpu=1 \
-  --memory=1Gi \
+  --memory=2Gi \
   --task-timeout=3600s \
   --env-vars-file="$BUILD_DIR/env.yaml" \
   2>&1
