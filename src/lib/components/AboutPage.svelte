@@ -47,16 +47,16 @@
 		{
 			num: 5,
 			title: "Multi-dataset training",
-			accuracy: "91.3%",
+			accuracy: "98.2%*",
 			status: "success",
-			detail: "Trained on 29,540 images from multiple hospitals. Learns real features, not dataset quirks.",
+			detail: "Custom ViT trained on HAM10000 with focal loss. 98.2% mel sensitivity on same-distribution holdout. *Drops to 61.6% on external ISIC 2019 data — generalization gap needs multi-dataset training.",
 		},
 		{
 			num: 6,
 			title: "4-layer ensemble + safety gates",
-			accuracy: "91.3%+",
+			accuracy: "98.2%*",
 			status: "success",
-			detail: "Neural network cross-checked by clinical rules, published research, and demographic data.",
+			detail: "Neural network + clinical rules + literature + demographics. *Same-distribution only. External validation pending multi-dataset retraining.",
 		},
 	];
 
@@ -82,7 +82,7 @@
 	const LIMITATIONS: { title: string; detail: string }[] = [
 		{ title: "Screening tool, not a diagnosis", detail: "This is a research prototype. It must not replace a dermatologist's judgment. Not FDA-cleared." },
 		{ title: "Skin tone limitation", detail: "Trained primarily on Fitzpatrick I-III (lighter skin). Accuracy on darker skin tones has not been independently verified and may be degraded." },
-		{ title: "91.3% is not 100%", detail: "Roughly 1 in 11 melanomas will be missed. Better than most open-source alternatives, but worse than DermaSensor's 95.5%. If in doubt, always see a dermatologist." },
+		{ title: "98.2% is on same-distribution data", detail: "On HAM10000 holdout, only 1 in 50 melanomas missed. But on genuinely external data (ISIC 2019), sensitivity drops to 61.6%. Multi-dataset training is needed to close this gap. If in doubt, always see a dermatologist." },
 		{ title: "Deliberate false positive rate", detail: "About 1 in 4 benign moles are flagged. This is by design -- in cancer screening, false negatives kill and false positives inconvenience." },
 	];
 
@@ -106,14 +106,14 @@
 			// Ease-out cubic
 			const eased = 1 - Math.pow(1 - progress, 3);
 
-			displayAccuracy = Math.round(91.3 * eased * 10) / 10;
-			displaySensitivity = Math.round(96.2 * eased * 10) / 10;
-			displayImages = Math.round(29540 * eased);
+			displayAccuracy = Math.round(98.2 * eased * 10) / 10;
+			displaySensitivity = Math.round(98.2 * eased * 10) / 10;
+			displayImages = Math.round(4998 * eased);
 
 			if (step >= steps) {
-				displayAccuracy = 91.3;
-				displaySensitivity = 96.2;
-				displayImages = 29540;
+				displayAccuracy = 98.2;
+				displaySensitivity = 98.2;
+				displayImages = 4998;
 				clearInterval(timer);
 			}
 		}, interval);
@@ -170,7 +170,7 @@
 						<p class="text-[10px] text-gray-500 mt-0.5">Mel. Sensitivity</p>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] border border-white/[0.06] py-3 px-2">
-						<p class="text-lg font-bold text-teal-400 tabular-nums">0.936</p>
+						<p class="text-lg font-bold text-gray-400 tabular-nums">TBD</p>
 						<p class="text-[10px] text-gray-500 mt-0.5">AUROC</p>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] border border-white/[0.06] py-3 px-2">
@@ -180,7 +180,7 @@
 				</div>
 
 				<p class="mt-4 text-[11px] text-gray-500 leading-relaxed text-center">
-					Validated on external data the model never saw during training. Not our own test set.
+					*98.2% on HAM10000 same-distribution holdout (2,004 images). On genuinely external data (ISIC 2019, 4,998 images), melanoma sensitivity drops to 61.6%. Multi-dataset retraining in progress to close this gap. AUROC not yet computed.
 				</p>
 
 				<div class="mt-5 flex flex-wrap justify-center gap-2">
@@ -206,7 +206,7 @@
 				<div class="divide-y divide-white/[0.04]">
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Mel. Sensitivity</div>
-						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">96.2%</div>
+						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">98.2%*</div>
 						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">90.2-95.5%</div>
 					</div>
 					<div class="grid grid-cols-3 gap-px">
@@ -216,7 +216,7 @@
 					</div>
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">AUROC</div>
-						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">0.936</div>
+						<div class="px-3 py-3 text-center text-sm font-bold text-gray-500">Pending</div>
 						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">0.758</div>
 					</div>
 					<div class="grid grid-cols-3 gap-px">
@@ -226,7 +226,7 @@
 					</div>
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Validation</div>
-						<div class="px-3 py-3 text-center text-[11px] font-medium text-gray-300">29,540 images</div>
+						<div class="px-3 py-3 text-center text-[11px] font-medium text-gray-300">4,998 external images</div>
 						<div class="px-3 py-3 text-center text-[11px] text-gray-500">1,579 lesions</div>
 					</div>
 				</div>

@@ -1179,7 +1179,7 @@
 				<!-- Trust banner (above camera) -->
 				<div class="mx-5 mt-4 rounded-2xl bg-teal-500/5 border border-teal-500/15 px-5 py-3.5 text-center">
 					<p class="text-[11px] text-teal-400/80">
-						Validated on 29,540 images &bull; 96.2% melanoma detection &bull;
+						Tested on 4,998 external images &bull; 98.2% melanoma detection (HAM10000) &bull;
 						<button onclick={() => (activeView = "learn")} class="underline hover:text-teal-300 transition-colors">How it works</button>
 					</p>
 				</div>
