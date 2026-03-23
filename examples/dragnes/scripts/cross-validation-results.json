@@ -1,0 +1,468 @@
+{
+  "timestamp": "2026-03-22T17:49:50",
+  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
+  "device": "mps",
+  "class_names": [
+    "akiec",
+    "bcc",
+    "bkl",
+    "df",
+    "mel",
+    "nv",
+    "vasc"
+  ],
+  "strategies": [
+    {
+      "strategy": "external_binary",
+      "source": "Nagabu/HAM10000",
+      "dataset": "Nagabu/HAM10000 (external binary melanoma dataset)",
+      "total_images": 1000,
+      "melanoma_n": 151,
+      "non_melanoma_n": 849,
+      "binary_accuracy": 0.761,
+      "melanoma_sensitivity": 0.9868,
+      "melanoma_specificity": 0.7208,
+      "true_positives": 149,
+      "false_negatives": 2,
+      "false_positives": 237,
+      "true_negatives": 612,
+      "inference_time_sec": 5.86,
+      "images_per_second": 170.6
+    },
+    {
+      "dataset": "marmal88/skin_cancer TEST split (held-out, 1285 images)",
+      "total_images": 1285,
+      "overall_accuracy": 0.7665,
+      "correct": 985,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.9762,
+          "specificity": 0.9984,
+          "precision": 0.9535,
+          "f1": 0.9647,
+          "support": 42
+        },
+        "bcc": {
+          "sensitivity": 0.9701,
+          "specificity": 0.9926,
+          "precision": 0.8784,
+          "f1": 0.922,
+          "support": 67
+        },
+        "bkl": {
+          "sensitivity": 0.9577,
+          "specificity": 0.9589,
+          "precision": 0.7432,
+          "f1": 0.8369,
+          "support": 142
+        },
+        "df": {
+          "sensitivity": 0.9286,
+          "specificity": 0.9969,
+          "precision": 0.7647,
+          "f1": 0.8387,
+          "support": 14
+        },
+        "mel": {
+          "sensitivity": 1.0,
+          "specificity": 0.7932,
+          "precision": 0.3789,
+          "f1": 0.5496,
+          "support": 144
+        },
+        "nv": {
+          "sensitivity": 0.662,
+          "specificity": 0.9953,
+          "precision": 0.9965,
+          "f1": 0.7955,
+          "support": 858
+        },
+        "vasc": {
+          "sensitivity": 1.0,
+          "specificity": 1.0,
+          "precision": 1.0,
+          "f1": 1.0,
+          "support": 18
+        }
+      },
+      "melanoma_sensitivity": 1.0,
+      "melanoma_specificity": 0.7932,
+      "melanoma_n": 144,
+      "confusion_matrix": [
+        [
+          41,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          65,
+          1,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          136,
+          0,
+          3,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          13,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          144,
+          0,
+          0
+        ],
+        [
+          1,
+          8,
+          46,
+          4,
+          231,
+          568,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          18
+        ]
+      ],
+      "source": "marmal88/skin_cancer",
+      "strategy": "held_out_test",
+      "split": "test",
+      "inference_time_sec": 10.61,
+      "images_per_second": 121.1
+    },
+    {
+      "strategy": "overfitting_check",
+      "source": "marmal88/skin_cancer",
+      "dataset": "marmal88/skin_cancer (HAM10000) - overfitting check",
+      "split_params": {
+        "test_size": 0.15,
+        "random_state": 42,
+        "stratified": true
+      },
+      "train_accuracy": 0.774,
+      "test_accuracy": 0.7809,
+      "train_test_gap": -0.0069,
+      "melanoma_sensitivity_train": 0.9817,
+      "melanoma_sensitivity_test": 0.9822,
+      "melanoma_sensitivity_gap": -0.0006,
+      "overfit_status": "EXCELLENT",
+      "train_n": 1000,
+      "test_n": 2004,
+      "test_results": {
+        "dataset": "marmal88/skin_cancer (reproduced 85/15 TEST split)",
+        "total_images": 2004,
+        "overall_accuracy": 0.7809,
+        "correct": 1565,
+        "per_class": {
+          "akiec": {
+            "sensitivity": 0.8939,
+            "specificity": 0.9969,
+            "precision": 0.9077,
+            "f1": 0.9008,
+            "support": 66
+          },
+          "bcc": {
+            "sensitivity": 0.9706,
+            "specificity": 0.9947,
+            "precision": 0.9083,
+            "f1": 0.9384,
+            "support": 102
+          },
+          "bkl": {
+            "sensitivity": 0.9364,
+            "specificity": 0.963,
+            "precision": 0.7574,
+            "f1": 0.8374,
+            "support": 220
+          },
+          "df": {
+            "sensitivity": 0.9565,
+            "specificity": 0.9985,
+            "precision": 0.88,
+            "f1": 0.9167,
+            "support": 23
+          },
+          "mel": {
+            "sensitivity": 0.9822,
+            "specificity": 0.8038,
+            "precision": 0.3877,
+            "f1": 0.556,
+            "support": 225
+          },
+          "nv": {
+            "sensitivity": 0.694,
+            "specificity": 0.997,
+            "precision": 0.9979,
+            "f1": 0.8187,
+            "support": 1340
+          },
+          "vasc": {
+            "sensitivity": 1.0,
+            "specificity": 0.9985,
+            "precision": 0.9032,
+            "f1": 0.9492,
+            "support": 28
+          }
+        },
+        "melanoma_sensitivity": 0.9822,
+        "melanoma_specificity": 0.8038,
+        "melanoma_n": 225,
+        "confusion_matrix": [
+          [
+            59,
+            1,
+            4,
+            0,
+            2,
+            0,
+            0
+          ],
+          [
+            1,
+            99,
+            0,
+            0,
+            2,
+            0,
+            0
+          ],
+          [
+            5,
+            1,
+            206,
+            0,
+            6,
+            2,
+            0
+          ],
+          [
+            0,
+            0,
+            0,
+            22,
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            3,
+            1,
+            221,
+            0,
+            0
+          ],
+          [
+            0,
+            8,
+            59,
+            2,
+            338,
+            930,
+            3
+          ],
+          [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            28
+          ]
+        ]
+      }
+    }
+  ],
+  "external_validation": {
+    "strategy": "external_binary",
+    "source": "Nagabu/HAM10000",
+    "dataset": "Nagabu/HAM10000 (external binary melanoma dataset)",
+    "total_images": 1000,
+    "melanoma_n": 151,
+    "non_melanoma_n": 849,
+    "binary_accuracy": 0.761,
+    "melanoma_sensitivity": 0.9868,
+    "melanoma_specificity": 0.7208,
+    "true_positives": 149,
+    "false_negatives": 2,
+    "false_positives": 237,
+    "true_negatives": 612,
+    "inference_time_sec": 5.86,
+    "images_per_second": 170.6
+  },
+  "overfitting_check": {
+    "strategy": "overfitting_check",
+    "source": "marmal88/skin_cancer",
+    "dataset": "marmal88/skin_cancer (HAM10000) - overfitting check",
+    "split_params": {
+      "test_size": 0.15,
+      "random_state": 42,
+      "stratified": true
+    },
+    "train_accuracy": 0.774,
+    "test_accuracy": 0.7809,
+    "train_test_gap": -0.0069,
+    "melanoma_sensitivity_train": 0.9817,
+    "melanoma_sensitivity_test": 0.9822,
+    "melanoma_sensitivity_gap": -0.0006,
+    "overfit_status": "EXCELLENT",
+    "train_n": 1000,
+    "test_n": 2004,
+    "test_results": {
+      "dataset": "marmal88/skin_cancer (reproduced 85/15 TEST split)",
+      "total_images": 2004,
+      "overall_accuracy": 0.7809,
+      "correct": 1565,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.8939,
+          "specificity": 0.9969,
+          "precision": 0.9077,
+          "f1": 0.9008,
+          "support": 66
+        },
+        "bcc": {
+          "sensitivity": 0.9706,
+          "specificity": 0.9947,
+          "precision": 0.9083,
+          "f1": 0.9384,
+          "support": 102
+        },
+        "bkl": {
+          "sensitivity": 0.9364,
+          "specificity": 0.963,
+          "precision": 0.7574,
+          "f1": 0.8374,
+          "support": 220
+        },
+        "df": {
+          "sensitivity": 0.9565,
+          "specificity": 0.9985,
+          "precision": 0.88,
+          "f1": 0.9167,
+          "support": 23
+        },
+        "mel": {
+          "sensitivity": 0.9822,
+          "specificity": 0.8038,
+          "precision": 0.3877,
+          "f1": 0.556,
+          "support": 225
+        },
+        "nv": {
+          "sensitivity": 0.694,
+          "specificity": 0.997,
+          "precision": 0.9979,
+          "f1": 0.8187,
+          "support": 1340
+        },
+        "vasc": {
+          "sensitivity": 1.0,
+          "specificity": 0.9985,
+          "precision": 0.9032,
+          "f1": 0.9492,
+          "support": 28
+        }
+      },
+      "melanoma_sensitivity": 0.9822,
+      "melanoma_specificity": 0.8038,
+      "melanoma_n": 225,
+      "confusion_matrix": [
+        [
+          59,
+          1,
+          4,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          1,
+          99,
+          0,
+          0,
+          2,
+          0,
+          0
+        ],
+        [
+          5,
+          1,
+          206,
+          0,
+          6,
+          2,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          22,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          3,
+          1,
+          221,
+          0,
+          0
+        ],
+        [
+          0,
+          8,
+          59,
+          2,
+          338,
+          930,
+          3
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          28
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,79 @@
+<script lang="ts">
+	import Modal from "$lib/components/Modal.svelte";
+	import { getPrimaryICD10 } from "$lib/dragnes/icd10";
+	import type { ClassificationResult, ABCDEScores } from "$lib/dragnes/types";
+
+	interface Props {
+		onclose: () => void;
+		classification: ClassificationResult;
+		abcdeScores?: ABCDEScores | null;
+		bodyLocation: string;
+		patientAge?: number;
+		patientSex?: string;
+	}
+
+	let { onclose, classification, abcdeScores, bodyLocation, patientAge, patientSex }: Props = $props();
+
+	const icd10 = getPrimaryICD10(classification.topClass);
+	const today = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+	const riskLevel = classification.confidence > 0.7 ? "high" : classification.confidence > 0.4 ? "moderate" : "low";
+
+	let copied = $state(false);
+
+	let letterText = $derived(`DERMATOLOGY REFERRAL
+
+Date: ${today}
+Priority: ${riskLevel === "high" ? "URGENT" : riskLevel === "moderate" ? "SEMI-URGENT" : "ROUTINE"}
+
+Dear Colleague,
+
+I am referring this patient for dermatologic evaluation of a skin lesion.
+
+CLINICAL INFORMATION:
+${patientAge ? `- Age: ${patientAge}` : "- Age: Not specified"}
+${patientSex ? `- Sex: ${patientSex}` : "- Sex: Not specified"}
+- Body site: ${bodyLocation || "Not specified"}
+
+AI-ASSISTED SCREENING FINDINGS:
+- Primary impression: ${classification.probabilities[0]?.label || classification.topClass}
+- Confidence: ${(classification.confidence * 100).toFixed(1)}%
+- Suggested ICD-10: ${icd10?.code || "N/A"} (${icd10?.description || "N/A"})
+${abcdeScores ? `
+ABCDE ASSESSMENT:
+- Asymmetry: ${abcdeScores.asymmetry}/2
+- Border irregularity: ${abcdeScores.border}/8
+- Color count: ${abcdeScores.color}/6
+- Diameter: ${abcdeScores.diameterMm}mm
+- Risk level: ${abcdeScores.riskLevel}
+` : ""}
+RECOMMENDATION:
+${riskLevel === "high" ? "Urgent evaluation and possible biopsy recommended." : riskLevel === "moderate" ? "Evaluation recommended within 2-4 weeks." : "Routine evaluation at next available appointment."}
+
+NOTE: This referral was generated with AI-assisted screening (Dr. Agnes v0.1.0). AI findings are supplementary and do not replace clinical judgment. The screening tool has not been FDA-cleared for diagnostic use.
+
+Referring Provider: ___________________________
+Signature: ___________________________
+`);
+
+	function copyToClipboard() {
+		navigator.clipboard.writeText(letterText);
+		copied = true;
+		setTimeout(() => (copied = false), 2000);
+	}
+</script>
+
+<Modal onclose={onclose} width="!max-w-[600px]">
+	<div class="p-6">
+		<h2 class="text-lg font-semibold text-gray-100 mb-4">Referral Letter</h2>
+		<pre class="whitespace-pre-wrap text-sm text-gray-300 bg-gray-900 rounded-lg p-4 border border-gray-700 max-h-96 overflow-y-auto font-mono">{letterText}</pre>
+		<div class="flex gap-3 mt-4">
+			<button onclick={copyToClipboard} class="flex-1 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
+				{copied ? "Copied!" : "Copy to Clipboard"}
+			</button>
+			<button onclick={onclose} class="rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800">
+				Close
+			</button>
+		</div>
+	</div>
+</Modal>

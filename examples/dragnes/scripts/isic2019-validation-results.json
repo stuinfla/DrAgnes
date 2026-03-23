@@ -1,0 +1,252 @@
+{
+  "timestamp": "2026-03-22T22:36:20.498183",
+  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
+  "device": "mps",
+  "dataset": {
+    "name": "akinsanyaayomide/skin_cancer_dataset_balanced_labels_2",
+    "split_used": "test + train (test preferred)",
+    "total_available": 26006,
+    "total_processed": 4998,
+    "from_test_split": 815,
+    "from_train_split": 4183,
+    "errors": 0,
+    "isic_label_names": [
+      "AK",
+      "BCC",
+      "BKL",
+      "DF",
+      "MEL",
+      "NV",
+      "SCC",
+      "VASC"
+    ],
+    "class_mapping": {
+      "AK": "akiec",
+      "BCC": "bcc",
+      "BKL": "bkl",
+      "DF": "df",
+      "MEL": "mel",
+      "NV": "nv",
+      "SCC": "akiec",
+      "VASC": "vasc"
+    },
+    "note": "SCC mapped to akiec (closest HAM10000 class for squamous cell carcinoma)"
+  },
+  "class_names": [
+    "akiec",
+    "bcc",
+    "bkl",
+    "df",
+    "mel",
+    "nv",
+    "vasc"
+  ],
+  "inference": {
+    "total_images": 4998,
+    "batch_size": 32,
+    "time_seconds": 87.73,
+    "images_per_second": 57.0
+  },
+  "overall_accuracy": 0.5756,
+  "per_class": {
+    "akiec": {
+      "sensitivity": 0.2703,
+      "specificity": 0.9785,
+      "ppv": 0.6772,
+      "npv": 0.8895,
+      "support": 714,
+      "tp": 193,
+      "fn": 521,
+      "fp": 92,
+      "tn": 4192
+    },
+    "bcc": {
+      "sensitivity": 0.5168,
+      "specificity": 0.9328,
+      "ppv": 0.5616,
+      "npv": 0.9205,
+      "support": 714,
+      "tp": 369,
+      "fn": 345,
+      "fp": 288,
+      "tn": 3996
+    },
+    "bkl": {
+      "sensitivity": 0.7675,
+      "specificity": 0.8291,
+      "ppv": 0.4281,
+      "npv": 0.9554,
+      "support": 714,
+      "tp": 548,
+      "fn": 166,
+      "fp": 732,
+      "tn": 3552
+    },
+    "df": {
+      "sensitivity": 0.4762,
+      "specificity": 0.9599,
+      "ppv": 0.6641,
+      "npv": 0.9166,
+      "support": 714,
+      "tp": 340,
+      "fn": 374,
+      "fp": 172,
+      "tn": 4112
+    },
+    "mel": {
+      "sensitivity": 0.6162,
+      "specificity": 0.8819,
+      "ppv": 0.4651,
+      "npv": 0.9324,
+      "support": 714,
+      "tp": 440,
+      "fn": 274,
+      "fp": 506,
+      "tn": 3778
+    },
+    "nv": {
+      "sensitivity": 0.5294,
+      "specificity": 0.9358,
+      "ppv": 0.5789,
+      "npv": 0.9227,
+      "support": 714,
+      "tp": 378,
+      "fn": 336,
+      "fp": 275,
+      "tn": 4009
+    },
+    "vasc": {
+      "sensitivity": 0.8529,
+      "specificity": 0.9869,
+      "ppv": 0.9158,
+      "npv": 0.9758,
+      "support": 714,
+      "tp": 609,
+      "fn": 105,
+      "fp": 56,
+      "tn": 4228
+    }
+  },
+  "cancer_metrics": {
+    "melanoma_sensitivity": 0.6162,
+    "bcc_sensitivity": 0.5168,
+    "akiec_sensitivity": 0.2703,
+    "all_cancer_sensitivity": 0.6176,
+    "cancer_support": 2142
+  },
+  "confusion_matrix": [
+    [
+      193,
+      113,
+      240,
+      71,
+      64,
+      29,
+      4
+    ],
+    [
+      47,
+      369,
+      139,
+      60,
+      70,
+      21,
+      8
+    ],
+    [
+      9,
+      52,
+      548,
+      19,
+      56,
+      29,
+      1
+    ],
+    [
+      25,
+      68,
+      46,
+      340,
+      89,
+      113,
+      33
+    ],
+    [
+      8,
+      19,
+      198,
+      6,
+      440,
+      40,
+      3
+    ],
+    [
+      3,
+      15,
+      103,
+      6,
+      202,
+      378,
+      7
+    ],
+    [
+      0,
+      21,
+      6,
+      10,
+      25,
+      43,
+      609
+    ]
+  ],
+  "confusion_matrix_labels": [
+    "akiec",
+    "bcc",
+    "bkl",
+    "df",
+    "mel",
+    "nv",
+    "vasc"
+  ],
+  "comparison_with_ham10000": {
+    "ham10000_source": "marmal88/skin_cancer (HAM10000 test split, 2004 images)",
+    "ham10000_accuracy": 0.7809,
+    "external_accuracy": 0.5756,
+    "accuracy_delta": -0.2053,
+    "ham10000_mel_sensitivity": 0.9822,
+    "external_mel_sensitivity": 0.6162,
+    "mel_sensitivity_delta": -0.366,
+    "ham10000_bcc_sensitivity": 0.9706,
+    "external_bcc_sensitivity": 0.5168,
+    "bcc_sensitivity_delta": -0.4538,
+    "ham10000_akiec_sensitivity": 0.8939,
+    "external_akiec_sensitivity": 0.2703,
+    "akiec_sensitivity_delta": -0.6236
+  },
+  "multi_image_voting": {
+    "n_test_images": 100,
+    "n_views": 3,
+    "augmentations": [
+      "rotation_-30_30",
+      "horizontal_flip",
+      "vertical_flip",
+      "brightness_0.7_1.3",
+      "contrast_0.8_1.2",
+      "random_crop_85_95pct"
+    ],
+    "single_image_accuracy": 0.59,
+    "multi_image_accuracy": 0.59,
+    "accuracy_improvement": 0.0,
+    "does_multi_improve": false,
+    "melanoma_n": 40,
+    "single_melanoma_sensitivity": 0.45,
+    "multi_melanoma_sensitivity": 0.475,
+    "melanoma_sensitivity_improvement": 0.025,
+    "single_melanoma_as_cancer": 0.475,
+    "multi_melanoma_as_cancer": 0.525,
+    "single_bcc_sensitivity": 0.5,
+    "multi_bcc_sensitivity": 0.5,
+    "single_cancer_sensitivity": 0.5645,
+    "multi_cancer_sensitivity": 0.5968
+  }
+}

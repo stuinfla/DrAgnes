@@ -11,6 +11,7 @@
 
 import type { ABCDEScores, RiskLevel, SegmentationMask } from "./types";
 import { segmentLesion } from "./preprocessing";
+import { computeTDS, tdsRiskLevel } from "./clinical-baselines";
 
 /** Color ranges in RGB for ABCDE color scoring */
 const ABCDE_COLORS: Record<string, { min: [number, number, number]; max: [number, number, number] }> = {
@@ -43,7 +44,10 @@ export async function computeABCDE(
 	const diameterMm = computeDiameter(segmentation, magnification);
 	const evolution = previousMask ? scoreEvolution(segmentation, previousMask) : 0;
 
-	const totalScore = asymmetry + border + color + (diameterMm > 6 ? 1 : 0) + evolution;
+	// Use clinically validated TDS weights (Stolz et al. ABCD formula)
+	// D component here uses diameter as a proxy for dermoscopic structures score
+	const structureScore = (diameterMm > 6 ? 1 : 0) + evolution;
+	const tds = computeTDS(asymmetry, border, color, structureScore);
 
 	return {
 		asymmetry,
@@ -51,8 +55,8 @@ export async function computeABCDE(
 		color,
 		diameterMm,
 		evolution,
-		totalScore,
-		riskLevel: deriveRiskLevel(totalScore),
+		totalScore: Math.round(tds * 100) / 100,
+		riskLevel: tdsRiskLevel(tds),
 		colorsDetected,
 	};
 }
@@ -261,14 +265,16 @@ function scoreEvolution(current: SegmentationMask, previous: SegmentationMask): 
 }
 
 /**
- * Derive risk level from total ABCDE score.
+ * Derive risk level from total ABCDE score using clinically validated TDS cutoffs.
  *
- * @param totalScore - Combined ABCDE score
+ * TDS < 4.75: benign (low risk) - 90.3% of nevi fall here
+ * TDS 4.75-5.45: suspicious (moderate risk) - close monitoring or biopsy
+ * TDS 5.45-7.0: probable malignant (high risk) - biopsy recommended
+ * TDS > 7.0: critical - urgent referral
+ *
+ * @param totalScore - Total Dermoscopy Score (TDS)
  * @returns Risk level classification
  */
 function deriveRiskLevel(totalScore: number): RiskLevel {
-	if (totalScore <= 3) return "low";
-	if (totalScore <= 6) return "moderate";
-	if (totalScore <= 9) return "high";
-	return "critical";
+	return tdsRiskLevel(totalScore);
 }

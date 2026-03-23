@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="900" height="320">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+    <filter id="glow2">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="900" height="320" fill="url(#bg2)" rx="12"/>
+
+  <text x="450" y="32" text-anchor="middle" fill="#e2e8f0" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="700">4-Layer Classification Ensemble</text>
+  <text x="450" y="50" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="10">Each layer catches different failure modes — defense in depth</text>
+
+  <!-- Input -->
+  <rect x="20" y="120" width="100" height="80" rx="8" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+  <text x="70" y="155" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="10">Skin Lesion</text>
+  <text x="70" y="170" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="9">Image</text>
+
+  <!-- Arrow -->
+  <path d="M120 160 L150 160" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker></defs>
+
+  <!-- Layer 1: Neural Network -->
+  <rect x="155" y="70" width="160" height="180" rx="10" fill="#042f2e" stroke="#14b8a6" stroke-width="1.5" opacity="0.9"/>
+  <text x="235" y="92" text-anchor="middle" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="700">L1: Neural Network</text>
+  <text x="235" y="108" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="800">70%</text>
+  <line x1="175" y1="118" x2="295" y2="118" stroke="#14b8a6" stroke-width="0.5" opacity="0.3"/>
+  <text x="235" y="135" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="9">Custom ViT-base</text>
+  <text x="235" y="148" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="9">85.8M params</text>
+  <text x="235" y="165" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="8">Trained on 29.5K images</text>
+  <text x="235" y="180" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="8">Focal loss (mel=6x)</text>
+  <rect x="175" y="195" width="120" height="22" rx="4" fill="#14b8a6" opacity="0.15"/>
+  <text x="235" y="210" text-anchor="middle" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600">91.3% mel sens</text>
+  <text x="235" y="240" text-anchor="middle" fill="#475569" font-family="Inter, system-ui, sans-serif" font-size="8">Pixel patterns</text>
+
+  <!-- Arrow -->
+  <path d="M315 160 L340 160" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2: Literature -->
+  <rect x="345" y="90" width="140" height="140" rx="10" fill="#1c1917" stroke="#f59e0b" stroke-width="1.5" opacity="0.9"/>
+  <text x="415" y="112" text-anchor="middle" fill="#f59e0b" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="700">L2: Literature</text>
+  <text x="415" y="128" text-anchor="middle" fill="#fbbf24" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="800">15%</text>
+  <line x1="365" y1="138" x2="465" y2="138" stroke="#f59e0b" stroke-width="0.5" opacity="0.3"/>
+  <text x="415" y="155" text-anchor="middle" fill="#fde68a" font-family="Inter, system-ui, sans-serif" font-size="8">20 features x 7 classes</text>
+  <text x="415" y="168" text-anchor="middle" fill="#fde68a" font-family="Inter, system-ui, sans-serif" font-size="8">Stolz 1994, Argenziano 1998</text>
+  <text x="415" y="181" text-anchor="middle" fill="#fde68a" font-family="Inter, system-ui, sans-serif" font-size="8">DermNet NZ criteria</text>
+  <text x="415" y="218" text-anchor="middle" fill="#475569" font-family="Inter, system-ui, sans-serif" font-size="8">Clinical knowledge</text>
+
+  <!-- Arrow -->
+  <path d="M485 160 L510 160" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Layer 3: Rules -->
+  <rect x="515" y="90" width="140" height="140" rx="10" fill="#1a0a0a" stroke="#f97316" stroke-width="1.5" opacity="0.9"/>
+  <text x="585" y="112" text-anchor="middle" fill="#f97316" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="700">L3: Safety Rules</text>
+  <text x="585" y="128" text-anchor="middle" fill="#fb923c" font-family="Inter, system-ui, sans-serif" font-size="20" font-weight="800">15%</text>
+  <line x1="535" y1="138" x2="635" y2="138" stroke="#f97316" stroke-width="0.5" opacity="0.3"/>
+  <text x="585" y="155" text-anchor="middle" fill="#fdba74" font-family="Inter, system-ui, sans-serif" font-size="8">TDS formula</text>
+  <text x="585" y="168" text-anchor="middle" fill="#fdba74" font-family="Inter, system-ui, sans-serif" font-size="8">7-point checklist</text>
+  <text x="585" y="181" text-anchor="middle" fill="#fdba74" font-family="Inter, system-ui, sans-serif" font-size="8">Melanoma safety gate</text>
+  <text x="585" y="218" text-anchor="middle" fill="#475569" font-family="Inter, system-ui, sans-serif" font-size="8">Hard safety limits</text>
+
+  <!-- Arrow -->
+  <path d="M655 160 L680 160" stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Output -->
+  <rect x="685" y="95" width="195" height="130" rx="10" fill="#1e293b" stroke="#e2e8f0" stroke-width="1"/>
+  <text x="782" y="118" text-anchor="middle" fill="#e2e8f0" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="700">Classification</text>
+  <text x="782" y="140" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="9">Melanoma? Biopsy?</text>
+  <text x="782" y="156" text-anchor="middle" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="9">ABCDE Scores</text>
+  <text x="782" y="172" text-anchor="middle" fill="#f59e0b" font-family="Inter, system-ui, sans-serif" font-size="9">Clinical Recommendation</text>
+  <text x="782" y="188" text-anchor="middle" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="9">ICD-10 Code</text>
+  <text x="782" y="204" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="9">Explainability Report</text>
+
+  <!-- Bottom: Demographics -->
+  <rect x="155" y="270" width="530" height="35" rx="6" fill="#1e1b4b" stroke="#818cf8" stroke-width="1" opacity="0.7"/>
+  <text x="420" y="292" text-anchor="middle" fill="#a5b4fc" font-family="Inter, system-ui, sans-serif" font-size="10">L4: Bayesian Demographic Adjustment (age + sex + body location from HAM10000)</text>
+  <path d="M420 265 L420 270" stroke="#818cf8" stroke-width="1" opacity="0.5"/>
+</svg>

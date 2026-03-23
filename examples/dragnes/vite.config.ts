@@ -9,11 +9,11 @@ export default defineConfig({
 	],
 	build: {
 		rollupOptions: {
-			external: ['@ruvector/cnn']
+			external: ['@ruvector/cnn', 'onnxruntime-node', 'sharp']
 		}
 	},
 	ssr: {
-		external: ['@ruvector/cnn']
+		external: ['@ruvector/cnn', 'onnxruntime-node', 'sharp']
 	},
 	test: {
 		include: ['tests/**/*.test.ts', 'src/**/*.test.ts']

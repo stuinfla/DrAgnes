@@ -73,6 +73,16 @@ export interface ClassificationResult {
 	inferenceTimeMs: number;
 	/** Whether the WASM model was used (vs demo fallback) */
 	usedWasm: boolean;
+	/** Whether the HuggingFace ViT model was used in classification */
+	usedHF?: boolean;
+	/** Whether the dual-model ensemble (Anwarkh1 + actavkid) was used */
+	usedDualModel?: boolean;
+	/** Whether the custom-trained local ViT model (98.2% mel sens) was used */
+	usedCustomModel?: boolean;
+	/** Whether the two HF models disagreed on the top class */
+	modelsDisagree?: boolean;
+	/** Cosine similarity between the two model output distributions (0-1) */
+	modelAgreement?: number;
 }
 
 /** Grad-CAM attention heatmap result */

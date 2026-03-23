@@ -1,39 +1,53 @@
 # DrAgnes System Architecture
 
-**Status**: Research & Planning
-**Date**: 2026-03-21
+Updated: 2026-03-22 18:30:00 EST | Version 1.1.0
+Created: 2026-03-21
+
+**Status**: Research Prototype (v0.2.0)
 
 ## Overview
 
-DrAgnes is a layered architecture that connects dermoscopic imaging hardware through a mobile-first web application to a CNN classification engine and collective intelligence brain. The design prioritizes offline capability, privacy preservation, and continuous learning.
+DrAgnes is a layered architecture that connects dermoscopic imaging hardware through a mobile-first web application to a 4-layer classification ensemble and collective intelligence brain. The design prioritizes offline capability, privacy preservation, clinical safety, and honest accuracy reporting.
 
 ## High-Level Architecture
 
 ```
-                    ┌─────────────────────────────────────────────────────────┐
-                    │                    DrAgnes Platform                     │
-                    │                                                         │
-  ┌──────────┐     │  ┌──────────────┐    ┌──────────────┐    ┌───────────┐ │
-  │ DermLite │────▶│  │   RuVocal    │───▶│  CNN Engine   │───▶│  Brain    │ │
-  │ HUD/DL5  │     │  │   PWA UI     │    │  (WASM)       │    │ pi.ruv.io │ │
-  └──────────┘     │  └──────────────┘    └──────────────┘    └───────────┘ │
-                    │        │                    │                   │       │
-  ┌──────────┐     │        ▼                    ▼                   ▼       │
-  │ Phone    │────▶│  ┌──────────────┐    ┌──────────────┐    ┌───────────┐ │
-  │ Camera   │     │  │ Image Capture│    │  HNSW Search  │    │ PubMed    │ │
-  └──────────┘     │  │ & Preprocess │    │  + GNN Topo   │    │ Enrichment│ │
-                    │  └──────────────┘    └──────────────┘    └───────────┘ │
-                    │                                                         │
-                    │  ┌──────────────────────────────────────────────────┐   │
-                    │  │              Privacy & Compliance Layer           │   │
-                    │  │  PII Strip │ Diff. Privacy │ Witness Chain │ BAA  │   │
-                    │  └──────────────────────────────────────────────────┘   │
-                    │                                                         │
-                    │  ┌──────────────────────────────────────────────────┐   │
-                    │  │              Google Cloud Infrastructure          │   │
-                    │  │  Cloud Run │ Firestore │ GCS │ Pub/Sub │ CDN    │   │
-                    │  └──────────────────────────────────────────────────┘   │
-                    └─────────────────────────────────────────────────────────┘
+                    ┌──────────────────────────────────────────────────────────────┐
+                    │                      DrAgnes Platform (v0.2.0)               │
+                    │                                                              │
+  ┌──────────┐     │  ┌──────────────┐    ┌─────────────────────────────────────┐ │
+  │ DermLite │────>│  │  SvelteKit   │───>│  4-Layer Classification Ensemble    │ │
+  │ HUD/DL5  │     │  │  PWA UI      │    │                                     │ │
+  └──────────┘     │  │  (5 tabs)    │    │  L1: Dual ViT (Anwarkh1 + SigLIP)  │ │
+                    │  │              │    │  L2: Literature Logistic Regression  │ │
+  ┌──────────┐     │  │  Capture     │    │  L3: Rule-Based (TDS, 7pt, gates)   │ │
+  │ Phone    │────>│  │  Results     │    │  L4: Bayesian Demographics           │ │
+  │ Camera   │     │  │  History     │    └─────────────────────────────────────┘ │
+  └──────────┘     │  │  Analytics   │                    │                       │
+                    │  │  Settings    │                    ▼                       │
+  ┌──────────┐     │  └──────────────┘    ┌─────────────────────────────────────┐ │
+  │ Image    │────>│         │            │  Image Analysis Engine (1,890 LOC)   │ │
+  │ Upload   │     │         │            │  Otsu seg | ABCDE | GLCM | LBP     │ │
+  └──────────┘     │         │            │  k-means color | attention maps      │ │
+                    │         │            └─────────────────────────────────────┘ │
+                    │         │                                                    │
+                    │         ▼                                                    │
+                    │  ┌──────────────────────────────────────────────────────┐    │
+                    │  │  Clinical Tools                                      │    │
+                    │  │  ICD-10 | Referral Letters | Explainability          │    │
+                    │  │  Analytics Dashboard | Outcome Feedback              │    │
+                    │  └──────────────────────────────────────────────────────┘    │
+                    │                                                              │
+                    │  ┌──────────────────────────────────────────────────────┐    │
+                    │  │  Privacy & Compliance Layer                          │    │
+                    │  │  EXIF Strip | Diff. Privacy (e=1.0) | Witness Chain  │    │
+                    │  └──────────────────────────────────────────────────────┘    │
+                    │                                                              │
+                    │  ┌──────────────────────────────────────────────────────┐    │
+                    │  │  External Services (server-side only)                │    │
+                    │  │  HuggingFace Inference API | pi.ruv.io Brain         │    │
+                    │  └──────────────────────────────────────────────────────┘    │
+                    └──────────────────────────────────────────────────────────────┘
 ```
 
 ## Component Architecture
@@ -80,46 +94,58 @@ Preprocessed Tensor [1, 3, 224, 224] float32
 - Extract measurement scale from DermLite's ruler overlay
 - Compensate for contact plate reflection artifacts in contact dermoscopy mode
 
-### 2. CNN Classification Engine
+### 2. 4-Layer Classification Ensemble
 
-Built on `ruvector-cnn` with MobileNetV3 Small backbone, compiled to WASM for browser execution.
+The classification engine uses a 4-layer ensemble that degrades gracefully when offline.
 
 **Architecture**:
 ```
-Input [1, 3, 224, 224]
+Input Image (dermoscopy or clinical photo)
     │
     ▼
-MobileNetV3 Small Backbone
-    │   ├── Conv2D layers with SE (Squeeze-Excite) blocks
-    │   ├── Inverted residuals with h-swish activation
-    │   └── SIMD128 accelerated (AVX2 on server, WASM SIMD in browser)
+Preprocessing Pipeline
+    │   ├── Shades-of-Gray color normalization (Minkowski p=6)
+    │   ├── DullRazor hair removal
+    │   ├── Bilinear resize to 224x224
+    │   └── NCHW tensor + ImageNet normalization
     │
-    ▼
-Feature Vector [576-dim] (fp32 or INT8 quantized)
-    │
-    ├──▶ HNSW Search (k=5 nearest neighbors in brain)
-    │       │
-    │       ▼
-    │     Reference cases with known diagnoses
-    │
-    ├──▶ SONA MicroLoRA Classifier (rank-2)
-    │       │
-    │       ├── Online adaptation per practice
-    │       ├── EWC++ (lambda=2000) catastrophic forgetting prevention
-    │       └── 7-class output probabilities
-    │
-    ├──▶ Grad-CAM Heatmap Generation
-    │       │
-    │       └── Spatial attention overlay on original image
-    │
-    └──▶ ABCDE Risk Scoring Module
-            │
-            ├── Asymmetry score (contour analysis)
-            ├── Border irregularity (fractal dimension)
-            ├── Color variance (histogram analysis across 6 color channels)
-            ├── Diameter estimation (calibrated from DermLite scale)
-            └── Evolution tracking (temporal comparison with prior images)
+    ├──────────────────────────────────────────────────────┐
+    │                                                      │
+    ▼                                                      ▼
+Image Analysis Engine (1,890 LOC)                   HuggingFace Inference API
+    │                                                      │
+    ├── Segmentation (Otsu in LAB + morphological)        ├── /api/classify
+    ├── Asymmetry (principal-axis inertia)                 │     Anwarkh1 ViT-Base (85.8M)
+    ├── Border (8-octant CV + color gradient)              │
+    ├── Color (k-means++ in LAB, 6 reference colors)      ├── /api/classify-v2
+    ├── Texture (GLCM: contrast, homogeneity, entropy)    │     skintaglabs SigLIP (400M)
+    ├── Structures (LBP, globules, streaks, BWV, reg)     │
+    └── Attention map generation                           └── Promise.allSettled (parallel)
+    │                                                      │
+    ▼                                                      ▼
+Layer 2: Literature LR    Layer 3: Rules          Layer 1: Dual ViT Ensemble
+(20x7 weight matrix)      (TDS, 7pt, gates)       (50/50 equal weighting)
+    │  30% weight              │  20% weight            │  50% weight
+    │                          │                        │
+    └──────────────────────────┴────────────────────────┘
+                               │
+                               ▼
+                    Layer 4: Bayesian Demographic Adjustment
+                    (age/sex/location multipliers from HAM10000)
+                               │
+                               ▼
+                    Final 7-class probability distribution
+                               │
+                               ▼
+                    Clinical recommendation thresholds
+                    (reassurance / monitor / biopsy / urgent referral)
 ```
+
+**Fallback chain**:
+- Both HF models available: 50% dual-HF + 30% literature + 20% rules
+- One HF model available: 60% single-HF + 25% literature + 15% rules
+- Offline: 60% literature + 40% rules
+- Always applied: demographic adjustment, melanoma safety gate, TDS override
 
 **Classification Taxonomy** (7 classes, aligned with HAM10000):
 | Class | Label | Risk Level |
@@ -132,15 +158,22 @@ Feature Vector [576-dim] (fp32 or INT8 quantized)
 | nv | Melanocytic nevus (mole) | Low |
 | vasc | Vascular lesion (angioma, angiokeratoma, pyogenic granuloma) | Low |
 
-**Performance Targets**:
-| Metric | Target | Notes |
-|--------|--------|-------|
-| Inference latency (WASM) | <200ms | On mid-range phone (Snapdragon 778G) |
-| Inference latency (server) | <50ms | Cloud Run with AVX2 |
-| Melanoma sensitivity | >95% | Critical -- minimize false negatives |
-| Melanoma specificity | >85% | Balance against unnecessary biopsies |
-| Model size (INT8) | <5MB | For offline PWA cache |
-| Embedding dimension | 576 | MobileNetV3 Small penultimate layer |
+**Measured Performance** (March 22, 2026):
+| Metric | Measured | Target | Notes |
+|--------|----------|--------|-------|
+| Anwarkh1 melanoma sensitivity | 73.3% | >95% | Tested on 210 HAM10000 images |
+| Anwarkh1 overall accuracy | 55.7% | >85% | Below published ViT benchmarks |
+| Hand-crafted features alone | 0% mel sens | -- | Proven insufficient |
+| Full ensemble | Not measured | >95% mel sens | Validation needed |
+| Fitzpatrick V-VI performance | Not measured | <5% disparity | HAM10000 is ~95% FST I-III |
+
+**Safety Mechanisms**:
+| Mechanism | Trigger | Effect |
+|-----------|---------|--------|
+| Melanoma safety gate | 2+ concurrent suspicious features | P(mel) >= 15% floor |
+| TDS override | TDS > 5.45 (malignant range) | P(malignant) >= 30% |
+| Model disagreement alert | ViT models disagree on top-1 | Clinical review warning |
+| Probability floor | 3+ suspicious features | 15% melanoma minimum |
 
 ### 3. Brain Integration Layer
 
@@ -204,46 +237,60 @@ Cross-Practice Learning
 | `brain_partition` | Cluster lesion subtypes via MinCut partitioning |
 | `brain_sync` | Sync local model updates with collective |
 
-### 4. RuVocal Chat Interface
+### 4. SvelteKit UI (5-Tab Interface)
 
-The existing RuVocal SvelteKit application serves as the user interface, extended with dermatology-specific components.
+DrAgnes is a standalone SvelteKit application with 5 tabs. The main panel is `DrAgnesPanel.svelte`.
 
 **UI Components**:
 ```
-RuVocal DrAgnes Mode
+DrAgnes Panel (DrAgnesPanel.svelte)
     │
-    ├── Camera Capture Panel
-    │       ├── Live viewfinder with DermLite overlay
+    ├── Tab 1: Capture (DermCapture.svelte)
+    │       ├── Camera viewfinder with DermLite device selection
+    │       ├── Interactive clickable body map SVG (replaces dropdown)
+    │       ├── Image upload fallback
+    │       ├── Dermoscopy / clinical photo auto-detection
     │       ├── Capture button (high-res still)
-    │       ├── Image quality indicator
-    │       └── Body location selector (anatomical diagram)
+    │       └── Medical disclaimer
     │
-    ├── Analysis Dashboard
-    │       ├── Classification probabilities (bar chart)
-    │       ├── Grad-CAM heatmap overlay (toggle)
-    │       ├── ABCDE score breakdown (radar chart)
-    │       ├── Similar cases panel (from brain search)
-    │       └── Risk assessment summary (traffic light)
+    ├── Tab 2: Results (ClassificationResult.svelte)
+    │       ├── Classification probabilities (7-class bar chart)
+    │       ├── Risk level with color-coded icons
+    │       ├── ABCDE score breakdown (real image-derived values)
+    │       ├── TDS score with interpretation
+    │       ├── 7-point checklist evaluation
+    │       ├── Attention heatmap overlay
+    │       ├── Clinical recommendation (reassurance / monitor / biopsy / urgent)
+    │       ├── ICD-10-CM code for predicted class
+    │       ├── Model agreement/disagreement indicator
+    │       ├── Referral letter generator (ReferralLetter.svelte)
+    │       ├── "Why this classification?" panel (ExplainPanel.svelte)
+    │       ├── Outcome feedback buttons (Agreed / Overcalled / Missed / Pathology)
+    │       └── Sticky action buttons on mobile
     │
-    ├── Clinical Decision Support
-    │       ├── Recommended action (monitor / biopsy / refer)
-    │       ├── 7-point checklist auto-scoring
-    │       ├── Menzies method evaluation
-    │       ├── PubMed literature links
-    │       └── Clinical guidelines citations (AAD, BAD)
+    ├── Tab 3: History
+    │       ├── Prior classifications with timestamps
+    │       ├── Outcome feedback status
+    │       └── Re-review capability
     │
-    ├── Patient Timeline
-    │       ├── Lesion evolution tracking
-    │       ├── Side-by-side comparison (temporal)
-    │       ├── ABCDE score trend graphs
-    │       └── Dermoscopic feature change detection
+    ├── Tab 4: Analytics
+    │       ├── Practice concordance rate (AI vs. clinician)
+    │       ├── 30-day rolling concordance trend
+    │       ├── Number Needed to Biopsy (NNB) tracking
+    │       ├── Per-class sensitivity / specificity / PPV / NPV
+    │       ├── Wilson 95% confidence intervals
+    │       ├── Calibration curves (ECE + Hosmer-Lemeshow p-value)
+    │       ├── Fitzpatrick equity monitoring with disparity alerts
+    │       └── Discordance analysis
     │
-    └── Chat Interface
-            ├── Natural language queries about lesion
-            ├── Differential diagnosis discussion
-            ├── Literature search via brain
-            └── Clinical note generation
+    └── Tab 5: Settings
+            ├── Model configuration (HF_MODEL_1, HF_MODEL_2)
+            ├── Privacy preferences
+            ├── Practice profile
+            └── Brain sync settings
 ```
+
+**Branding**: DA logo with "RESEARCH ONLY" badge, v0.2.0 version display, medical disclaimers on every screen.
 
 ### 5. Offline Architecture
 
@@ -275,7 +322,39 @@ Service Worker (Workbox)
 - HNSW search against cached reference embeddings
 - Queue-and-sync for brain submissions
 
-### 6. Multi-Practice Knowledge Sharing
+### 6. Training Pipeline
+
+**Custom ViT Training** (`scripts/train-proper.py`):
+
+```
+HAM10000 Dataset (HuggingFace datasets library)
+    │
+    ▼
+3-Layer Class Balancing
+    ├── Layer 1: Focal loss alpha weights (melanoma alpha=8.0)
+    ├── Layer 2: Oversampling of minority classes
+    └── Layer 3: Gamma downweighting of easy examples (gamma=2.0)
+    │
+    ▼
+ViT-Base Fine-Tuning
+    ├── Pre-trained on ImageNet-21k
+    ├── Fine-tuned on HAM10000 (7 classes)
+    ├── Loss: Focal loss (gamma=2.0)
+    ├── Hardware: M3 Max with MPS backend
+    └── Model selection: by melanoma sensitivity (not overall accuracy)
+    │
+    ▼
+stuinfla/dragnes-classifier (HuggingFace Hub)
+```
+
+**Validation Harness** (`scripts/validate-models.mjs`):
+
+- Loads HAM10000 test split via HuggingFace datasets
+- Runs each model on the test set via HuggingFace Inference API
+- Reports per-class sensitivity, specificity, confusion matrix
+- Used to validate Anwarkh1 (73.3% mel sens, 55.7% overall)
+
+### 7. Multi-Practice Knowledge Sharing
 
 **Privacy-Preserving Federation**:
 ```
@@ -307,7 +386,7 @@ Practice A                    pi.ruv.io Brain                  Practice B
 4. Practice identifiers are stripped before brain ingestion
 5. k-anonymity (k>=5) enforced on metadata attributes
 
-### 7. Data Model
+### 8. Data Model
 
 **Core Entities**:
 
@@ -372,9 +451,20 @@ interface ABCDEScores {
 }
 ```
 
-### 8. API Design
+### 9. API Design
 
-**RESTful + WebSocket Endpoints**:
+**Implemented SvelteKit API Routes** (server-side, HF_TOKEN never exposed to browser):
+
+```
+POST   /api/classify              Proxy to HuggingFace Model A (Anwarkh1 ViT-Base)
+POST   /api/classify-v2           Proxy to HuggingFace Model B (skintaglabs SigLIP)
+GET    /api/health                Health check with model info
+POST   /api/analyze               Classify an image embedding (legacy)
+POST   /api/feedback              Submit clinician feedback
+GET    /api/similar/[id]          Find similar cases
+```
+
+**Planned RESTful + WebSocket Endpoints** (not yet implemented):
 
 ```
 POST   /api/v1/analyze              Analyze a dermoscopic image (returns classification)
@@ -397,7 +487,7 @@ GET    /api/v1/audit/trail/:id      Witness chain verification for a classificat
 GET    /api/v1/audit/provenance     Full provenance graph for a diagnosis
 ```
 
-### 9. Security Architecture
+### 10. Security Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -444,7 +534,7 @@ GET    /api/v1/audit/provenance     Full provenance graph for a diagnosis
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 10. 25-Year Architecture Evolution
+### 11. 25-Year Architecture Evolution
 
 **Phase 1 (2026-2028): Foundation**
 - Mobile-first PWA with DermLite integration

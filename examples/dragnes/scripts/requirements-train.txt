@@ -1,0 +1,8 @@
+torch>=2.0
+torchvision>=0.15
+transformers>=4.35
+datasets>=2.15
+scikit-learn>=1.3
+Pillow>=10.0
+accelerate>=0.25
+numpy>=1.24
