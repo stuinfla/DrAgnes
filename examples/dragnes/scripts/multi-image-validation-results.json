@@ -1,0 +1,158 @@
+{
+  "timestamp": "2026-03-23T19:12:26.678306",
+  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
+  "device": "mps",
+  "dataset": "kuchikihater/HAM10000",
+  "test_set_size": 1499,
+  "holdout_fraction": 0.15,
+  "n_views": 3,
+  "augmentations": "crop_pm5pct, rotation_pm10deg, brightness_pm10pct",
+  "inference_seconds": 151.6,
+  "single_image": {
+    "accuracy": 0.6578,
+    "melanoma_sensitivity": 0.994,
+    "melanoma_specificity": 0.6707,
+    "per_class_f1": {
+      "akiec": {
+        "precision": 0.8095,
+        "recall": 0.6939,
+        "f1": 0.7473,
+        "support": 49
+      },
+      "bcc": {
+        "precision": 0.6522,
+        "recall": 0.974,
+        "f1": 0.7812,
+        "support": 77
+      },
+      "bkl": {
+        "precision": 0.8222,
+        "recall": 0.4512,
+        "f1": 0.5827,
+        "support": 164
+      },
+      "df": {
+        "precision": 0.8421,
+        "recall": 0.9412,
+        "f1": 0.8889,
+        "support": 17
+      },
+      "mel": {
+        "precision": 0.2732,
+        "recall": 0.994,
+        "f1": 0.4286,
+        "support": 166
+      },
+      "nv": {
+        "precision": 0.9918,
+        "recall": 0.6,
+        "f1": 0.7477,
+        "support": 1005
+      },
+      "vasc": {
+        "precision": 0.9048,
+        "recall": 0.9048,
+        "f1": 0.9048,
+        "support": 21
+      }
+    }
+  },
+  "majority_vote_3img": {
+    "accuracy": 0.6264,
+    "melanoma_sensitivity": 0.994,
+    "melanoma_specificity": 0.6302,
+    "per_class_f1": {
+      "akiec": {
+        "precision": 0.9524,
+        "recall": 0.4082,
+        "f1": 0.5714,
+        "support": 49
+      },
+      "bcc": {
+        "precision": 0.6579,
+        "recall": 0.974,
+        "f1": 0.7853,
+        "support": 77
+      },
+      "bkl": {
+        "precision": 0.7838,
+        "recall": 0.3537,
+        "f1": 0.4874,
+        "support": 164
+      },
+      "df": {
+        "precision": 0.7895,
+        "recall": 0.8824,
+        "f1": 0.8333,
+        "support": 17
+      },
+      "mel": {
+        "precision": 0.2508,
+        "recall": 0.994,
+        "f1": 0.4005,
+        "support": 166
+      },
+      "nv": {
+        "precision": 0.9916,
+        "recall": 0.5841,
+        "f1": 0.7351,
+        "support": 1005
+      },
+      "vasc": {
+        "precision": 0.9048,
+        "recall": 0.9048,
+        "f1": 0.9048,
+        "support": 21
+      }
+    }
+  },
+  "quality_weighted_3img": {
+    "accuracy": 0.6144,
+    "melanoma_sensitivity": 0.994,
+    "melanoma_specificity": 0.6144,
+    "per_class_f1": {
+      "akiec": {
+        "precision": 0.9474,
+        "recall": 0.3673,
+        "f1": 0.5294,
+        "support": 49
+      },
+      "bcc": {
+        "precision": 0.6759,
+        "recall": 0.9481,
+        "f1": 0.7892,
+        "support": 77
+      },
+      "bkl": {
+        "precision": 0.7761,
+        "recall": 0.3171,
+        "f1": 0.4502,
+        "support": 164
+      },
+      "df": {
+        "precision": 0.75,
+        "recall": 0.8824,
+        "f1": 0.8108,
+        "support": 17
+      },
+      "mel": {
+        "precision": 0.243,
+        "recall": 0.994,
+        "f1": 0.3905,
+        "support": 166
+      },
+      "nv": {
+        "precision": 0.9897,
+        "recall": 0.5761,
+        "f1": 0.7283,
+        "support": 1005
+      },
+      "vasc": {
+        "precision": 0.9048,
+        "recall": 0.9048,
+        "f1": 0.9048,
+        "support": 21
+      }
+    }
+  }
+}
