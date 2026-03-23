@@ -3,7 +3,34 @@ module.exports = {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	darkMode: 'class',
 	theme: {
-		extend: {}
+		extend: {
+			colors: {
+				medical: {
+					safe: '#10b981',
+					caution: '#f59e0b',
+					warning: '#f97316',
+					urgent: '#ef4444',
+					critical: '#dc2626',
+				},
+				derm: {
+					50: '#f0fdfa',
+					100: '#ccfbf1',
+					200: '#99f6e4',
+					300: '#5eead4',
+					400: '#2dd4bf',
+					500: '#14b8a6',
+					600: '#0d9488',
+					700: '#0f766e',
+					800: '#115e59',
+					900: '#134e4a',
+					950: '#042f2e',
+				},
+			},
+			fontFamily: {
+				sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+				mono: ['JetBrains Mono', 'Menlo', 'monospace'],
+			},
+		},
 	},
-	plugins: []
+	plugins: [],
 };

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" width="900" height="280">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0a0f"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </linearGradient>
+  </defs>
+  <rect width="900" height="280" fill="url(#bg4)" rx="12"/>
+
+  <text x="450" y="32" text-anchor="middle" fill="#e2e8f0" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="700">The Key Innovation: Focal Loss with Melanoma Weighting</text>
+  <text x="450" y="50" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="10">Why standard training fails on skin cancer — and how we fixed it</text>
+
+  <!-- Left: The Problem -->
+  <rect x="30" y="70" width="260" height="190" rx="10" fill="#1a0a0a" stroke="#ef4444" stroke-width="1" opacity="0.8"/>
+  <text x="160" y="92" text-anchor="middle" fill="#ef4444" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700">The Problem</text>
+  <text x="160" y="112" text-anchor="middle" fill="#fca5a5" font-family="Inter, system-ui, sans-serif" font-size="9">HAM10000 class distribution:</text>
+
+  <!-- Class bars (problem side) -->
+  <rect x="50" y="125" width="180" height="12" rx="2" fill="#475569" opacity="0.5"/>
+  <text x="240" y="135" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="8">Nevi: 67%</text>
+  <rect x="50" y="142" width="30" height="12" rx="2" fill="#ef4444" opacity="0.8"/>
+  <text x="90" y="152" fill="#ef4444" font-family="Inter, system-ui, sans-serif" font-size="8">Melanoma: 11%</text>
+  <rect x="50" y="159" width="28" height="12" rx="2" fill="#94a3b8" opacity="0.4"/>
+  <text x="88" y="169" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">BKL: 11%</text>
+  <rect x="50" y="176" width="14" height="12" rx="2" fill="#94a3b8" opacity="0.3"/>
+  <text x="74" y="186" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="8">BCC: 5%</text>
+
+  <text x="160" y="215" text-anchor="middle" fill="#fca5a5" font-family="Inter, system-ui, sans-serif" font-size="9">Standard training learns:</text>
+  <text x="160" y="230" text-anchor="middle" fill="#ef4444" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="700">"Predict nevi for everything"</text>
+  <text x="160" y="248" text-anchor="middle" fill="#fca5a5" font-family="Inter, system-ui, sans-serif" font-size="9">67% accuracy, 0% melanoma detection</text>
+
+  <!-- Arrow -->
+  <path d="M300 165 L330 165" stroke="#475569" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Middle: The Innovation -->
+  <rect x="335" y="70" width="230" height="190" rx="10" fill="#042f2e" stroke="#14b8a6" stroke-width="2" opacity="0.9"/>
+  <text x="450" y="92" text-anchor="middle" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700">Focal Loss Solution</text>
+
+  <text x="450" y="115" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="10">Class weights (alpha):</text>
+
+  <!-- Weight bars -->
+  <rect x="360" y="125" width="160" height="14" rx="2" fill="#ef4444" opacity="0.8"/>
+  <text x="530" y="137" fill="#ef4444" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="700">mel: 6.0x</text>
+  <rect x="360" y="143" width="107" height="14" rx="2" fill="#f97316" opacity="0.7"/>
+  <text x="477" y="155" fill="#f97316" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="700">bcc: 5.0x</text>
+  <rect x="360" y="161" width="107" height="14" rx="2" fill="#f59e0b" opacity="0.6"/>
+  <text x="477" y="173" fill="#f59e0b" font-family="Inter, system-ui, sans-serif" font-size="9">akiec: 4.0x</text>
+  <rect x="360" y="179" width="11" height="14" rx="2" fill="#64748b" opacity="0.4"/>
+  <text x="381" y="191" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="9">nevi: 0.4x</text>
+
+  <text x="450" y="218" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="9">+ gamma=2.0 (focus on hard cases)</text>
+  <text x="450" y="235" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600">"Missing melanoma costs 6x more"</text>
+
+  <!-- Arrow -->
+  <path d="M575 165 L605 165" stroke="#475569" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- Right: The Result -->
+  <rect x="610" y="70" width="270" height="190" rx="10" fill="#052e16" stroke="#10b981" stroke-width="1" opacity="0.8"/>
+  <text x="745" y="92" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700">The Result</text>
+
+  <text x="745" y="125" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="800">91.3%</text>
+  <text x="745" y="150" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="12">Melanoma Sensitivity</text>
+  <text x="745" y="170" text-anchor="middle" fill="#4ade80" font-family="Inter, system-ui, sans-serif" font-size="10">on 29,540 diverse images</text>
+
+  <line x1="640" y1="185" x2="850" y2="185" stroke="#10b981" stroke-width="0.5" opacity="0.3"/>
+
+  <text x="745" y="205" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">BCC: 93.5% | DF: 99.1%</text>
+  <text x="745" y="220" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">Vasc: 91.9% | Overall: 81.4%</text>
+  <text x="745" y="245" text-anchor="middle" fill="#4ade80" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600">Above DermaSensor (90.2%)</text>
+</svg>
