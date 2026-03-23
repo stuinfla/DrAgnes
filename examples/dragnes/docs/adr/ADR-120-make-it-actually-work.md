@@ -244,17 +244,30 @@ What To Do Next
 
 ---
 
-## Estimated Timeline
+## Implementation Status (Updated 2026-03-23)
 
-| Phase | Time | Blocker? |
-|-------|------|----------|
-| Phase 0: Verify what works | 30 min | Must do first |
-| Phase 1: Custom model on Vercel/Cloud Run | 2-3 hours | Yes — everything depends on this |
-| Phase 2: Consumer-friendly output | 1-2 hours | No |
-| Phase 3: Image quality gate | 1 hour | No |
-| Phase 4: End-to-end testing | 2 hours | Yes — proves it works |
-| Phase 5: Deploy and verify | 1 hour | Final step |
-| **Total** | **~8 hours** | |
+| Phase | Status | Notes |
+|-------|--------|-------|
+| Phase 0: Verify what works | **DONE** | cross-validation-results.json, isic2019-validation-results.json confirmed |
+| Phase 1: Custom model on Vercel | **PARTIAL** | ONNX FP32 (327MB) exceeds Vercel 250MB limit. INT8 (83MB) has ConvInteger compat issue. HuggingFace Inference API proxy works as fallback. Cloud Run deployment available via Dockerfile. |
+| Phase 2: Consumer-friendly output | **DONE** | consumer-translation.ts: 7 classes → plain English, 4 risk levels (green/yellow/orange/red), specific actions per risk |
+| Phase 3: Image quality gate | **DONE** | detectLesionPresence() checks area ratio, compactness, color contrast. Multi-image quality scoring (Laplacian sharpness, RMS contrast, segmentation quality) added in multi-image.ts |
+| Phase 4: End-to-end testing | **DONE** | Playwright E2E on desktop (1280x800) + mobile (390x844). Upload → multi-capture → consensus classification → consumer result → nav tabs all verified |
+| Phase 5: Deploy and verify | **PARTIAL** | Local dev works. Vercel deployment needs auth protection disabled (manual step). HuggingFace API backend works end-to-end. |
+
+### What Was Added Beyond Original ADR Scope
+
+- **Multi-image consensus classification** (v0.5.0): Quality-weighted probability averaging across 2-3 photos with melanoma safety gate. Validation running.
+- **Multi-capture UI**: Thumbnail strip, counter badge, "Done — Analyze All" button, instruction text
+- **Settings toggle**: Multi-photo mode on/off in Settings tab
+- **Auto-analyze on capture**: No extra "Analyze Lesion" button tap needed
+
+### Remaining Blockers
+
+1. **ONNX INT8 browser inference**: Needs onnxruntime >= 1.17 for ConvInteger op. Current onnxruntime-web doesn't support it.
+2. **Vercel auth**: Team protection must be disabled manually in Vercel dashboard.
+3. **Fitzpatrick17k**: Not yet integrated for skin tone equity validation.
+4. **Multi-image measured proof**: Validation script running — results pending.
 
 ## Author
 Stuart Kerr + Claude Flow

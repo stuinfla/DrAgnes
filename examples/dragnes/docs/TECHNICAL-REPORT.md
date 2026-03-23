@@ -1,4 +1,4 @@
-Updated: 2026-03-22 22:00:00 EST | Version 1.2.0
+Updated: 2026-03-23 19:30:00 EST | Version 1.3.0
 Created: 2026-03-22
 
 # DrAgnes AI Dermatoscopy Screening Platform -- Technical Report
@@ -21,9 +21,10 @@ Created: 2026-03-22
    - 2.8 [Bayesian Demographic Adjustment](#28-bayesian-demographic-adjustment)
 3. [What We Tried and What Failed](#3-what-we-tried-and-what-failed)
 4. [Calibration Against FDA-Cleared Devices](#4-calibration-against-fda-cleared-devices)
-5. [Strategy for Increasing Efficacy](#5-strategy-for-increasing-efficacy)
-6. [Known Limitations (Complete List)](#6-known-limitations-complete-list)
-7. [References](#7-references)
+5. [Multi-Image Consensus Classification](#5-multi-image-consensus-classification-v050)
+6. [Strategy for Further Increasing Efficacy](#6-strategy-for-further-increasing-efficacy)
+7. [Known Limitations (Complete List)](#7-known-limitations-complete-list)
+8. [References](#8-references)
 
 ---
 
@@ -716,7 +717,64 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 
 ---
 
-## 5. Strategy for Increasing Efficacy
+## 5. Multi-Image Consensus Classification (v0.5.0)
+
+Added 2026-03-23. This section documents the multi-image feature that allows
+users to capture 2-3 photos of the same lesion for higher classification
+confidence.
+
+### 5.1 Quality Scoring
+
+Each captured image is scored on three axes before classification:
+
+| Metric | Method | Range | Weight |
+|--------|--------|-------|--------|
+| Sharpness | Laplacian variance (3x3 kernel: [0,1,0/1,-4,1/0,1,0]), normalized to cap at variance 2000 | [0, 1] | 0.4 |
+| Contrast | RMS contrast of grayscale pixels, normalized to max 127.5 | [0, 1] | 0.3 |
+| Segmentation quality | Confidence from `detectLesionPresence()` — area ratio, compactness, color contrast checks | [0, 1] | 0.3 |
+
+Overall quality = 0.4 × sharpness + 0.3 × contrast + 0.3 × segmentation quality.
+
+### 5.2 Consensus Algorithm
+
+1. Each image is classified independently via `classifyWithDemographics()`
+2. Per-class probabilities are averaged, weighted by each image's overall quality score
+3. Probabilities are normalized to sum to 1
+4. **Melanoma safety gate**: If any single image yields mel probability > 60%, the consensus
+   result preserves that melanoma probability regardless of what other images say. The boost
+   is redistributed equally from the 6 non-melanoma classes, then re-normalized. This ensures
+   cancer sensitivity is never diluted by lower-quality images that happen to disagree.
+
+### 5.3 Agreement Score
+
+Inter-image agreement is computed as the average pairwise cosine similarity of the 7-class
+probability vectors across all image pairs. A score of 1.0 means all images produced identical
+probability distributions; lower scores indicate disagreement (which may suggest the images
+captured different features or had varying quality).
+
+### 5.4 Validation Status
+
+**Validation script running** (`scripts/validate-multi-image.py`). Uses test-time augmentation
+(random crop ±5%, rotation ±10°, brightness ±10%) to simulate multiple photos of the same
+lesion. Compares single-image vs 3-image majority vote vs 3-image quality-weighted vote.
+
+Results will be saved to `scripts/multi-image-validation-results.json` when complete.
+
+**Literature basis**: Multi-image voting in medical imaging typically improves classification
+by 3-8 percentage points (Esteva et al. 2017, Haenssle et al. 2018). Our implementation
+adds quality weighting, which should preferentially weight sharper, better-segmented images.
+
+### 5.5 Implementation Files
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/lib/dragnes/multi-image.ts` | 200 | Quality scoring, consensus algorithm, safety gate |
+| `src/lib/components/DermCapture.svelte` | ~510 | Multi-capture UI: thumbnail strip, counter, Done button |
+| `src/lib/components/DrAgnesPanel.svelte` | ~1350 | Multi-image handler, analysis steps, result badges |
+
+---
+
+## 6. Strategy for Further Increasing Efficacy
 
 ### Phase 1: Validate Current System (1-2 weeks)
 
@@ -761,7 +819,7 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 
 ---
 
-## 6. Known Limitations (Complete List)
+## 7. Known Limitations (Complete List)
 
 ### What we now know (validated March 22, 2026)
 
@@ -798,7 +856,7 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 
 ---
 
-## 7. References
+## 8. References
 
 1. **Stolz W, Riemann A, Cognetta AB, et al.** ABCD rule of dermatoscopy: a new practical method for early recognition of malignant melanoma. *European Journal of Dermatology*. 1994;4:521-527.
    - *Defines the ABCD scoring system (Asymmetry, Border, Color, Dermoscopic structures) and the TDS formula. Used as the basis for our feature extraction and TDS computation.*
