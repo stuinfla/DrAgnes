@@ -1,0 +1,84 @@
+{
+  "dataset": "ISIC Dermoscopy",
+  "description": "HAM10000 and/or ISIC 2019 Challenge dermoscopy images",
+  "timestamp": "2026-03-23T23:55:12.497448+00:00",
+  "accessible_datasets": [
+    {
+      "source": "huggingface:marmal88/skin_cancer",
+      "description": "HAM10000 (skin_cancer)",
+      "config": "default",
+      "total_images": 9577,
+      "has_image_data": true,
+      "metadata_columns": [
+        "age",
+        "dx",
+        "dx_type",
+        "image",
+        "image_id",
+        "lesion_id",
+        "localization",
+        "sex"
+      ],
+      "label_column": "dx",
+      "label_names": null,
+      "raw_class_distribution": {
+        "melanocytic_nevi": 6405,
+        "melanoma": 1076,
+        "benign_keratosis-like_lesions": 1048,
+        "basal_cell_carcinoma": 487,
+        "actinic_keratoses": 315,
+        "vascular_lesions": 136,
+        "dermatofibroma": 110
+      },
+      "dragnes_7class_distribution": {
+        "nv": 6405,
+        "mel": 1076,
+        "bkl": 1048,
+        "bcc": 487,
+        "akiec": 315,
+        "vasc": 136,
+        "df": 110
+      },
+      "unmapped_labels": {}
+    }
+  ],
+  "isic_archive_api": {
+    "accessible": true,
+    "total_archive_images": 549590
+  },
+  "class_mapping": {
+    "mel": "mel",
+    "melanoma": "mel",
+    "nv": "nv",
+    "nevus": "nv",
+    "melanocytic nevi": "nv",
+    "melanocytic_nevi": "nv",
+    "bcc": "bcc",
+    "basal cell carcinoma": "bcc",
+    "basal_cell_carcinoma": "bcc",
+    "akiec": "akiec",
+    "actinic keratosis": "akiec",
+    "actinic keratoses": "akiec",
+    "actinic_keratoses": "akiec",
+    "ak": "akiec",
+    "scc": "akiec",
+    "squamous cell carcinoma": "akiec",
+    "squamous_cell_carcinoma": "akiec",
+    "intraepithelial carcinoma": "akiec",
+    "bkl": "bkl",
+    "benign keratosis": "bkl",
+    "benign keratosis-like lesions": "bkl",
+    "benign_keratosis-like_lesions": "bkl",
+    "benign keratosis-like": "bkl",
+    "seborrheic keratosis": "bkl",
+    "solar lentigo": "bkl",
+    "lentigo": "bkl",
+    "df": "df",
+    "dermatofibroma": "df",
+    "vasc": "vasc",
+    "vascular": "vasc",
+    "vascular lesion": "vasc",
+    "vascular lesions": "vasc",
+    "vascular_lesions": "vasc"
+  }
+}

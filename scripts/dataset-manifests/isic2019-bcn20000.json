@@ -1,0 +1,65 @@
+{
+  "dataset": "BCN20000 / ISIC 2019",
+  "source": "huggingface:marmal88/skin_cancer",
+  "config": "default",
+  "timestamp": "2026-03-23T23:47:39.349912+00:00",
+  "total_images": 9577,
+  "has_image_data": true,
+  "metadata_columns": [
+    "age",
+    "dx",
+    "dx_type",
+    "image",
+    "image_id",
+    "lesion_id",
+    "localization",
+    "sex"
+  ],
+  "label_column": "dx",
+  "label_names": null,
+  "raw_class_distribution": {
+    "melanocytic_nevi": 6405,
+    "melanoma": 1076,
+    "benign_keratosis-like_lesions": 1048,
+    "basal_cell_carcinoma": 487,
+    "actinic_keratoses": 315,
+    "vascular_lesions": 136,
+    "dermatofibroma": 110
+  },
+  "dragnes_7class_distribution": {
+    "mel": 1076,
+    "df": 110
+  },
+  "unmapped_labels": {
+    "melanocytic_nevi": 6405,
+    "benign_keratosis-like_lesions": 1048,
+    "basal_cell_carcinoma": 487,
+    "actinic_keratoses": 315,
+    "vascular_lesions": 136
+  },
+  "class_mapping": {
+    "mel": "mel",
+    "melanoma": "mel",
+    "nv": "nv",
+    "nevus": "nv",
+    "melanocytic nevi": "nv",
+    "bcc": "bcc",
+    "basal cell carcinoma": "bcc",
+    "akiec": "akiec",
+    "actinic keratosis": "akiec",
+    "ak": "akiec",
+    "scc": "akiec",
+    "squamous cell carcinoma": "akiec",
+    "bkl": "bkl",
+    "benign keratosis": "bkl",
+    "benign keratosis-like lesions": "bkl",
+    "seborrheic keratosis": "bkl",
+    "solar lentigo": "bkl",
+    "df": "df",
+    "dermatofibroma": "df",
+    "vasc": "vasc",
+    "vascular": "vasc",
+    "vascular lesion": "vasc",
+    "vascular lesions": "vasc"
+  }
+}

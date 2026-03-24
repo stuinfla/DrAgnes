@@ -1,0 +1,28 @@
+{
+  "dataset": "PAD-UFES-20",
+  "source": "not-found-on-huggingface",
+  "timestamp": "2026-03-23T23:55:14.142881+00:00",
+  "status": "requires_manual_download",
+  "download_url": "https://data.mendeley.com/datasets/zr7vgbcyr2/1",
+  "note": "PAD-UFES-20 requires manual download from Mendeley Data. Contains ~2,298 smartphone images.",
+  "expected_total": 2298,
+  "expected_classes": {
+    "ACK": "akiec (actinic keratosis)",
+    "BCC": "bcc (basal cell carcinoma)",
+    "MEL": "mel (melanoma)",
+    "NEV": "nv (nevus)",
+    "SCC": "akiec (squamous cell carcinoma)",
+    "SEK": "bkl (seborrheic keratosis)"
+  },
+  "class_mapping": {
+    "mel": "mel",
+    "bcc": "bcc",
+    "scc": "akiec",
+    "ack": "akiec",
+    "actinic keratosis": "akiec",
+    "sek": "bkl",
+    "seborrheic keratosis": "bkl",
+    "nev": "nv",
+    "nevus": "nv"
+  }
+}

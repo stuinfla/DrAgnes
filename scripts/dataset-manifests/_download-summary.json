@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-03-23T23:55:14.144918+00:00",
+  "results": {
+    "isic_dermoscopy": "success",
+    "fitzpatrick17k": "success",
+    "pad_ufes_20": "success"
+  },
+  "target_classes": [
+    "akiec",
+    "bcc",
+    "bkl",
+    "df",
+    "mel",
+    "nv",
+    "vasc"
+  ]
+}

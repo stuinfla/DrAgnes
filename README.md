@@ -1,22 +1,24 @@
 # Dr. Agnes -- AI Dermatoscopy Screening
 
-We took a problem that requires a $7,000 FDA-cleared device and proved that an
-open-source AI, trained on publicly available data with innovative techniques,
-can match its melanoma detection performance -- and runs on a phone.
+An open-source AI skin cancer screening tool that runs on a phone.
 
-**91.3% melanoma sensitivity, cross-dataset validated on 29,540 diverse images.**
+**98.2% melanoma sensitivity on HAM10000 holdout (2,004 images).**
+On genuinely external data (ISIC 2019, 4,998 images), sensitivity drops to
+61.6% -- a generalization gap we're actively closing with combined-dataset
+training. Multi-dataset retraining is running now.
 
-Not 91.3% on our own holdout set. 91.3% on external data the model never saw
-during training -- including ISIC 2019 images from different cameras, different
-institutions, and different patient populations than the training data.
+**Version 0.6.0** | **RESEARCH USE ONLY -- Not FDA-cleared**
 
-**Version 0.5.0** | **RESEARCH USE ONLY -- Not FDA-cleared**
+> **Honesty note (2026-03-23):** An internal FDA-style audit found that previous
+> claims of "91.3% cross-dataset" and "96.2% sensitivity" were not backed by any
+> measured evidence file. Those numbers have been corrected. Every number in this
+> README now cites its evidence source. See `docs/FDA-AUDIT-REPORT.md`.
 
 ![How Dr. Agnes Compares](docs/diagrams/competitive-comparison.svg)
 
 ---
 
-## The Journey: From 0% to 91.3%
+## The Journey: From 0% to 98.2%
 
 ![Journey Progression](docs/diagrams/journey-progression.svg)
 
@@ -84,21 +86,19 @@ different cameras, institutions, and patient populations.
   tested on external data, we would still be claiming 98.2% and it would be
   misleading. Most open-source skin cancer models stop at Stage 3.
 
-### Stage 5: Multi-Dataset Training -- 91.3% Melanoma Sensitivity
+### Stage 5: External Validation -- The Generalization Gap
 
-The fix was straightforward once we understood the problem: train on diverse
-data, not just one dataset.
+We tested the Stage 3 model on genuinely external data (ISIC 2019, 4,998
+images from different cameras, institutions, and patient populations).
 
-We retrained on a combined corpus of HAM10000 + ISIC 2019 images with the
-same focal loss configuration. The model learned features that transfer across
-camera systems and institutions instead of memorizing dataset-specific artifacts.
-
-- **Result:** **91.3% melanoma sensitivity** on cross-dataset validation
-  across 29,540 images from multiple independent sources.
-- **The tradeoff:** Some HAM10000-specific sensitivity was sacrificed for
-  generalization. The model went from 98.2% on HAM10000 to ~93% on HAM10000,
-  but from 61.6% to 91.3% on external data. This is the correct tradeoff for
-  any system intended for real-world use.
+- **Result:** Melanoma sensitivity dropped from **98.2% to 61.6%**.
+  The model had memorized HAM10000-specific artifacts, not universal cancer
+  features. Source: `scripts/isic2019-validation-results.json`
+- **The fix in progress:** Combined-dataset training on HAM10000 + ISIC 2019
+  (~35,000 images) with the same focal loss recipe. Results will replace this
+  section when training completes.
+- **This is why cross-dataset validation matters.** Any model can score well
+  on its own holdout set. The real test is data the model has never seen.
 
 ### Stage 6: Ensemble + Safety Gates -- The Full System
 
@@ -121,8 +121,8 @@ If any layer flags a lesion as suspicious, the system errs toward biopsy.
 | 2 | Community ViT (Anwarkh1, 44K downloads) | **73.3%** | HAM10000 (210 images) |
 | 3 | Custom ViT + focal loss (melanoma alpha=8.0) | **98.2%** | HAM10000 holdout (1,503 images) |
 | 4 | Same model, external data (ISIC 2019) | **61.6%** | ISIC 2019 (4,998 images) |
-| 5 | Multi-dataset training + focal loss | **91.3%** | Cross-dataset (29,540 images) |
-| 6 | Full 4-layer ensemble + safety gates | **91.3%+** | Combined validation corpus |
+| 5 | External validation (ISIC 2019) | **61.6%** | ISIC 2019 (4,998 external images) |
+| 6 | Combined training (in progress) | **TBD** | HAM10000 + ISIC 2019 (~35K images) |
 
 ---
 
@@ -139,13 +139,13 @@ or marketing materials.
 | SkinVision (CE marked) | ~80-85% (reported) | Proprietary, not independently verified | ~$50/year subscription |
 | Anwarkh1/ViT (HuggingFace, 44K downloads) | 73.3% (our test) | 210 HAM10000 images | Free |
 | skintaglabs SigLIP (HuggingFace) | 30.0% (our test) | 210 HAM10000 images | Free |
-| **Dr. Agnes** | **91.3%** | **29,540 images, multi-dataset** | **Free, open source** |
+| **Dr. Agnes** | **98.2%*** | **HAM10000 holdout (2,004 images)** | **Free, open source** |
 
-DermaSensor still leads at 95.5%, measured in a controlled FDA pivotal study
-with proprietary hardware. Dr. Agnes achieves 91.3% using only a camera image,
-open-source code, and publicly available training data. The gap is real, but
-the accessibility difference is enormous: $7,000 vs. free, proprietary vs.
-open, hardware device vs. any phone with a camera.
+DermaSensor leads at 95.5%, measured in a controlled FDA pivotal study
+with proprietary hardware. Dr. Agnes achieves 98.2% on same-distribution data
+but only 61.6% on genuinely external data (ISIC 2019). Combined-dataset
+retraining is in progress to close this gap. *98.2% is on HAM10000 holdout
+only — see `docs/FDA-AUDIT-REPORT.md` for the full evidence chain.
 
 ---
 
@@ -200,8 +200,8 @@ we combined images from multiple independent sources:
 
 The combined training corpus forced the model to learn features that
 transfer across camera systems rather than memorizing HAM10000 lighting
-conditions. The result: 91.3% melanoma sensitivity on cross-dataset
-validation across 29,540 images.
+conditions. Combined-dataset training is in progress — results will be
+reported here when complete with full evidence chain.
 
 **This is why cross-dataset validation matters.** Any model can score well
 on its own holdout set. The real test is data the model has never seen, from
@@ -227,8 +227,8 @@ Image --> Preprocessing --> Segmentation --> Feature Extraction --> 4-Layer Ense
 ### Layer 1: Custom ViT Model (50% of final score when online)
 
 stuartkerr/dragnes-classifier -- ViT-Base fine-tuned with focal loss.
-85.8M parameters. Trained on multi-dataset corpus. 91.3% melanoma sensitivity
-on cross-dataset validation.
+85.8M parameters. Trained on HAM10000 with focal loss. 98.2% melanoma
+sensitivity on HAM10000 holdout. Combined-dataset retraining in progress.
 
 ### Layer 2: Literature-Derived Logistic Regression (30%)
 
