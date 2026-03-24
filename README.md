@@ -308,7 +308,13 @@ dermatofibroma, melanocytic nevus, vascular lesion. Risk level displayed
 with color and icon coding. Inter-image agreement score shown when multiple
 photos are analyzed.
 
-**3. ABCDE Scores.** Real image-derived measurements -- not placeholders.
+**3. Smart Lesion Measurement.** Three-tier size calibration: USB-C charger
+cable reference detection (±0.5mm), automatic skin texture FFT analysis
+(±2-3mm), or rough pixel estimate. "Place your charger cable next to the
+spot for best accuracy." The real diameter feeds directly into the ABCDE "D"
+score and TDS formula — no more guessing at the 6mm clinical threshold.
+
+**4. ABCDE Scores.** Real image-derived measurements -- not placeholders.
 Asymmetry from principal-axis moment analysis, border from 8-octant
 irregularity, color from k-means++ clustering in LAB space, texture from
 GLCM analysis. Each score includes the literature-cited rationale.
