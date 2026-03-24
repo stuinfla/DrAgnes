@@ -4,8 +4,10 @@ An open-source AI skin cancer screening tool that runs on a phone.
 
 **98.2% melanoma sensitivity on HAM10000 holdout (2,004 images).**
 On genuinely external data (ISIC 2019, 4,998 images), sensitivity drops to
-61.6% -- a generalization gap we're actively closing with combined-dataset
-training. Multi-dataset retraining is running now.
+61.6% -- but melanoma AUROC is **0.960** on that same external data
+(source: `scripts/auroc-results.json`). The model CAN discriminate melanoma
+on external data; the 61.6% is a threshold problem, not a discrimination
+problem. Combined-dataset retraining is running now to fix the threshold.
 
 **Version 0.6.0** | **RESEARCH USE ONLY -- Not FDA-cleared**
 
@@ -429,10 +431,11 @@ static/                      PWA manifest, icons
 | Metric | DermaSensor | Nevisense | MelaFind | Dr. Agnes |
 |--------|-------------|-----------|----------|-----------|
 | Melanoma sensitivity | 95.5% | 97% | 98.3% | 98.2% (HAM10000) / 61.6% (ISIC 2019) |
+| Melanoma AUROC | 0.758 | N/A | N/A | **0.926 (HAM10000) / 0.960 (ISIC 2019)** |
 | Specificity | 20.7-32.5% | 31.3% | 9.9% | ~72% (nevi, HAM10000 only) |
 | Technology | Spectroscopy ($7K hardware) | Impedance ($$$) | Multispectral (discontinued) | Vision Transformer (open source) |
-| Validation | 1,579 lesions, FDA pivotal | Clinical trial | FDA pivotal | HAM10000 holdout (2,004 images) + ISIC 2019 (4,998 images) |
-| External data tested | Yes (pivotal trial) | Yes | Yes | Yes (ISIC 2019: 61.6% sensitivity) |
+| Validation | 1,579 lesions, FDA pivotal | Clinical trial | FDA pivotal | HAM10000 holdout (2,004) + ISIC 2019 (4,998) |
+| External data tested | Yes (pivotal trial) | Yes | Yes | Yes (ISIC 2019: AUROC 0.960, sensitivity 61.6%) |
 | Cost | $7,000 device + per-test fee | Expensive | Withdrawn | Free |
 
 Sources: DermaSensor (FDA DEN230008, Tkaczyk et al. 2024), Nevisense (Scibase
