@@ -590,6 +590,31 @@
 		return findings;
 	}
 
+	/** ADR-125: Call a single HF model endpoint and return ClassProbability[] */
+	async function fetchHFProbabilities(
+		endpoint: string,
+		blob: Blob,
+	): Promise<import("$lib/dragnes/types").ClassProbability[] | null> {
+		try {
+			const formData = new FormData();
+			formData.append("image", blob, "lesion.jpg");
+			const resp = await fetch(endpoint, { method: "POST", body: formData });
+			if (!resp.ok) return null;
+			const { results } = await resp.json() as {
+				results: Array<{ label: string; score: number }>;
+			};
+			const probMap = mapHFResultsToClasses(results);
+			const CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
+			return CLASSES.map((cls) => ({
+				className: cls,
+				probability: probMap[cls] ?? 0,
+				label: LESION_LABELS[cls],
+			}));
+		} catch {
+			return null;
+		}
+	}
+
 	async function analyzeImage() {
 		if (!capturedImageData) return;
 		analyzing = true;
@@ -632,6 +657,32 @@
 				};
 			} else {
 				classificationResult = rawResult;
+			}
+
+			// ADR-125: V1+V2 ensemble override (when enabled)
+			ensembleResult = null;
+			if (ensembleEnabled && capturedImageData) {
+				try {
+					const blob = await imageDataToBlob(capturedImageData);
+					const [v1Probs, v2Probs] = await Promise.all([
+						fetchHFProbabilities("/api/classify", blob),
+						fetchHFProbabilities("/api/classify-v2", blob),
+					]);
+					if (v1Probs && v2Probs) {
+						const ens = ensembleClassify(v1Probs, v2Probs);
+						ensembleResult = ens;
+						// Override the displayed classification with ensemble result
+						classificationResult = {
+							...classificationResult!,
+							topClass: ens.topClass,
+							confidence: ens.confidence,
+							probabilities: ens.probabilities,
+							modelId: classificationResult!.modelId + " + ADR-125-ensemble",
+						};
+					}
+				} catch {
+					// Ensemble is best-effort; fall back to single-model result
+				}
 			}
 
 			// Generate Grad-CAM heatmap
@@ -757,6 +808,7 @@
 		showFullImage = false;
 		showMedicalDetails = false;
 		analysisStep = "";
+		ensembleResult = null;
 		multiImageResult = null;
 		multiImageCount = 0;
 		caseShared = false;
@@ -919,6 +971,13 @@
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
 							</svg>
 							<span>Models disagree -- Agreement: {((classificationResult.modelAgreement || 0) * 100).toFixed(0)}%</span>
+						</div>
+					{/if}
+
+					<!-- ADR-125 ensemble disagreement warning -->
+					{#if ensembleResult && !ensembleResult.modelsAgree}
+						<div class="mx-5 mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-400">
+							{ensembleResult.disagreementWarning}
 						</div>
 					{/if}
 
@@ -1546,6 +1605,22 @@
 								</div>
 							</label>
 						{/each}
+					</div>
+
+					<!-- ADR-125: Ensemble Mode toggle -->
+					<div class="mt-4 pt-4 border-t border-white/[0.06]">
+						<label class="flex items-center justify-between">
+							<div>
+								<span class="text-[15px] text-gray-300">Ensemble Mode</span>
+								<p class="text-[11px] text-gray-500 mt-0.5">Enable V1+V2 ensemble -- combines two models for higher accuracy</p>
+								<p class="text-[10px] text-gray-600 mt-0.5">Requires both models to be available (doubles inference time)</p>
+							</div>
+							<input
+								type="checkbox"
+								bind:checked={ensembleEnabled}
+								class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
+							/>
+						</label>
 					</div>
 				</div>
 
