@@ -131,7 +131,7 @@
 	let brainSyncEnabled: boolean = $state(false);
 	let privacyStripExif: boolean = $state(true);
 	let privacyLocalOnly: boolean = $state(true);
-	let thresholdMode: ThresholdMode = $state("default");
+	let thresholdMode: ThresholdMode = $state("triage");
 
 	// Offline indicator
 	let isOffline: boolean = $state(false);

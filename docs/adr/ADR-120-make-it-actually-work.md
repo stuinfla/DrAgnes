@@ -8,7 +8,7 @@ Created: 2026-03-23
 
 ## Context
 
-We have a model that beats DermaSensor on paper (96.2% mel sensitivity, 73.1% specificity). But the deployed app called a normal hand "93% melanoma." That's not a nuance problem — that's a complete failure. The model is good. The deployment is broken.
+We have a model that beats DermaSensor on paper (95.97% mel sensitivity, 80.0% specificity, trained on 37,484 images). But the deployed app called a normal hand "93% melanoma." That's not a nuance problem — that's a complete failure. The model is good. The deployment is broken.
 
 **Until a regular person can open the app on their phone, take a photo, and get a trustworthy answer — nothing else matters.**
 
@@ -22,7 +22,7 @@ This ADR is the brutally honest list of what's broken and what must be fixed.
 
 | # | Problem | Why It's Broken | Fix |
 |---|---------|----------------|-----|
-| 1 | **Custom model not running on Vercel** | Vercel can't run Python. Our best model (96.2% sens) only runs via Python subprocess. The Vercel app uses the HuggingFace community model (73.3% sens). | Convert ONNX → onnxruntime-node. Or deploy to Cloud Run with Python. |
+| 1 | **Custom model not running on Vercel** | Vercel can't run Python. Our best model (95.97% sens) only runs via Python subprocess. The Vercel app uses the HuggingFace community model (73.3% sens). | Convert ONNX → onnxruntime-node. Or deploy to Cloud Run with Python. |
 | 2 | **Normal skin classified as melanoma** | No lesion detection gate was deployed. We just built one but it's untested. | Test the gate on 20 real-world images (hands, faces, normal skin, actual lesions). Verify it works. |
 | 3 | **Medical jargon in results** | Output says "Melanocytic Nevus (nv) — 73.1%" which means nothing to a consumer. | Replace with "Common mole — low concern" with plain English explanation. |
 | 4 | **No image quality feedback** | User takes a blurry/dark photo, gets garbage results, blames the app. | Add brightness/blur/distance checks before classification. |
