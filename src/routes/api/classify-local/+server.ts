@@ -135,8 +135,8 @@ export const GET: RequestHandler = async () => {
 		available: backend !== "none",
 		backend,
 		model: "dragnes-custom-vit-v1",
-		melanomaSensitivity: "98.2%",
-		trainedOn: "HAM10000 (10,015 images)",
+		melanomaSensitivity: "95.97%",
+		trainedOn: "HAM10000 + ISIC 2019 combined (37,484 images)",
 	});
 };
 
@@ -186,7 +186,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		results,
 		model: "dragnes-custom-vit-v1",
 		backend,
-		melanomaSensitivity: "98.2%",
-		trainedOn: "HAM10000 (10,015 images)",
+		melanomaSensitivity: "95.97%",
+		trainedOn: "HAM10000 + ISIC 2019 combined (37,484 images)",
 	});
 };

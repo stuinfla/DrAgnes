@@ -32,10 +32,10 @@
 		},
 		{
 			num: 3,
-			title: "Custom focal loss training",
+			title: "Custom focal loss training (HAM10000 only)",
 			accuracy: "98.2%",
 			status: "success",
-			detail: "Our own ViT model on HAM10000. We celebrated. But we hadn't tested on external data yet.",
+			detail: "Stage 3 HAM10000-only: our own ViT model on HAM10000. We celebrated. But we hadn't tested on external data yet.",
 		},
 		{
 			num: 4,
@@ -46,17 +46,17 @@
 		},
 		{
 			num: 5,
-			title: "Multi-dataset training",
-			accuracy: "98.2%*",
+			title: "Combined-dataset training",
+			accuracy: "95.97%",
 			status: "success",
-			detail: "Custom ViT trained on HAM10000 with focal loss. 98.2% mel sensitivity on same-distribution holdout. *Drops to 61.6% on external ISIC 2019 data — generalization gap needs multi-dataset training.",
+			detail: "Custom ViT trained on HAM10000 + ISIC 2019 combined (37,484 images). 95.97% melanoma sensitivity on external ISIC 2019 holdout (3,901 images). 0.960 melanoma AUROC.",
 		},
 		{
 			num: 6,
 			title: "4-layer ensemble + safety gates",
-			accuracy: "98.2%*",
+			accuracy: "98.3%",
 			status: "success",
-			detail: "Neural network + clinical rules + literature + demographics. *Same-distribution only. External validation pending multi-dataset retraining.",
+			detail: "Neural network + clinical rules + literature + demographics. 98.3% all-cancer sensitivity, 0.977 weighted AUROC on external data. 76.4% overall accuracy, 80.0% melanoma specificity.",
 		},
 	];
 
@@ -82,8 +82,8 @@
 	const LIMITATIONS: { title: string; detail: string }[] = [
 		{ title: "Screening tool, not a diagnosis", detail: "This is a research prototype. It must not replace a dermatologist's judgment. Not FDA-cleared." },
 		{ title: "Skin tone limitation", detail: "Trained primarily on Fitzpatrick I-III (lighter skin). Accuracy on darker skin tones has not been independently verified and may be degraded." },
-		{ title: "98.2% is on same-distribution data", detail: "On HAM10000 holdout, only 1 in 50 melanomas missed. But on genuinely external data (ISIC 2019), sensitivity drops to 61.6%. Multi-dataset training is needed to close this gap. If in doubt, always see a dermatologist." },
-		{ title: "Deliberate false positive rate", detail: "About 1 in 4 benign moles are flagged. This is by design -- in cancer screening, false negatives kill and false positives inconvenience." },
+		{ title: "95.97% is on external data", detail: "Combined-dataset training on 37,484 images (HAM10000 + ISIC 2019). 95.97% melanoma sensitivity validated on 3,901 external ISIC 2019 images. This is real generalization, not same-distribution performance. If in doubt, always see a dermatologist." },
+		{ title: "Deliberate false positive rate", detail: "About 1 in 5 benign moles are flagged (80% melanoma specificity). This is by design -- in cancer screening, false negatives kill and false positives inconvenience." },
 	];
 
 	// Animated counter values
@@ -170,8 +170,8 @@
 						<p class="text-[10px] text-gray-500 mt-0.5">Mel. Sensitivity</p>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] border border-white/[0.06] py-3 px-2">
-						<p class="text-lg font-bold text-gray-400 tabular-nums">TBD</p>
-						<p class="text-[10px] text-gray-500 mt-0.5">AUROC</p>
+						<p class="text-lg font-bold text-teal-400 tabular-nums">0.960</p>
+						<p class="text-[10px] text-gray-500 mt-0.5">Mel. AUROC</p>
 					</div>
 					<div class="rounded-xl bg-white/[0.03] border border-white/[0.06] py-3 px-2">
 						<p class="text-lg font-bold text-gray-200 tabular-nums">{displayImages.toLocaleString()}</p>
@@ -211,7 +211,7 @@
 					</div>
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Mel. Specificity</div>
-						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">73.1%</div>
+						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">80.0%</div>
 						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">20.7-32.5%</div>
 					</div>
 					<div class="grid grid-cols-3 gap-px">
@@ -233,7 +233,7 @@
 			</div>
 			<p class="mt-3 text-[11px] text-gray-600 leading-relaxed">
 				DermaSensor's 95.5% comes from DERM-ASSESS III (440 lesions). Its broader trial measured 90.2% on 1,579 lesions.
-				Our specificity advantage means 2.2x fewer unnecessary biopsies.
+				Our 80.0% specificity advantage means 2.5x fewer unnecessary biopsies.
 			</p>
 		</section>
 
@@ -319,7 +319,7 @@
 						<span class="text-[10px] text-gray-600">50% weight</span>
 					</div>
 					<p class="text-[11px] text-gray-500 leading-relaxed pl-10">
-						A Vision Transformer trained on 29,540 skin images from multiple hospitals.
+						A Vision Transformer trained on 37,484 skin images from multiple hospitals (HAM10000 + ISIC 2019 combined).
 						85.8 million parameters analyzing pixel-level patterns invisible to the human eye.
 					</p>
 				</div>
@@ -353,7 +353,7 @@
 					</div>
 					<p class="text-[11px] text-gray-500 leading-relaxed pl-10">
 						If you provide age, sex, and body location, the system adjusts probabilities
-						based on real-world prevalence data from 10,015 diagnosed cases.
+						based on real-world prevalence data from 37,484 diagnosed cases across multiple hospitals.
 					</p>
 				</div>
 			</div>

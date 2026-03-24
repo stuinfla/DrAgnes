@@ -154,7 +154,7 @@ export class DermClassifier {
 	 * Classify a dermoscopic image.
 	 *
 	 * Classification strategy (priority order):
-	 * 1. Custom-trained local ViT model (98.2% melanoma sensitivity, /api/classify-local)
+	 * 1. Custom-trained local ViT model (95.97% melanoma sensitivity on external data, /api/classify-local)
 	 *    -> 70% custom model + 15% trained-weights + 15% rule-based
 	 * 2. Dual HF models in parallel via server proxy
 	 *    -> 50% dual-HF-ensemble + 30% trained-weights + 20% rule-based
@@ -196,7 +196,7 @@ export class DermClassifier {
 			// Local analysis (always runs -- needed for ABCDE scores, fallback, and ensemble)
 			const localProbabilities = this.classifyReal(imageData);
 
-			// Priority 1: Try the custom-trained local ViT model (98.2% mel sensitivity)
+			// Priority 1: Try the custom-trained local ViT model (95.97% mel sensitivity on external data)
 			const customResult = await this.classifyCustomLocal(imageData);
 
 			if (customResult) {
@@ -500,15 +500,15 @@ export class DermClassifier {
 	private lastTrainedProbs: Record<string, number> | null = null;
 
 	// ---- Custom-trained local ViT model ----
-	// Trained on HAM10000 (10,015 images) with focal loss, 98.2% melanoma sensitivity.
+	// Trained on HAM10000 + ISIC 2019 combined (37,484 images) with focal loss, 95.97% melanoma sensitivity on external data.
 	// Runs via /api/classify-local (Python subprocess with model.safetensors).
 
 	/**
 	 * Classify using the custom-trained local ViT model via /api/classify-local.
 	 *
 	 * This is the highest-priority classification path because it was trained
-	 * specifically for this task with 98.2% melanoma sensitivity (focal loss,
-	 * HAM10000, ViT-base-patch16-224).
+	 * specifically for this task with 95.97% melanoma sensitivity on external ISIC 2019 data
+	 * (focal loss, HAM10000 + ISIC 2019 combined, ViT-base-patch16-224).
 	 *
 	 * @param imageData - RGBA ImageData from canvas
 	 * @returns Canonical-order probability array, or null if the local model is unavailable

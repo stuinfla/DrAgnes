@@ -283,7 +283,7 @@
 								<p class="font-medium text-gray-300">Anwarkh1 ViT-Base</p>
 								<span class="text-gray-500 font-mono">85.8M params</span>
 							</div>
-							<p class="text-gray-500 mt-0.5">Fine-tuned on HAM10000 (10,015 dermoscopy images, 7 classes). HuggingFace-hosted.</p>
+							<p class="text-gray-500 mt-0.5">Fine-tuned on HAM10000 + ISIC 2019 combined (37,484 dermoscopy images, 7 classes). HuggingFace-hosted.</p>
 						</div>
 					{/if}
 

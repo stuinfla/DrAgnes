@@ -77,7 +77,7 @@ export interface ClassificationResult {
 	usedHF?: boolean;
 	/** Whether the dual-model ensemble (Anwarkh1 + actavkid) was used */
 	usedDualModel?: boolean;
-	/** Whether the custom-trained local ViT model (98.2% mel sens) was used */
+	/** Whether the custom-trained local ViT model (95.97% mel sens on external data) was used */
 	usedCustomModel?: boolean;
 	/** Whether the two HF models disagreed on the top class */
 	modelsDisagree?: boolean;

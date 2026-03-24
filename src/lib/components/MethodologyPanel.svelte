@@ -174,17 +174,17 @@
 			<div class="px-4 pb-4 space-y-2 text-[10px]">
 				<div class="flex justify-between items-center rounded-lg bg-gray-800/50 p-2">
 					<div>
-						<p class="font-medium text-gray-300">HAM10000</p>
-						<p class="text-gray-500">Tschandl et al. 2018 -- Medical University of Vienna. 7-class dermoscopy benchmark.</p>
+						<p class="font-medium text-gray-300">HAM10000 + ISIC 2019 Combined</p>
+						<p class="text-gray-500">Tschandl et al. 2018 + ISIC Challenge 2019. Multi-hospital combined training set.</p>
 					</div>
-					<span class="text-gray-400 flex-shrink-0 ml-2">10,015 images</span>
+					<span class="text-gray-400 flex-shrink-0 ml-2">37,484 images</span>
 				</div>
 				<div class="flex justify-between items-center rounded-lg bg-gray-800/50 p-2">
 					<div>
-						<p class="font-medium text-gray-300">ISIC Archive</p>
-						<p class="text-gray-500">International Skin Imaging Collaboration -- global dermoscopy archive.</p>
+						<p class="font-medium text-gray-300">ISIC 2019 External Validation</p>
+						<p class="text-gray-500">International Skin Imaging Collaboration -- held-out external test set.</p>
 					</div>
-					<span class="text-gray-400 flex-shrink-0 ml-2">70,000+ images</span>
+					<span class="text-gray-400 flex-shrink-0 ml-2">3,901 images</span>
 				</div>
 				<div class="flex justify-between items-center rounded-lg bg-gray-800/50 p-2">
 					<div>

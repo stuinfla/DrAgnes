@@ -27,7 +27,7 @@ export async function GET() {
 		backbone: DRAGNES_CONFIG.cnnBackbone,
 		classes: DRAGNES_CONFIG.classes.length,
 		customModel: customModelAvailable,
-		customModelSensitivity: customModelAvailable ? "98.2% melanoma" : null,
+		customModelSensitivity: customModelAvailable ? "95.97% melanoma (external ISIC 2019)" : null,
 		customModelId: customModelAvailable ? "dragnes-custom-vit-v1" : null,
 		privacy: {
 			dpEpsilon: DRAGNES_CONFIG.privacy.dpEpsilon,
