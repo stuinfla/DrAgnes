@@ -31,6 +31,8 @@
 	import { ensembleClassify } from "$lib/dragnes/ensemble";
 	import type { EnsembleResult } from "$lib/dragnes/ensemble";
 	import { imageDataToBlob, mapHFResultsToClasses } from "$lib/dragnes/hf-classifier";
+	import { metaClassify } from "$lib/dragnes/meta-classifier";
+	import type { MetaClassification } from "$lib/dragnes/meta-classifier";
 
 	import DermCapture from "./DermCapture.svelte";
 	import GradCamOverlay from "./GradCamOverlay.svelte";
@@ -165,6 +167,9 @@
 	// ADR-125: V1+V2 ensemble mode
 	let ensembleResult: EnsembleResult | null = $state(null);
 	let ensembleEnabled: boolean = $state(false);
+
+	// Meta-classifier: neural + clinical feature fusion
+	let metaResult: MetaClassification | null = $state(null);
 
 	// Phase 3-4: Network sharing and similar case retrieval
 	let caseShared: boolean = $state(false);
@@ -471,16 +476,33 @@
 			sevenPointResult = structures ? computeSevenPointScore(structures) : null;
 			explanationFindings = buildExplanation();
 
+			// Meta-classifier: fuse neural output with clinical features
+			metaResult = metaClassify(
+				classificationResult!.probabilities,
+				abcdeScores,
+				abcdeScores?.totalScore ?? null,
+				sevenPointResult?.score ?? null,
+				abcdeScores?.diameterMm ?? null,
+			);
+
+			// Apply meta-classifier adjustments
+			classificationResult = {
+				...classificationResult!,
+				topClass: metaResult.adjustedTopClass,
+				confidence: metaResult.adjustedConfidence,
+				probabilities: metaResult.adjustedProbabilities,
+			};
+
 			// Record in analytics
 			const eventId = crypto.randomUUID();
 			lastEventId = eventId;
 			recordClassification({
 				eventId,
-				topClass: result.topClass,
-				confidence: result.confidence,
-				probabilities: result.probabilities,
+				topClass: classificationResult.topClass,
+				confidence: classificationResult.confidence,
+				probabilities: classificationResult.probabilities,
 				bodyLocation: capturedBodyLocation,
-				modelId: result.modelId + ` (${images.length}-image consensus)`,
+				modelId: classificationResult.modelId + ` (${images.length}-image consensus)`,
 			});
 
 			if (result.confidence < 0.5) {
@@ -745,6 +767,23 @@
 			// Build explainability findings
 			explanationFindings = buildExplanation();
 
+			// Meta-classifier: fuse neural output with clinical features
+			metaResult = metaClassify(
+				classificationResult.probabilities,
+				abcdeScores,
+				abcdeScores?.totalScore ?? null,
+				sevenPointResult?.score ?? null,
+				abcdeScores?.diameterMm ?? null,
+			);
+
+			// Apply meta-classifier adjustments to the displayed classification
+			classificationResult = {
+				...classificationResult,
+				topClass: metaResult.adjustedTopClass,
+				confidence: metaResult.adjustedConfidence,
+				probabilities: metaResult.adjustedProbabilities,
+			};
+
 			// Low-confidence warning
 			if (classificationResult.confidence < 0.4) {
 				lowConfidenceWarning = "Low confidence classification. The image may not contain a clear lesion or may be poor quality.";
@@ -809,6 +848,7 @@
 		showMedicalDetails = false;
 		analysisStep = "";
 		ensembleResult = null;
+		metaResult = null;
 		multiImageResult = null;
 		multiImageCount = 0;
 		caseShared = false;
@@ -978,6 +1018,22 @@
 					{#if ensembleResult && !ensembleResult.modelsAgree}
 						<div class="mx-5 mt-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-400">
 							{ensembleResult.disagreementWarning}
+						</div>
+					{/if}
+
+					<!-- Meta-classifier: clinical feature agreement note -->
+					{#if metaResult && metaResult.agreement !== "neutral"}
+						<div class="mx-5 mt-3 flex items-center gap-2.5 rounded-2xl border px-4 py-3 text-xs {metaResult.agreement === 'concordant' ? 'border-emerald-500/20 bg-emerald-500/5 text-emerald-400' : 'border-amber-500/20 bg-amber-500/5 text-amber-400'}">
+							{#if metaResult.agreement === "concordant"}
+								<svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+								</svg>
+							{:else}
+								<svg class="h-4 w-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+								</svg>
+							{/if}
+							<span>{metaResult.adjustmentReason}</span>
 						</div>
 					{/if}
 

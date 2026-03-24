@@ -82,6 +82,10 @@ export type { ConsumerResult, ConsumerRiskLevel } from "./consumer-translation";
 export { assessRisk } from "./risk-stratification";
 export type { RiskAssessment, BayesianRiskLevel } from "./risk-stratification";
 
+// Meta-classifier: fuses neural + clinical features to improve PPV
+export { metaClassify } from "./meta-classifier";
+export type { MetaClassification } from "./meta-classifier";
+
 // ICD-10 code mapping
 export { getPrimaryICD10, getLocationSpecificICD10, ICD10_MAP } from "./icd10";
 export type { ICD10Code } from "./icd10";

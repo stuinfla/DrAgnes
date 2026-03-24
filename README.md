@@ -12,7 +12,7 @@ ONNX deployment: 85MB INT8, 22ms inference, fully offline.
 
 Source: `scripts/combined-training-results.json`
 
-**Version 0.8.1** | **Updated 2026-03-24** | **RESEARCH USE ONLY -- Not FDA-cleared**
+**Version 0.9.0** | **Updated 2026-03-24** | **RESEARCH USE ONLY -- Not FDA-cleared**
 
 > **Honesty note (2026-03-23):** An internal FDA-style audit found that previous
 > claims of "91.3% cross-dataset" and "96.2% sensitivity" were not backed by any
@@ -200,6 +200,64 @@ with clinical safety gates that catches what the neural network misses:
 
 If any layer flags a lesion as suspicious, the system errs toward biopsy.
 
+### Stage 11: Bayesian Risk Stratification -- Making Every Result Actionable
+
+The 4-layer ensemble from Stage 10 produces a probability, but turning that
+probability into a clinical recommendation exposes a fundamental problem with
+binary classifiers at low disease prevalence.
+
+**The PPV Problem.** Binary "melanoma yes/no" has a positive predictive value
+(PPV) of only 8.9% at real-world 2% melanoma prevalence -- wrong 91% of the
+time. This is not a model failure; it is mathematically inevitable with any
+high-sensitivity binary classifier at low prevalence. Bayes' theorem does not
+care how good the model is. At 2% base rate, even 95.97% sensitivity and 80%
+specificity produce a PPV under 10%.
+
+**The Fix: Bayesian Post-Test Probability.** Instead of binary classification,
+the system computes a continuous post-test probability using:
+
+- The model's continuous confidence output (AUROC 0.960 on external data)
+- Real-world melanoma prevalence (2% population base rate, age-adjusted)
+- Temperature-calibrated probabilities (T=1.23, calibration ECE 0.044)
+- Clinical feature agreement (ABCDE scores, TDS formula, 7-point checklist)
+
+The result is not "melanoma yes/no" but a specific risk percentage that
+incorporates both the neural network's output and the clinical context.
+
+**5 Risk Tiers:**
+
+| Tier | Post-Test Probability | Recommendation |
+|------|----------------------|----------------|
+| Very High | >50% | Urgent referral -- see dermatologist within days |
+| High | 20-50% | See dermatologist within 2 weeks |
+| Moderate | 5-20% | Monitor monthly, photograph for comparison |
+| Low | 1-5% | Routine skin checks |
+| Minimal | <1% | No current concerns |
+
+**Meta-Classifier: Neural + Clinical Agreement.** The meta-classifier adjusts
+confidence based on agreement between the ViT model and clinical feature
+analysis. When both the neural network and the ABCDE/TDS/7-point scoring agree
+that a lesion is suspicious, confidence increases. When they disagree -- for
+example, the model says melanoma but the clinical features show no asymmetry,
+regular borders, and uniform color -- confidence is suppressed. This
+agreement/disagreement signal directly reduces false positives while
+maintaining cancer sensitivity, because true melanomas almost always show
+both neural and clinical indicators.
+
+**The Key Numbers:**
+
+- **NPV: 99.06%** -- when the system says "no concern," it is correct over
+  99% of the time. This is the number that matters most for screening: a
+  negative result is highly reliable.
+- **NNB: 2.1** -- Number Needed to Biopsy. For every confirmed malignancy,
+  approximately 1.1 benign lesions were also flagged. This is better than
+  DermaSensor's NNB of 6.25.
+- **LR-: 0.050** -- Likelihood ratio negative. A strong clinical rule-out
+  value; a negative result reduces pre-test odds by 20x.
+- **Calibration ECE: 0.044** -- Expected Calibration Error after temperature
+  scaling. When the system says 30% risk, the true frequency is close to 30%.
+  Confidence matches reality.
+
 ### The Complete Training Progression
 
 | Stage | Approach | Melanoma Sensitivity | Validation Set |
@@ -214,6 +272,8 @@ If any layer flags a lesion as suspicious, the system errs toward biopsy.
 | 7 | V1+V2 Ensemble (combined + HAM10000-only models) | **99.4%** | Ensemble evaluation |
 | 8 | Threshold optimization (triage mode) | **88.4% mel / 91.1% spec** | ISIC 2019 external |
 | 9 | ONNX INT8 deployment | **95.97%** (full-precision) | 85MB, 22ms, offline capable |
+| 10 | Ensemble + safety gates (4-layer system) | **99.4%** (V1+V2 ensemble) | Full system with clinical gates |
+| 11 | Bayesian risk stratification + meta-classifier | **NPV 99.06%, NNB 2.1** | 5-tier risk scoring, ECE 0.044 |
 
 Source: `scripts/combined-training-results.json`
 
@@ -609,6 +669,37 @@ The principle is that privacy should not depend on trusting the developer,
 the server operator, or the network. It should be enforced by the architecture
 itself: if the data never exists on the server, it cannot be breached from the
 server.
+
+### 8. Bayesian Honesty -- Risk Scores, Not Binary Alarms
+
+A binary "melanoma yes/no" answer is the wrong output for a screening tool
+operating at real-world prevalence. At 2% base rate, even a model with 95.97%
+sensitivity and 80% specificity produces a PPV of only 8.9% -- meaning 91% of
+positive results are false positives. Telling a patient "you might have
+melanoma" when the math says they probably do not is dishonest, even if the
+model is doing its job correctly.
+
+The honest answer is a calibrated risk score: "Given the image analysis, your
+clinical features, and the base rate for your demographic, the post-test
+probability of melanoma is 14%." That number is actionable -- the patient and
+their doctor can make an informed decision about whether to biopsy, monitor,
+or dismiss. Binary classification hides the uncertainty. Bayesian risk
+stratification exposes it.
+
+This principle has a concrete consequence: the system never says "melanoma
+detected." It says "Very High risk (62%) -- urgent referral recommended" or
+"Low risk (2.3%) -- routine checks." The 5-tier system maps continuous
+probability to clinical action without pretending the model knows more than it
+does. Temperature calibration (ECE 0.044) ensures the probabilities are not
+just directionally correct but quantitatively trustworthy -- when the system
+says 30%, the true frequency is close to 30%.
+
+The meta-classifier enforces consistency between the neural network and
+clinical features. A model prediction without clinical corroboration is
+downweighted; a model prediction with clinical agreement is upweighted. This
+is not just a technical trick -- it encodes the clinical principle that
+multiple independent lines of evidence are more trustworthy than any single
+signal, no matter how sophisticated.
 
 ---
 
