@@ -74,7 +74,7 @@ function checkContrast(d: D, w: number, h: number): QualityCheck {
 			sum += lum; sumSq += lum * lum; n++;
 		}
 	const mean = n > 0 ? sum / n : 0;
-	const rms = n > 0 ? Math.sqrt(sumSq / n - mean * mean) : 0;
+	const rms = n > 0 ? Math.sqrt(Math.max(0, sumSq / n - mean * mean)) : 0;
 	const score = Math.min(rms / 0.25, 1);
 	return { name: "contrast", passed: rms >= CONTRAST_POOR, score,
 		message: rms >= CONTRAST_POOR ? "Contrast OK" : "Image looks washed out \u2014 ensure good lighting." };
