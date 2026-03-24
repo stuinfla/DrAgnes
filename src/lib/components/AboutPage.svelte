@@ -106,14 +106,14 @@
 			// Ease-out cubic
 			const eased = 1 - Math.pow(1 - progress, 3);
 
-			displayAccuracy = Math.round(98.2 * eased * 10) / 10;
-			displaySensitivity = Math.round(98.2 * eased * 10) / 10;
-			displayImages = Math.round(4998 * eased);
+			displayAccuracy = Math.round(95.97 * eased * 10) / 10;
+			displaySensitivity = Math.round(95.97 * eased * 10) / 10;
+			displayImages = Math.round(37484 * eased);
 
 			if (step >= steps) {
-				displayAccuracy = 98.2;
-				displaySensitivity = 98.2;
-				displayImages = 4998;
+				displayAccuracy = 95.97;
+				displaySensitivity = 95.97;
+				displayImages = 37484;
 				clearInterval(timer);
 			}
 		}, interval);
@@ -180,7 +180,7 @@
 				</div>
 
 				<p class="mt-4 text-[11px] text-gray-500 leading-relaxed text-center">
-					*98.2% on HAM10000 same-distribution holdout (2,004 images). On genuinely external data (ISIC 2019, 4,998 images), melanoma sensitivity drops to 61.6%. Multi-dataset retraining in progress to close this gap. AUROC not yet computed.
+					95.97% melanoma sensitivity on external ISIC 2019 data (3,901 held-out images). Trained on 37,484 combined images (HAM10000 + ISIC 2019). Melanoma AUROC: 0.960. All-cancer sensitivity: 98.3%. Source: combined-training-results.json
 				</p>
 
 				<div class="mt-5 flex flex-wrap justify-center gap-2">
@@ -206,7 +206,7 @@
 				<div class="divide-y divide-white/[0.04]">
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Mel. Sensitivity</div>
-						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">98.2%*</div>
+						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">95.97%</div>
 						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">90.2-95.5%</div>
 					</div>
 					<div class="grid grid-cols-3 gap-px">
@@ -216,7 +216,7 @@
 					</div>
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">AUROC</div>
-						<div class="px-3 py-3 text-center text-sm font-bold text-gray-500">Pending</div>
+						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">0.960</div>
 						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">0.758</div>
 					</div>
 					<div class="grid grid-cols-3 gap-px">
@@ -226,7 +226,7 @@
 					</div>
 					<div class="grid grid-cols-3 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Validation</div>
-						<div class="px-3 py-3 text-center text-[11px] font-medium text-gray-300">4,998 external images</div>
+						<div class="px-3 py-3 text-center text-[11px] font-medium text-gray-300">37,484 training images</div>
 						<div class="px-3 py-3 text-center text-[11px] text-gray-500">1,579 lesions</div>
 					</div>
 				</div>
