@@ -4,9 +4,16 @@
  * Translates medical classification results into plain English
  * that a regular person can understand and act on.
  *
+ * Uses Bayesian risk stratification (risk-stratification.ts) to compute
+ * post-test probability from the model's continuous output and real-world
+ * prevalence, replacing the old binary classification that suffered from
+ * a PPV of only 8.9% at real-world 2% melanoma prevalence.
+ *
  * The goal: someone with zero medical training should be able to
  * read the output and know exactly what to do next.
  */
+
+import { assessRisk, type BayesianRiskLevel, type RiskAssessment } from "./risk-stratification";
 
 export type ConsumerRiskLevel = "green" | "yellow" | "orange" | "red";
 
@@ -20,6 +27,8 @@ export interface ConsumerResult {
 	urgency: "none" | "routine" | "soon" | "urgent";
 	medicalTerm: string;
 	confidence: number;
+	/** Bayesian risk assessment (present when full probabilities are available) */
+	riskAssessment?: RiskAssessment;
 }
 
 const TRANSLATIONS: Record<
@@ -116,49 +125,90 @@ const RISK_COLORS: Record<ConsumerRiskLevel, string> = {
 	red: "#ef4444",
 };
 
+/** Map Bayesian risk levels to the existing ConsumerRiskLevel color scheme */
+const BAYESIAN_TO_CONSUMER_RISK: Record<BayesianRiskLevel, ConsumerRiskLevel> = {
+	"very-high": "red",
+	"high": "orange",
+	"moderate": "yellow",
+	"low": "green",
+	"minimal": "green",
+};
+
+/** Map Bayesian risk levels to ConsumerResult urgency values */
+const BAYESIAN_TO_URGENCY: Record<BayesianRiskLevel, "none" | "routine" | "soon" | "urgent"> = {
+	"very-high": "urgent",
+	"high": "soon",
+	"moderate": "routine",
+	"low": "none",
+	"minimal": "none",
+};
+
 /**
  * Translate a classification result into consumer-friendly language.
  *
+ * When full probability data is available, uses Bayesian risk stratification
+ * to compute an honest post-test probability that accounts for real-world
+ * prevalence (2% melanoma, 5% BCC, 3% actinic keratosis). This replaces the
+ * old binary approach where "melanoma detected" had a PPV of only 8.9%.
+ *
  * @param topClass - The top predicted HAM10000 class (e.g. "mel", "nv")
  * @param confidence - Confidence score from the model [0, 1]
- * @param allProbabilities - Optional full probability distribution for cancer-risk aggregation
+ * @param allProbabilities - Optional full probability distribution for Bayesian update
+ * @param demographics - Optional age/location for prevalence adjustment
  */
 export function translateForConsumer(
 	topClass: string,
 	confidence: number,
 	allProbabilities?: Array<{ className: string; probability: number }>,
+	demographics?: { age?: number; bodyLocation?: string },
 ): ConsumerResult {
 	const translation = TRANSLATIONS[topClass] || TRANSLATIONS["nv"];
 
-	// Start with the static translation values
-	let effectiveRisk = translation.risk;
-	let effectiveAction = translation.action;
+	// When we have full probability data, use Bayesian risk stratification
+	if (allProbabilities && allProbabilities.length > 0) {
+		// Convert array format to Record for assessRisk
+		const probRecord: Record<string, number> = {};
+		for (const p of allProbabilities) {
+			probRecord[p.className] = p.probability;
+		}
 
-	// If confidence is low, add a caveat to the action
+		const risk = assessRisk(topClass, confidence, probRecord, demographics);
+
+		const effectiveRisk = BAYESIAN_TO_CONSUMER_RISK[risk.riskLevel];
+		const effectiveUrgency = BAYESIAN_TO_URGENCY[risk.riskLevel];
+
+		// Use Bayesian headline/action, but keep the medical explanation
+		let effectiveAction = risk.action;
+		if (confidence < 0.4) {
+			effectiveAction =
+				"The image quality or classification confidence is low. Consider retaking the photo with better lighting, or see a dermatologist for a definitive assessment.";
+		}
+
+		return {
+			headline: risk.headline,
+			riskLevel: effectiveRisk,
+			riskColor: risk.color,
+			explanation: translation.explanation,
+			action: effectiveAction,
+			shouldSeeDoctor: risk.riskLevel === "very-high" || risk.riskLevel === "high" || risk.riskLevel === "moderate",
+			urgency: effectiveUrgency,
+			medicalTerm: topClass,
+			confidence,
+			riskAssessment: risk,
+		};
+	}
+
+	// Fallback: no probability data, use static translation
+	let effectiveAction = translation.action;
 	if (confidence < 0.4) {
 		effectiveAction =
 			"The image quality or classification confidence is low. Consider retaking the photo with better lighting, or see a dermatologist for a definitive assessment.";
 	}
 
-	// If ANY cancer class has > 30% combined probability, upgrade to at least yellow
-	if (allProbabilities) {
-		const cancerProb = allProbabilities
-			.filter((p) =>
-				["mel", "bcc", "akiec"].includes(p.className),
-			)
-			.reduce((sum, p) => sum + p.probability, 0);
-
-		if (cancerProb > 0.3 && effectiveRisk === "green") {
-			effectiveRisk = "yellow";
-			effectiveAction =
-				"Some concerning features detected. Have a dermatologist take a look at your next visit.";
-		}
-	}
-
 	return {
 		headline: translation.name,
-		riskLevel: effectiveRisk,
-		riskColor: RISK_COLORS[effectiveRisk],
+		riskLevel: translation.risk,
+		riskColor: RISK_COLORS[translation.risk],
 		explanation: translation.explanation,
 		action: effectiveAction,
 		shouldSeeDoctor: translation.shouldSeeDoctor,

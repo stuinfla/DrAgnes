@@ -78,6 +78,10 @@ export type { DrAgnesConfig } from "./config";
 export { translateForConsumer } from "./consumer-translation";
 export type { ConsumerResult, ConsumerRiskLevel } from "./consumer-translation";
 
+// Bayesian risk stratification (fixes PPV problem)
+export { assessRisk } from "./risk-stratification";
+export type { RiskAssessment, BayesianRiskLevel } from "./risk-stratification";
+
 // ICD-10 code mapping
 export { getPrimaryICD10, getLocationSpecificICD10, ICD10_MAP } from "./icd10";
 export type { ICD10Code } from "./icd10";

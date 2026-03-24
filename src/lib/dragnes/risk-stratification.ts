@@ -1,0 +1,193 @@
+/**
+ * Bayesian Risk Stratification Module
+ *
+ * Fixes the PPV problem: binary classification gives PPV of 47.6% at test
+ * prevalence and 8.9% at real-world 2% prevalence. Instead of binary yes/no,
+ * we compute a post-test probability using Bayes' theorem with the model's
+ * continuous probability output and real-world prevalence.
+ *
+ * Every result becomes actionable and honest about uncertainty.
+ */
+
+export type BayesianRiskLevel = "very-high" | "high" | "moderate" | "low" | "minimal";
+
+export interface RiskAssessment {
+	/** Bayesian risk tier */
+	riskLevel: BayesianRiskLevel;
+	/** Post-test probability after Bayesian update [0, 1] */
+	postTestProbability: number;
+	/** Pre-test probability (prevalence prior, possibly age-adjusted) */
+	preTestProbability: number;
+	/** Likelihood ratio derived from model confidence */
+	likelihoodRatio: number;
+	/** Consumer-facing headline */
+	headline: string;
+	/** What to do next */
+	action: string;
+	/** Timeframe for action */
+	urgency: string;
+	/** UI color for the risk tier */
+	color: string;
+}
+
+// ---------------------------------------------------------------------------
+// Epidemiological base prevalence rates
+// (proportion of lesions seen in screening that turn out to be each type)
+// ---------------------------------------------------------------------------
+const MELANOMA_PREVALENCE = 0.02;
+const BCC_PREVALENCE = 0.05;
+const AKIEC_PREVALENCE = 0.03;
+
+/** Combined malignant/pre-malignant base prevalence */
+const MALIGNANT_PREVALENCE = MELANOMA_PREVALENCE + BCC_PREVALENCE + AKIEC_PREVALENCE; // 0.10
+
+// ---------------------------------------------------------------------------
+// Age-based prevalence multipliers (melanoma incidence scales with age)
+// ---------------------------------------------------------------------------
+const AGE_MULTIPLIERS: Array<{ maxAge: number; multiplier: number }> = [
+	{ maxAge: 29, multiplier: 0.3 },
+	{ maxAge: 50, multiplier: 0.7 },
+	{ maxAge: 70, multiplier: 1.5 },
+	{ maxAge: Infinity, multiplier: 2.5 },
+];
+
+function getAgeMultiplier(age: number | undefined): number {
+	if (age === undefined || age < 0) return 1.0;
+	for (const bracket of AGE_MULTIPLIERS) {
+		if (age <= bracket.maxAge) return bracket.multiplier;
+	}
+	return 1.0;
+}
+
+// ---------------------------------------------------------------------------
+// Risk-level thresholds and messaging
+// ---------------------------------------------------------------------------
+interface RiskTier {
+	level: BayesianRiskLevel;
+	minProbability: number;
+	headline: string;
+	action: string;
+	urgency: string;
+	color: string;
+}
+
+const RISK_TIERS: RiskTier[] = [
+	{
+		level: "very-high",
+		minProbability: 0.50,
+		headline: "Urgent: see a dermatologist",
+		action: "Schedule within 1 week",
+		urgency: "within 1 week",
+		color: "#ef4444", // red
+	},
+	{
+		level: "high",
+		minProbability: 0.20,
+		headline: "See a dermatologist",
+		action: "Schedule within 2 weeks",
+		urgency: "within 2 weeks",
+		color: "#f97316", // orange
+	},
+	{
+		level: "moderate",
+		minProbability: 0.05,
+		headline: "Worth monitoring",
+		action: "Photograph monthly, see doctor if changes",
+		urgency: "monitor monthly",
+		color: "#f59e0b", // yellow
+	},
+	{
+		level: "low",
+		minProbability: 0.01,
+		headline: "Low concern",
+		action: "Continue routine skin checks",
+		urgency: "routine schedule",
+		color: "#10b981", // green
+	},
+	{
+		level: "minimal",
+		minProbability: 0,
+		headline: "No concerning features",
+		action: "Normal skin check schedule",
+		urgency: "normal schedule",
+		color: "#14b8a6", // teal
+	},
+];
+
+function getTier(postTestProbability: number): RiskTier {
+	for (const tier of RISK_TIERS) {
+		if (postTestProbability >= tier.minProbability) return tier;
+	}
+	// Fallback (should never reach here because minimal has minProbability 0)
+	return RISK_TIERS[RISK_TIERS.length - 1];
+}
+
+// ---------------------------------------------------------------------------
+// Core Bayesian risk assessment
+// ---------------------------------------------------------------------------
+
+/**
+ * Assess risk using Bayesian post-test probability.
+ *
+ * Instead of reporting the model's raw confidence (which conflates sensitivity
+ * with PPV), we compute:
+ *
+ *   1. Aggregate the model's malignant-class probabilities (mel + bcc + akiec).
+ *   2. Convert that into a likelihood ratio.
+ *   3. Multiply by the age-adjusted pre-test odds (prevalence).
+ *   4. Convert back to a post-test probability.
+ *
+ * The result is an honest statement about how likely the lesion actually is
+ * to be malignant given the model output AND the base rate.
+ *
+ * @param topClass - The model's top predicted HAM10000 class
+ * @param modelConfidence - The model's probability for the top class [0, 1]
+ * @param allProbabilities - Full probability distribution keyed by class name
+ * @param demographics - Optional age and body location for prior adjustment
+ */
+export function assessRisk(
+	topClass: string,
+	modelConfidence: number,
+	allProbabilities: Record<string, number>,
+	demographics?: { age?: number; bodyLocation?: string },
+): RiskAssessment {
+	// 1. Aggregate malignant probability from the model
+	const melProb = allProbabilities["mel"] ?? 0;
+	const bccProb = allProbabilities["bcc"] ?? 0;
+	const akiecProb = allProbabilities["akiec"] ?? 0;
+	const malignantProb = Math.min(melProb + bccProb + akiecProb, 0.9999);
+
+	// 2. Compute age-adjusted prevalence
+	const ageMultiplier = getAgeMultiplier(demographics?.age);
+	const adjustedPrevalence = Math.min(MALIGNANT_PREVALENCE * ageMultiplier, 0.5);
+
+	// 3. Bayesian update
+	//    Likelihood ratio: LR = P(model output | disease) / P(model output | no disease)
+	//    Simplified: treat the malignant probability as a continuous test result
+	const clampedMalignant = Math.max(malignantProb, 0.0001);
+	const clampedBenign = Math.max(1 - malignantProb, 0.0001);
+	const likelihoodRatio = clampedMalignant / clampedBenign;
+
+	//    Pre-test odds = prevalence / (1 - prevalence)
+	const preTestOdds = adjustedPrevalence / (1 - adjustedPrevalence);
+
+	//    Post-test odds = pre-test odds * LR
+	const postTestOdds = preTestOdds * likelihoodRatio;
+
+	//    Post-test probability = post-test odds / (1 + post-test odds)
+	const postTestProbability = postTestOdds / (1 + postTestOdds);
+
+	// 4. Map to risk tier
+	const tier = getTier(postTestProbability);
+
+	return {
+		riskLevel: tier.level,
+		postTestProbability,
+		preTestProbability: adjustedPrevalence,
+		likelihoodRatio,
+		headline: tier.headline,
+		action: tier.action,
+		urgency: tier.urgency,
+		color: tier.color,
+	};
+}
