@@ -418,6 +418,9 @@
 				<input type="file" accept="image/*" class="hidden" onchange={handleFileUpload} />
 			</label>
 		</div>
+		<p class="text-[10px] text-gray-500 text-center mt-2">
+			Tip: Place a USB-C charger cable next to the spot for accurate size measurement
+		</p>
 	{/if}
 	<!-- Camera / preview area -->
 	{#if cameraActive || cameraError || capturedPreview}

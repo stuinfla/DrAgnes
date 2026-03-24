@@ -19,6 +19,8 @@
 	import type { ConsumerResult } from "$lib/dragnes/consumer-translation";
 	import { classifyMultiImage } from "$lib/dragnes/multi-image";
 	import type { MultiImageResult } from "$lib/dragnes/multi-image";
+	import { measureLesion } from "$lib/dragnes/measurement";
+	import type { LesionMeasurement } from "$lib/dragnes/measurement";
 
 	import DermCapture from "./DermCapture.svelte";
 	import GradCamOverlay from "./GradCamOverlay.svelte";
@@ -91,6 +93,7 @@
 	let classificationError: string | null = $state(null);
 	let lowConfidenceWarning: string | null = $state(null);
 	let sevenPointResult: { score: number; recommendation: string; details: string[] } | null = $state(null);
+	let lesionMeasurement: LesionMeasurement | null = $state(null);
 
 	// Referral letter modal state
 	let showReferralLetter: boolean = $state(false);
@@ -360,6 +363,11 @@
 				colorsDetected,
 			};
 
+			// Measure lesion size using ADR-121 measurement system
+			if (realSegmentation && images[bestIdx]) {
+				lesionMeasurement = measureLesion(images[bestIdx], realSegmentation.area, capturedBodyLocation as any);
+			}
+
 			const structures = classifier.getLastStructures();
 			sevenPointResult = structures ? computeSevenPointScore(structures) : null;
 			explanationFindings = buildExplanation();
@@ -556,6 +564,11 @@
 				colorsDetected,
 			};
 
+			// Measure lesion size using ADR-121 measurement system
+			if (realSegmentation && capturedImageData) {
+				lesionMeasurement = measureLesion(capturedImageData, realSegmentation.area, capturedBodyLocation as any);
+			}
+
 			// 7-point dermoscopy checklist
 			const structures = classifier.getLastStructures();
 			if (structures) {
@@ -612,6 +625,7 @@
 		capturedImageData = null;
 		classificationResult = null;
 		abcdeScores = null;
+		lesionMeasurement = null;
 		gradCamData = null;
 		classificationError = null;
 		lowConfidenceWarning = null;
@@ -920,6 +934,25 @@
 												<div class="text-sm font-bold tabular-nums text-gray-200">{abcdeScores.totalScore.toFixed(1)}</div>
 												<div class="text-[8px] text-gray-500 uppercase tracking-wider mt-0.5">TDS</div>
 											</div>
+										{/if}
+									</div>
+								{/if}
+
+								<!-- Estimated Size (ADR-121 measurement) -->
+								{#if lesionMeasurement}
+									<div class="mx-5 mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+										<div class="flex items-center justify-between">
+											<span class="text-[11px] font-medium text-gray-400">Estimated Size</span>
+											<span class="text-sm font-semibold {lesionMeasurement.diameterMm >= 6 ? 'text-amber-400' : 'text-gray-200'}">
+												{lesionMeasurement.diameterMm.toFixed(1)}mm
+											</span>
+										</div>
+										<div class="mt-1 flex items-center gap-1.5">
+											<span class="inline-block h-1.5 w-1.5 rounded-full {lesionMeasurement.confidence === 'high' ? 'bg-emerald-500' : lesionMeasurement.confidence === 'medium' ? 'bg-amber-400' : 'bg-gray-500'}"></span>
+											<span class="text-[10px] text-gray-500">{lesionMeasurement.details}</span>
+										</div>
+										{#if lesionMeasurement.diameterMm >= 6}
+											<p class="mt-2 text-[10px] text-amber-400/80">Diameter ≥ 6mm — a clinical indicator in the ABCDE criteria.</p>
 										{/if}
 									</div>
 								{/if}
