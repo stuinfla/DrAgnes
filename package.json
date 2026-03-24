@@ -1,6 +1,6 @@
 {
   "name": "dragnes",
-  "version": "0.2.0",
+  "version": "0.8.0",
   "private": true,
   "description": "DrAgnes -- AI-Powered Dermatology Intelligence Platform",
   "type": "module",
@@ -32,6 +32,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "@ruvector/cnn": "^0.1.0"
+    "@ruvector/cnn": "^0.1.0",
+    "onnxruntime-web": "^1.21.0"
   }
 }

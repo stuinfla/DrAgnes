@@ -577,21 +577,31 @@ npm run dev
 
 The app starts at `http://localhost:5173`.
 
+### Deployment
+
+**Live:** https://dragnes.vercel.app
+**Vercel project:** https://vercel.com/stuart-kerrs-projects/dragnes
+**GitHub:** https://github.com/stuinfla/DrAgnes
+
+The app uses ONNX Runtime Web for in-browser inference — the 85MB INT8 model
+runs at 155ms with zero network dependency. Images never leave the device.
+A HuggingFace API fallback is available for online mode.
+
 ### Environment Variables
 
 Create a `.env` file:
 
 ```bash
-# Required for HuggingFace model inference (online mode)
+# Optional: HuggingFace API for online fallback mode
 HF_TOKEN=hf_your_token_here
 
 # Optional: override default models
 HF_MODEL_1=stuartkerr/dragnes-classifier
-HF_MODEL_2=Anwarkh1/Skin_Cancer-Image_Classification
 ```
 
-Without `HF_TOKEN`, the system runs in offline mode using the literature-derived
-and rule-based classifiers only (no neural network).
+Without `HF_TOKEN`, the system runs in ONNX offline mode using the v2
+combined model (95.97% mel sensitivity) directly in the browser. No
+network required.
 
 ### Train a Custom Model (Optional)
 

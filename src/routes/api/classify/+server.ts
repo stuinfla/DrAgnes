@@ -15,7 +15,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
 
-const DEFAULT_MODEL_1 = "Anwarkh1/Skin_Cancer-Image_Classification";
+const DEFAULT_MODEL_1 = "stuartkerr/dragnes-classifier";
 
 /** Read the model name from environment or use the default */
 function getModel(): string {
