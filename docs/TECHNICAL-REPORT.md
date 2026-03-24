@@ -1,4 +1,4 @@
-Updated: 2026-03-23 19:30:00 EST | Version 1.3.0
+Updated: 2026-03-23 21:00:00 EST | Version 1.4.0
 Created: 2026-03-22
 
 # DrAgnes AI Dermatoscopy Screening Platform -- Technical Report
@@ -45,7 +45,9 @@ The system accepts a dermoscopic or clinical photograph, runs it through a multi
 
 ### Current accuracy state
 
-Cross-dataset validation results (March 22, 2026):
+Cross-dataset validation results (March 22-23, 2026):
+
+**HAM10000-family datasets** (same distribution as training data):
 
 | Dataset | N | Melanoma Sensitivity | Source |
 |---------|---|---------------------|--------|
@@ -54,7 +56,21 @@ Cross-dataset validation results (March 22, 2026):
 | marmal88 test split | 1,285 | 100.0% | Author's curated test split |
 | Overfitting check | -- | -0.7% gap | Train vs. test accuracy difference |
 
-The custom model (`stuartkerr/dragnes-classifier`) achieves 98.2% melanoma sensitivity on the HAM10000 holdout set, exceeding the DermaSensor FDA pivotal study threshold of 95.5% (DERM-ASSESS III). This was achieved using focal loss (gamma=2.0, melanoma alpha=8.0) with 3-layer class balancing.
+*Evidence: `scripts/cross-validation-results.json` (overfitting_check.test_results.melanoma_sensitivity = 0.9822, external_validation.melanoma_sensitivity = 0.9868)*
+
+**External dataset** (different distribution from training data):
+
+| Dataset | N | Melanoma Sensitivity | All-Cancer Sensitivity | Overall Accuracy | Source |
+|---------|---|---------------------|----------------------|-----------------|--------|
+| ISIC 2019 (BCN20000-derived) | 4,998 | **61.6%** | **61.8%** | 57.6% | akinsanyaayomide/skin_cancer_dataset_balanced_labels_2 |
+
+*Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.melanoma_sensitivity = 0.6162, cancer_metrics.all_cancer_sensitivity = 0.6176, overall_accuracy = 0.5756)*
+
+**CRITICAL CONTEXT**: The custom model achieves 98.2% melanoma sensitivity on HAM10000 holdout but **drops to 61.6% on the ISIC 2019 external dataset** -- a 36.6 percentage point decline. This demonstrates that HAM10000-family results do not generalize to external data. The three HAM10000-family test sets (holdout, Nagabu, marmal88) share the same source images and image acquisition conditions, so high performance across them confirms zero overfitting but does NOT confirm generalization.
+
+The custom model (`stuartkerr/dragnes-classifier`) achieves 98.2% melanoma sensitivity on the HAM10000 holdout set, exceeding the DermaSensor FDA pivotal study threshold of 95.5% (DERM-ASSESS III) on same-distribution data. This was achieved using focal loss (gamma=2.0, melanoma alpha=8.0) with 3-layer class balancing. External generalization to ISIC 2019 data remains significantly below this threshold.
+
+**Metrics not yet computed**: AUROC has not been calculated on any dataset. All-cancer sensitivity has not been measured on combined HAM10000 data (the only measured all-cancer sensitivity is 61.8% on ISIC 2019, from `scripts/isic2019-validation-results.json`, field `cancer_metrics.all_cancer_sensitivity`).
 
 **HuggingFace model:** [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
 
@@ -86,11 +102,12 @@ Bayesian demographic adjustment is always applied on top of the ensemble output.
 | Status | Component |
 |--------|-----------|
 | **Validated (by published literature)** | ABCD rule formulation (Stolz et al. 1994), 7-point checklist (Argenziano et al. 1998), GLCM texture features (Haralick et al. 1973), Shades-of-Gray normalization (Finlayson 2004), Otsu thresholding (Otsu 1979), DermaSensor clinical thresholds (Tkaczyk et al. 2024, FDA DEN230008) |
-| **Independently validated by us** | Custom ViT (stuartkerr/dragnes-classifier): 98.2% melanoma sensitivity on HAM10000 holdout (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), 100% on marmal88 test (1,285 images). -0.7% train/test gap (zero overfitting). Anwarkh1 ViT-Base: 73.3% melanoma sensitivity on 210 images. skintaglabs SigLIP: 30.0% melanoma sensitivity. Hand-crafted features alone: 0% melanoma sensitivity (proven insufficient). |
+| **Independently validated by us** | Custom ViT (stuartkerr/dragnes-classifier): 98.2% melanoma sensitivity on HAM10000 holdout (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), 100% on marmal88 test (1,285 images). -0.7% train/test gap (zero overfitting). **External validation: 61.6% melanoma sensitivity on ISIC 2019 (4,998 images).** Anwarkh1 ViT-Base: 73.3% melanoma sensitivity on 210 images. skintaglabs SigLIP: 30.0% melanoma sensitivity. Hand-crafted features alone: 0% melanoma sensitivity (proven insufficient). |
 | **Implemented and functioning** | Full preprocessing pipeline, lesion segmentation (Otsu + morphological cleanup in LAB), 20-feature extraction (ABCDE, GLCM, LBP, k-means color), custom ViT + ensemble, literature-derived logistic regression, rule-based scoring with safety gates, demographic adjustment, attention visualization, ICD-10 mapping, referral letters, explainability panel, analytics dashboard |
-| **Implemented but not validated** | Full 4-layer ensemble combined accuracy with custom model, optimal ensemble weights, clinical safety thresholds, per-Fitzpatrick-type performance |
-| **Achieved** | 98.2% melanoma sensitivity (exceeds DermaSensor 95.5% benchmark) |
-| **Aspirational** | Prospective clinical validation, FDA 510(k) clearance, Fitzpatrick V-VI equity validation |
+| **Implemented but not validated** | Full 4-layer ensemble combined accuracy with custom model, optimal ensemble weights, clinical safety thresholds, per-Fitzpatrick-type performance, AUROC (not yet computed on any dataset), all-cancer sensitivity on HAM10000 (not yet measured) |
+| **Achieved on HAM10000** | 98.2% melanoma sensitivity (exceeds DermaSensor 95.5% benchmark on same-distribution data) |
+| **Not achieved on external data** | 61.6% melanoma sensitivity on ISIC 2019 (36.6pp below HAM10000 result, 28.6pp below DermaSensor's 90.2%) |
+| **Aspirational** | Close generalization gap, prospective clinical validation, FDA 510(k) clearance, Fitzpatrick V-VI equity validation, AUROC computation |
 
 ---
 
@@ -640,6 +657,8 @@ Community ViT models do not meet the 90% melanoma sensitivity target. We trained
 
 #### Cross-Dataset Validation Results
 
+**HAM10000-family** (same distribution as training data):
+
 | Dataset | N | Melanoma Sensitivity | Notes |
 |---------|---|---------------------|-------|
 | HAM10000 holdout | 1,503 | 98.2% | 15% stratified holdout |
@@ -647,7 +666,17 @@ Community ViT models do not meet the 90% melanoma sensitivity target. We trained
 | marmal88 test split | 1,285 | 100.0% | Author's curated test split |
 | Train vs. test gap | -- | -0.7% | Confirms zero overfitting |
 
-The custom model exceeds the DermaSensor DERM-ASSESS III melanoma sensitivity of 95.5% on all three test sets. The -0.7% train/test gap (test slightly outperforming train) confirms there is no overfitting.
+*Evidence: `scripts/cross-validation-results.json`*
+
+**External dataset** (different distribution):
+
+| Dataset | N | Melanoma Sensitivity | Overall Accuracy | Notes |
+|---------|---|---------------------|-----------------|-------|
+| ISIC 2019 (BCN20000-derived) | 4,998 | **61.6%** | 57.6% | 8-class dataset mapped to HAM10000 7-class taxonomy |
+
+*Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.melanoma_sensitivity = 0.6162)*
+
+The custom model exceeds the DermaSensor DERM-ASSESS III melanoma sensitivity of 95.5% on all three HAM10000-family test sets. The -0.7% train/test gap (test slightly outperforming train) confirms there is no overfitting within the HAM10000 distribution. However, external validation on ISIC 2019 data shows a 36.6 percentage point drop (98.2% to 61.6%), indicating the model has not yet generalized beyond its training distribution.
 
 **Why focal loss works:** Standard cross-entropy loss treats all misclassifications equally. In HAM10000, melanocytic nevi represent 66.9% of the dataset. A model optimizing cross-entropy will focus on correctly classifying nevi (the majority class) at the expense of melanoma sensitivity. Focal loss (Lin et al. 2017) down-weights well-classified examples and focuses on hard cases. Combined with melanoma alpha=8.0, this forces the model to treat every melanoma misclassification as 8x more costly than a nevus misclassification.
 
@@ -703,17 +732,21 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 
 ### 4.4 DrAgnes vs. Benchmarks
 
-| Metric | DermaSensor (measured) | Nevisense (measured) | DrAgnes (measured) |
-|--------|------------------------|----------------------|---------------------|
-| Melanoma sensitivity | 90.2% (pivotal), 95.5% (DERM-ASSESS III) | 97% | **98.2%** (HAM10000 holdout) |
-| Specificity | 20.7% (overall), 32.5% (derm setting) | 31.3% | ~72% (on nevi) |
-| Melanoma FNR ceiling | 4.5% | 3% | **1.8%** |
-| NPV | 96.6% | -- | Pending full measurement |
-| Fitzpatrick disparity | 4% | -- | Not yet measured |
-| Cost | $7,000 device + per-test fee | Expensive | Free (open source) |
-| Validation | 1,579 lesions, FDA pivotal | Clinical trial | 3,788 images, 3 test sets |
+| Metric | DermaSensor (measured) | Nevisense (measured) | DrAgnes HAM10000 (measured) | DrAgnes ISIC 2019 (measured) |
+|--------|------------------------|----------------------|-----------------------------|------------------------------|
+| Melanoma sensitivity | 90.2% (pivotal), 95.5% (DERM-ASSESS III) | 97% | **98.2%** (holdout, N=1,503) | **61.6%** (external, N=4,998) |
+| Specificity | 20.7% (overall), 32.5% (derm setting) | 31.3% | ~80% (on nevi) | ~88% (on nevi) |
+| Melanoma FNR ceiling | 4.5% | 3% | **1.8%** | **38.4%** |
+| All-cancer sensitivity | 95.5% | -- | Not yet measured on HAM10000 | **61.8%** |
+| NPV | 96.6% | -- | Not yet computed | Not yet computed |
+| AUROC | 0.779 (FST I-III) | -- | Not yet computed | Not yet computed |
+| Fitzpatrick disparity | 4% | -- | Not yet measured | Not yet measured |
+| Cost | $7,000 device + per-test fee | Expensive | Free (open source) | Free (open source) |
+| Validation | 1,579 lesions, FDA pivotal | Clinical trial | 3,788 images, 3 HAM10000-family sets | 4,998 images, 1 external set |
 
-**Status**: The custom model (stuartkerr/dragnes-classifier) exceeds the DermaSensor melanoma sensitivity benchmark on all three test sets. The 28% false positive rate on nevi is higher than ideal but is a deliberate design choice prioritizing sensitivity over specificity. Remaining gaps: no prospective clinical validation, no Fitzpatrick V-VI equity measurement, no FDA clearance.
+*Evidence sources: HAM10000 column from `scripts/cross-validation-results.json`; ISIC 2019 column from `scripts/isic2019-validation-results.json` (cancer_metrics fields). All-cancer sensitivity on HAM10000 has not been computed. AUROC has not been computed on any dataset. NPV requires calibrated probability thresholds not yet established.*
+
+**Status**: The custom model (stuartkerr/dragnes-classifier) exceeds the DermaSensor melanoma sensitivity benchmark on HAM10000-family test sets but **falls significantly below it on external ISIC 2019 data** (61.6% vs. DermaSensor's 90.2%). The HAM10000 results demonstrate the model's capability on same-distribution data with zero overfitting, but the ISIC 2019 results reveal a generalization gap that must be closed before clinical deployment. The 28% false positive rate on nevi (HAM10000) is a deliberate design choice prioritizing sensitivity over specificity. Remaining gaps: external generalization, no prospective clinical validation, no Fitzpatrick V-VI equity measurement, no FDA clearance.
 
 ---
 
@@ -836,38 +869,47 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 ## 7. Known Limitations (Complete List)
 
-### What we now know (validated March 22, 2026)
+### What we now know (validated March 22-23, 2026)
 
-- **Custom model (stuartkerr/dragnes-classifier) achieves 98.2% melanoma sensitivity** on HAM10000 holdout (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), and 100% on marmal88 test (1,285 images). Zero overfitting (-0.7% train/test gap).
-- **Anwarkh1 ViT-Base achieves 73.3% melanoma sensitivity** on 210 HAM10000 test images. Below the 90% clinical target.
-- **skintaglabs SigLIP achieves 30.0% melanoma sensitivity.** Misses 70% of melanomas. Not suitable as a primary classifier.
+- **Custom model (stuartkerr/dragnes-classifier) achieves 98.2% melanoma sensitivity on HAM10000 holdout** (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), and 100% on marmal88 test (1,285 images). Zero overfitting (-0.7% train/test gap). *Evidence: `scripts/cross-validation-results.json`*
+- **Custom model drops to 61.6% melanoma sensitivity on ISIC 2019 external data** (4,998 images). Overall accuracy 57.6%. All-cancer sensitivity 61.8%. This is the only genuinely external validation and it shows the model does not yet generalize. *Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.melanoma_sensitivity = 0.6162)*
+- **AUROC has not been computed** on any dataset. No ROC curve analysis has been performed. *Evidence: no evidence file contains an AUROC metric.*
+- **All-cancer sensitivity on HAM10000 data has not been measured.** The only measured all-cancer sensitivity is 61.8% on ISIC 2019. *Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.all_cancer_sensitivity = 0.6176)*
+- **Anwarkh1 ViT-Base achieves 73.3% melanoma sensitivity** on 210 HAM10000 test images. Below the 90% clinical target. *Evidence: `scripts/siglip-test-results.json` (metrics.vit_mel.mel_sens = 0.7333)*
+- **skintaglabs SigLIP achieves 30.0% melanoma sensitivity.** Misses 70% of melanomas. Not suitable as a primary classifier. *Evidence: `scripts/siglip-test-results.json` (metrics.siglip.mel_sens = 0.3)*
 - **Hand-crafted features alone achieve 0% melanoma sensitivity** in full-mode training. Proven insufficient as a standalone classifier.
 - **The actavkid model is gone.** Removed from HuggingFace (HTTP 410). Its 89% melanoma recall claim cannot be verified.
-- **Community models are not clinical-grade.** No freely-available HuggingFace model we tested meets the 90% melanoma sensitivity threshold. The custom-trained model is the only one that exceeds it.
+- **Community models are not clinical-grade.** No freely-available HuggingFace model we tested meets the 90% melanoma sensitivity threshold. The custom-trained model is the only one that exceeds it on HAM10000 data.
 
 ### What we still do not know
 
-1. **No end-to-end ensemble accuracy measurement.** We have validated the Anwarkh1 model individually (73.3% mel sens, 55.7% overall) but have not measured the complete 4-layer ensemble's combined accuracy.
+1. **External generalization is poor.** The model achieves 98.2% melanoma sensitivity on HAM10000 but only 61.6% on ISIC 2019 external data (a 36.6pp drop). This is the single most important limitation. Until this gap is closed, no HAM10000-only metric should be treated as representative of real-world performance. *Evidence: `scripts/isic2019-validation-results.json` (comparison_with_ham10000.mel_sensitivity_delta = -0.366)*
 
-2. **The skintaglabs SigLIP model has not been validated.** It was deployed as a replacement for the dead actavkid model but we have not measured its per-class sensitivity/specificity on HAM10000.
+2. **No end-to-end ensemble accuracy measurement.** We have validated the Anwarkh1 model individually (73.3% mel sens, 55.7% overall) but have not measured the complete 4-layer ensemble's combined accuracy.
 
-3. **Dual-model combined melanoma sensitivity is unknown.** Equal weighting (50/50) is a safe default but may not be optimal. The two models may have correlated errors that reduce the ensemble benefit.
+3. **The skintaglabs SigLIP model has not been validated.** It was deployed as a replacement for the dead actavkid model but we have not measured its per-class sensitivity/specificity on HAM10000.
 
-4. **Ensemble weights (50/30/20) are assumptions, not empirically optimized.** The weights were set based on engineering judgment. The actual optimal weights are unknown and should be determined through validation.
+4. **Dual-model combined melanoma sensitivity is unknown.** Equal weighting (50/50) is a safe default but may not be optimal. The two models may have correlated errors that reduce the ensemble benefit.
 
-5. **Segmentation is fragile on low-contrast clinical photos.** Otsu thresholding assumes a bimodal histogram (lesion darker than skin). This fails for amelanotic melanoma, hypo-pigmented lesions, dark skin (Fitzpatrick V-VI), and non-dermoscopic photographs. The fallback centered-ellipse is a poor substitute.
+5. **Ensemble weights (50/30/20) are assumptions, not empirically optimized.** The weights were set based on engineering judgment. The actual optimal weights are unknown and should be determined through validation.
 
-6. **ABCDE "Evolution" is always 0.** The Evolution component requires comparing the current image against a previous image. The system does not currently implement longitudinal tracking, so Evolution always scores 0.
+6. **AUROC has not been computed.** No ROC curve analysis has been performed on any dataset. This metric requires storing per-image probability scores, which was not done during validation runs.
 
-7. **Attention heatmap is feature saliency, not true Grad-CAM.** The visualization is a weighted combination of color irregularity (45%), local entropy (30%), and border proximity (25%). It shows diagnostically relevant regions but does not reflect neural network attention. It should not be presented to clinicians as a model explanation.
+7. **All-cancer sensitivity on HAM10000 has not been measured.** The only measured all-cancer sensitivity is 61.8% on ISIC 2019 external data. *Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.all_cancer_sensitivity = 0.6176)*
 
-8. **Fitzpatrick V-VI underrepresented in training data.** HAM10000 is approximately 95% Fitzpatrick I-III. Performance on darker skin tones is unknown and likely degraded. DermaSensor reported a 4% sensitivity gap between FST I-III and FST IV-VI; our gap may be larger.
+8. **Segmentation is fragile on low-contrast clinical photos.** Otsu thresholding assumes a bimodal histogram (lesion darker than skin). This fails for amelanotic melanoma, hypo-pigmented lesions, dark skin (Fitzpatrick V-VI), and non-dermoscopic photographs. The fallback centered-ellipse is a poor substitute.
 
-9. **No prospective clinical validation.** All testing has been on HAM10000 and ad-hoc images. The system has not been tested in clinical workflow conditions.
+9. **ABCDE "Evolution" is always 0.** The Evolution component requires comparing the current image against a previous image. The system does not currently implement longitudinal tracking, so Evolution always scores 0.
 
-10. **Not FDA-cleared.** DrAgnes is a research prototype. It has not been submitted for 510(k) clearance and must not be used for clinical decision-making without appropriate regulatory authorization and professional medical oversight.
+10. **Attention heatmap is feature saliency, not true Grad-CAM.** The visualization is a weighted combination of color irregularity (45%), local entropy (30%), and border proximity (25%). It shows diagnostically relevant regions but does not reflect neural network attention. It should not be presented to clinicians as a model explanation.
 
-11. **Custom model weights are not in the repository.** The trained model (327MB) must be downloaded from [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier) on HuggingFace or trained locally using `scripts/train-fast.py`.
+11. **Fitzpatrick V-VI underrepresented in training data.** HAM10000 is approximately 95% Fitzpatrick I-III. Performance on darker skin tones is unknown and likely degraded. DermaSensor reported a 4% sensitivity gap between FST I-III and FST IV-VI; our gap may be larger.
+
+12. **No prospective clinical validation.** All testing has been on HAM10000 and ad-hoc images. The system has not been tested in clinical workflow conditions.
+
+13. **Not FDA-cleared.** DrAgnes is a research prototype. It has not been submitted for 510(k) clearance and must not be used for clinical decision-making without appropriate regulatory authorization and professional medical oversight.
+
+14. **Custom model weights are not in the repository.** The trained model (327MB) must be downloaded from [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier) on HuggingFace or trained locally using `scripts/train-fast.py`.
 
 ---
 
@@ -990,10 +1032,12 @@ When the two ViT models disagree on the top predicted class, the system:
 
 ### 8.5 Validation Status
 
-**What we have validated (March 22, 2026):**
-- Custom model (stuartkerr/dragnes-classifier): 98.2% melanoma sensitivity on HAM10000 holdout (1,503), 98.7% on Nagabu/HAM10000 (1,000), 100% on marmal88 test (1,285). -0.7% train/test gap.
-- Anwarkh1 ViT-Base on 210 HAM10000 test images: 73.3% melanoma sensitivity, 55.7% overall accuracy
-- skintaglabs SigLIP: 30.0% melanoma sensitivity (insufficient for clinical use)
+**What we have validated (March 22-23, 2026):**
+- Custom model (stuartkerr/dragnes-classifier) on HAM10000-family data: 98.2% melanoma sensitivity on holdout (1,503), 98.7% on Nagabu/HAM10000 (1,000), 100% on marmal88 test (1,285). -0.7% train/test gap. *Evidence: `scripts/cross-validation-results.json`*
+- Custom model on ISIC 2019 external data: **61.6% melanoma sensitivity**, 61.8% all-cancer sensitivity, 57.6% overall accuracy (4,998 images). *Evidence: `scripts/isic2019-validation-results.json`*
+- Custom model multi-image consensus: 99.4% melanoma sensitivity on HAM10000 holdout (1,499 images, 3 views). *Evidence: `scripts/multi-image-validation-results.json`*
+- Anwarkh1 ViT-Base on 210 HAM10000 test images: 73.3% melanoma sensitivity, 55.7% overall accuracy. *Evidence: `scripts/siglip-test-results.json`*
+- skintaglabs SigLIP: 30.0% melanoma sensitivity (insufficient for clinical use). *Evidence: `scripts/siglip-test-results.json`*
 - Hand-crafted features alone: 0% melanoma sensitivity (proven insufficient)
 
 **What we have NOT validated:**
@@ -1003,13 +1047,17 @@ When the two ViT models disagree on the top predicted class, the system:
 - Performance on Fitzpatrick V-VI skin tones
 
 **Outstanding validation tasks:**
-- [x] Train custom model with focal loss -- DONE (98.2% mel sens)
-- [x] Validate on multiple independent test sets -- DONE (3 datasets, zero overfitting)
+- [x] Train custom model with focal loss -- DONE (98.2% mel sens on HAM10000)
+- [x] Validate on multiple HAM10000-family test sets -- DONE (3 datasets, zero overfitting)
 - [x] Validate skintaglabs SigLIP -- DONE (30.0% mel sens, insufficient)
+- [x] External validation on ISIC 2019 -- DONE (61.6% mel sens, significant generalization gap)
+- [ ] Close the generalization gap (98.2% HAM10000 vs 61.6% ISIC 2019)
+- [ ] Compute AUROC on all datasets (not yet computed on any dataset)
+- [ ] Measure all-cancer sensitivity on HAM10000 data (only measured on ISIC 2019: 61.8%)
 - [ ] Measure full 4-layer ensemble accuracy end-to-end with custom model
 - [ ] Validate on Fitzpatrick V-VI images
 - [ ] Prospective clinical validation
-- [ ] Measure specificity and NNB with custom model
+- [ ] Measure specificity, NPV, and NNB with custom model
 
 ---
 
@@ -1062,4 +1110,4 @@ SVG-based clickable body map replacing the previous dropdown selector for body l
 
 ---
 
-*This document was prepared for technical review by dermatology professionals evaluating the DrAgnes classification system. All claims of system performance are qualified with their validation status. Where independent validation has not been performed, this is stated explicitly. DrAgnes is a research prototype and is not FDA-cleared for clinical use.*
+*This document was prepared for technical review by dermatology professionals evaluating the DrAgnes classification system. All claims of system performance are qualified with their validation status and cite the specific evidence file from which each number is derived. Where independent validation has not been performed, this is stated explicitly. External validation on ISIC 2019 data (61.6% melanoma sensitivity) demonstrates that HAM10000-family results (98.2%) do not yet generalize; both figures are reported throughout this document. AUROC has not been computed on any dataset. All-cancer sensitivity has only been measured on ISIC 2019 external data (61.8%). DrAgnes is a research prototype and is not FDA-cleared for clinical use.*

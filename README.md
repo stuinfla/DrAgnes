@@ -128,8 +128,7 @@ If any layer flags a lesion as suspicious, the system errs toward biopsy.
 
 ## Why Dr. Agnes Is Different
 
-No other open-source dermatoscopy tool achieves this level of melanoma detection
-on external data. We tested the alternatives ourselves -- every number in this
+We tested the open-source alternatives ourselves -- every number in this
 table was measured by us on the same test images, not copied from model cards
 or marketing materials.
 
@@ -429,22 +428,24 @@ static/                      PWA manifest, icons
 
 | Metric | DermaSensor | Nevisense | MelaFind | Dr. Agnes |
 |--------|-------------|-----------|----------|-----------|
-| Melanoma sensitivity | 95.5% | 97% | 98.3% | 91.3% |
-| Specificity | 20.7-32.5% | 31.3% | 9.9% | ~72% (nevi) |
+| Melanoma sensitivity | 95.5% | 97% | 98.3% | 98.2% (HAM10000) / 61.6% (ISIC 2019) |
+| Specificity | 20.7-32.5% | 31.3% | 9.9% | ~72% (nevi, HAM10000 only) |
 | Technology | Spectroscopy ($7K hardware) | Impedance ($$$) | Multispectral (discontinued) | Vision Transformer (open source) |
-| Validation | 1,579 lesions, FDA pivotal | Clinical trial | FDA pivotal | 29,540 images, multi-dataset |
-| External data tested | Yes (pivotal trial) | Yes | Yes | Yes (ISIC 2019 + HAM10000) |
+| Validation | 1,579 lesions, FDA pivotal | Clinical trial | FDA pivotal | HAM10000 holdout (2,004 images) + ISIC 2019 (4,998 images) |
+| External data tested | Yes (pivotal trial) | Yes | Yes | Yes (ISIC 2019: 61.6% sensitivity) |
 | Cost | $7,000 device + per-test fee | Expensive | Withdrawn | Free |
 
 Sources: DermaSensor (FDA DEN230008, Tkaczyk et al. 2024), Nevisense (Scibase
-clinical data), MelaFind (withdrawn from market). Dr. Agnes numbers are from
-cross-dataset validation on HAM10000 + ISIC 2019 variants.
+clinical data), MelaFind (withdrawn from market). Dr. Agnes HAM10000 numbers
+from `scripts/cross-validation-results.json`; ISIC 2019 numbers from
+`scripts/isic2019-validation-results.json`.
 
 Note: DermaSensor's 95.5% comes from the DERM-ASSESS III melanoma-focused
 study (440 lesions). Its broader DERM-SUCCESS pivotal trial measured 90.2%
-melanoma sensitivity on 1,579 lesions. Dr. Agnes's 91.3% is measured on
-29,540 images from multiple independent sources but has not undergone
-prospective clinical validation.
+melanoma sensitivity on 1,579 lesions. Dr. Agnes's 98.2% is on HAM10000
+holdout only (same-distribution data). On genuinely external data (ISIC 2019),
+sensitivity drops to 61.6%. Combined-dataset retraining is in progress.
+Dr. Agnes has not undergone prospective clinical validation.
 
 ---
 
@@ -462,9 +463,12 @@ We believe honesty about limitations is more important than marketing.
    reported a 4% sensitivity gap between FST I-III and FST IV-VI; our gap may
    be larger. This is a systemic problem in dermatology AI, not an excuse.
 
-3. **91.3% is not 100%.** Roughly 1 in 11 melanomas will be missed. This is
-   better than most open-source alternatives but worse than the 95.5% achieved
-   by DermaSensor's FDA-cleared hardware. The gap matters clinically.
+3. **The generalization gap is the real limitation.** On HAM10000 holdout,
+   sensitivity is 98.2% (source: `cross-validation-results.json`). On genuinely
+   external data (ISIC 2019), sensitivity drops to 61.6% (source:
+   `isic2019-validation-results.json`). That means roughly 2 in 5 melanomas are
+   missed on new data. Combined-dataset retraining is in progress to close this
+   gap. Until external validation improves, the 98.2% number alone is misleading.
 
 4. **High melanoma sensitivity comes at a cost to specificity.** The ~28%
    false positive rate on melanocytic nevi means roughly 1 in 4 benign moles
@@ -513,10 +517,10 @@ to well-funded dermatology practices in wealthy countries. A farmer in rural
 India, a nurse practitioner in Appalachia, a community health worker in
 sub-Saharan Africa -- they have smartphones, but they do not have DermaSensors.
 
-Dr. Agnes is an attempt to close that gap. It is not there yet -- 91.3% is
-not 95.5%, Fitzpatrick equity is not proven, and no regulator has cleared it.
-But the architecture is sound, the training methodology is honest, and the
-code is open.
+Dr. Agnes is an attempt to close that gap. It is not there yet -- 98.2% on
+same-distribution data drops to 61.6% on external data, Fitzpatrick equity is
+not proven, and no regulator has cleared it. But the architecture is sound,
+the training methodology is honest, and the code is open.
 
 The path forward:
 

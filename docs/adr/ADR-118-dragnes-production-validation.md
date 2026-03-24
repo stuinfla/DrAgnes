@@ -1,24 +1,43 @@
-Updated: 2026-03-23 02:00:00 EST | Version 1.0.0
+Updated: 2026-03-23 14:00:00 EST | Version 1.1.0
 Created: 2026-03-23
 
 # ADR-118: Dr. Agnes — Production Validation & World-Class Medical Proof
 
-## Status: PROPOSED
+## Status: IN PROGRESS -- Claims Corrected 2026-03-23
+
+---
+
+## Corrections Log
+
+| Date | What Changed | Why | Corrected By |
+|------|-------------|-----|-------------|
+| 2026-03-23 | Replaced melanoma sensitivity "96.2%" with measured values: 98.2% (HAM10000) / 61.6% (ISIC 2019 external) | Original "96.2%" does not appear in any evidence file. FDA audit flagged unsupported claims. | Stuart Kerr + Claude (FDA audit correction) |
+| 2026-03-23 | Replaced AUROC "0.936" with "Not yet computed" | No AUROC calculation exists in any results file. The number had no source. | Stuart Kerr + Claude (FDA audit correction) |
+| 2026-03-23 | Replaced all-cancer sensitivity "97.3%" with "Not yet measured on combined data" | No combined-dataset cancer sensitivity has been computed. External ISIC 2019 measured 61.8% all-cancer sensitivity (isic2019-validation-results.json). | Stuart Kerr + Claude (FDA audit correction) |
+| 2026-03-23 | Replaced melanoma specificity "73.1%" with measured values: 80.4% (HAM10000) / 88.2% (ISIC 2019 external) | Original "73.1%" does not match either evidence file. | Stuart Kerr + Claude (FDA audit correction) |
+| 2026-03-23 | Updated Success Criteria table to reflect actual measured values vs targets | Multiple "Current" values had no supporting evidence. | Stuart Kerr + Claude (FDA audit correction) |
+| 2026-03-23 | Added note that combined-dataset training is in progress | Context needed for roadmap accuracy. | Stuart Kerr + Claude (FDA audit correction) |
+
+**Governing principle:** Every number in this document must cite a specific evidence file. If a metric has not been computed, it must say so explicitly.
+
+---
 
 ## Context
 
-Dr. Agnes has achieved measurable results that exceed the only FDA-cleared skin cancer AI device (DermaSensor):
+Dr. Agnes has achieved measurable results on HAM10000 that are competitive with the only FDA-cleared skin cancer AI device (DermaSensor). However, performance drops significantly on external data (ISIC 2019), indicating the model has not yet generalized. Combined-dataset training is in progress.
 
-| Metric | DrAgnes (measured) | DermaSensor (FDA pivotal) | Source |
-|--------|-------------------|--------------------------|--------|
-| Melanoma sensitivity | **96.2%** | 90.2-95.5% | 4,431 test images |
-| Melanoma specificity | **73.1%** | 20.7-32.5% | Cross-dataset |
-| Melanoma AUROC | **0.936** | 0.758 | Combined test set |
-| All-cancer sensitivity | **97.3%** | 95.5% | mel+bcc+akiec |
-| All-cancer specificity | **57.8%** | 20.7% | Combined test set |
-| Training data | 29,540 images | Proprietary | Multi-source |
+| Metric | DrAgnes on HAM10000 | DrAgnes on ISIC 2019 (external) | DermaSensor (FDA pivotal) | Evidence File |
+|--------|--------------------|---------------------------------|--------------------------|---------------|
+| Melanoma sensitivity | **98.2%** (n=225) | **61.6%** (n=714) | 90.2-95.5% | cross-validation-results.json (mel sensitivity=0.9822) / isic2019-validation-results.json (mel sensitivity=0.6162) |
+| Melanoma specificity | **80.4%** | **88.2%** | 20.7-32.5% | cross-validation-results.json (mel specificity=0.8038) / isic2019-validation-results.json (mel specificity=0.8819) |
+| Melanoma AUROC | Not yet computed | Not yet computed | 0.758 | No AUROC calculation in any results file |
+| All-cancer sensitivity | Not yet measured on combined data | **61.8%** (mel+bcc+akiec, n=2142) | 95.5% | isic2019-validation-results.json (all_cancer_sensitivity=0.6176) |
+| All-cancer specificity | Not yet measured on combined data | Not yet measured | 20.7% | No combined specificity in any results file |
+| Training data | 10,015 images (HAM10000) | Evaluated on 4,998 ISIC 2019 images | Proprietary | Dataset metadata in respective results files |
 
-These numbers are promising but NOT world-class proof. World-class proof requires:
+**Key finding:** The model performs well on HAM10000-distributed data (98.2% mel sensitivity) but drops to 61.6% mel sensitivity on ISIC 2019 external data. This gap is the primary challenge that combined-dataset training aims to address.
+
+These numbers are promising on in-distribution data but NOT world-class proof. World-class proof requires:
 1. Independent external validation on data we never touched
 2. Prospective clinical study with real patients
 3. Fitzpatrick equity across all skin tones
@@ -65,8 +84,9 @@ Execute a 5-phase validation program that transforms DrAgnes from "impressive pr
 ### 1.3 Sensitivity-Specificity Co-Optimization
 **Goal:** Push BOTH metrics higher, not one at the expense of the other
 
-Current tradeoff: 96.2% sensitivity / 73.1% specificity for melanoma.
-Target: **≥95% sensitivity / ≥80% specificity** (AUROC ≥ 0.95)
+Current tradeoff (HAM10000 test split): 98.2% sensitivity / 80.4% specificity for melanoma (cross-validation-results.json).
+Current tradeoff (ISIC 2019 external): 61.6% sensitivity / 88.2% specificity for melanoma (isic2019-validation-results.json).
+Target (combined-dataset model): **>=95% sensitivity / >=80% specificity on external data** (AUROC >= 0.95)
 
 Approach:
 - Train with **asymmetric label smoothing**: smooth benign labels (0.1) but keep cancer labels hard (0.0)
@@ -98,7 +118,7 @@ Result: Classification runs in the browser at ~50ms/image. No server needed. Ful
 | **ISIC 2024 SLICE-3D** (401K images) | Massive, recent, 3D body photography | Test at scale |
 | **PH2** (200 images) | Portuguese hospital, independent | Small but fully external |
 
-Success criterion: Melanoma sensitivity ≥ 85% on ALL external datasets (allowing for domain shift).
+Success criterion: Melanoma sensitivity >= 85% on ALL external datasets (allowing for domain shift). Current external result on ISIC 2019: 61.6% (isic2019-validation-results.json) -- this target is not yet met.
 
 ### 2.2 Fitzpatrick Equity Audit
 **Goal:** Prove the model works equally across all skin tones
@@ -258,18 +278,24 @@ Expected finding: AI + Dermatologist > Dermatologist alone > AI alone (augmentat
 
 ## Success Criteria
 
-| Criterion | Threshold | Current |
-|-----------|----------|---------|
-| Melanoma sensitivity (cross-dataset) | ≥ 95% | 96.2% |
-| Melanoma specificity | ≥ 80% | 73.1% |
-| Melanoma AUROC | ≥ 0.95 | 0.936 |
-| All-cancer sensitivity | ≥ 95% | 97.3% |
-| Overall accuracy | ≥ 85% | 67.1% → 81.4% |
-| Fitzpatrick equity gap | < 5% | Not yet tested |
-| Independent external validation | ≥ 85% mel sens | 91.3% (mixed) |
-| Prospective clinical concordance | ≥ 85% | Not yet tested |
-| Peer-reviewed publication | Accepted | Not yet submitted |
-| Browser inference time | < 200ms | Not yet converted |
+| Criterion | Threshold | Current (Measured) | Evidence File | Status |
+|-----------|----------|-------------------|---------------|--------|
+| Melanoma sensitivity (HAM10000 test) | >= 95% | **98.2%** (n=225) | cross-validation-results.json | MEETS TARGET |
+| Melanoma sensitivity (ISIC 2019 external) | >= 85% | **61.6%** (n=714) | isic2019-validation-results.json | BELOW TARGET -- combined training in progress |
+| Melanoma specificity (HAM10000 test) | >= 80% | **80.4%** | cross-validation-results.json | MEETS TARGET (marginal) |
+| Melanoma specificity (ISIC 2019 external) | >= 80% | **88.2%** | isic2019-validation-results.json | MEETS TARGET |
+| Melanoma AUROC | >= 0.95 | Not yet computed | No AUROC in any results file | NOT MEASURED |
+| All-cancer sensitivity (combined data) | >= 95% | Not yet measured on combined data | N/A | NOT MEASURED |
+| All-cancer sensitivity (ISIC 2019 only) | >= 95% | **61.8%** (n=2142) | isic2019-validation-results.json | BELOW TARGET |
+| Overall accuracy (HAM10000 test) | >= 85% | **78.1%** | cross-validation-results.json (test_accuracy=0.7809) | BELOW TARGET |
+| Overall accuracy (ISIC 2019 external) | >= 85% | **57.6%** | isic2019-validation-results.json (overall_accuracy=0.5756) | BELOW TARGET |
+| Fitzpatrick equity gap | < 5% | Not yet tested | N/A | NOT MEASURED |
+| Independent external validation | >= 85% mel sens | **61.6%** (ISIC 2019) | isic2019-validation-results.json | BELOW TARGET |
+| Prospective clinical concordance | >= 85% | Not yet tested | N/A | NOT MEASURED |
+| Peer-reviewed publication | Accepted | Not yet submitted | N/A | NOT STARTED |
+| Browser inference time | < 200ms | Not yet converted | N/A | NOT STARTED |
+
+**Note on combined-dataset training:** Training on HAM10000 + ISIC 2019 + BCN20000 + Fitzpatrick17k is in progress (see Phase 1.1). The significant gap between HAM10000 performance (98.2% mel sensitivity) and ISIC 2019 external performance (61.6% mel sensitivity) is expected to narrow once the model is trained on multi-source data. Until combined-dataset results are available, all cross-dataset claims remain unvalidated.
 
 ---
 
@@ -278,7 +304,7 @@ Expected finding: AI + Dermatologist > Dermatologist alone > AI alone (augmentat
 ### Chosen: 4-Layer Ensemble with Collective Intelligence
 
 ```
-Layer 1: Custom ViT (70%) — trained on 29.5K+ diverse images with focal loss
+Layer 1: Custom ViT (70%) — trained on 10,015 HAM10000 images with focal loss (multi-source training in progress)
 Layer 2: Literature-derived classifier (15%) — 20 features × 7 classes from published research
 Layer 3: Rule-based safety gates (15%) — TDS formula, 7-point checklist, melanoma floor
 Layer 4: Bayesian demographic adjustment — age/sex/location from HAM10000 epidemiology
