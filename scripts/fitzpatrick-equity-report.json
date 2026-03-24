@@ -1,0 +1,177 @@
+{
+  "dataset": "Fitzpatrick17k (filtered to DrAgnes 7 classes)",
+  "total_mapped": 3413,
+  "cross_tabulation": {
+    "akiec": {
+      "-1": 57,
+      "1": 169,
+      "2": 293,
+      "3": 222,
+      "4": 167,
+      "5": 66,
+      "6": 25
+    },
+    "bcc": {
+      "-1": 13,
+      "1": 132,
+      "2": 215,
+      "3": 125,
+      "4": 78,
+      "5": 26,
+      "6": 7
+    },
+    "bkl": {
+      "-1": 1,
+      "1": 31,
+      "2": 59,
+      "3": 19,
+      "4": 23,
+      "5": 10,
+      "6": 4
+    },
+    "df": {
+      "-1": 1,
+      "1": 16,
+      "2": 30,
+      "3": 24,
+      "4": 7,
+      "5": 1,
+      "6": 0
+    },
+    "mel": {
+      "-1": 27,
+      "1": 133,
+      "2": 198,
+      "3": 108,
+      "4": 60,
+      "5": 32,
+      "6": 15
+    },
+    "nv": {
+      "-1": 7,
+      "1": 127,
+      "2": 108,
+      "3": 65,
+      "4": 53,
+      "5": 22,
+      "6": 8
+    },
+    "vasc": {
+      "-1": 27,
+      "1": 127,
+      "2": 191,
+      "3": 119,
+      "4": 94,
+      "5": 53,
+      "6": 18
+    }
+  },
+  "totals_by_skin_type": {
+    "Unknown": 133,
+    "I": 735,
+    "II": 1094,
+    "III": 682,
+    "IV": 482,
+    "V": 210,
+    "VI": 77
+  },
+  "totals_by_class": {
+    "akiec": 999,
+    "bcc": 596,
+    "bkl": 147,
+    "df": 79,
+    "mel": 573,
+    "nv": 390,
+    "vasc": 629
+  },
+  "equity_gaps": [
+    {
+      "class": "df",
+      "name": "Dermatofibroma",
+      "dark": 1,
+      "light": 46,
+      "ratio": 0.022
+    },
+    {
+      "class": "bcc",
+      "name": "Basal Cell Carcinoma",
+      "dark": 33,
+      "light": 347,
+      "ratio": 0.095
+    },
+    {
+      "class": "nv",
+      "name": "Melanocytic Nevi",
+      "dark": 30,
+      "light": 235,
+      "ratio": 0.128
+    },
+    {
+      "class": "mel",
+      "name": "Melanoma",
+      "dark": 47,
+      "light": 331,
+      "ratio": 0.142
+    },
+    {
+      "class": "bkl",
+      "name": "Benign Keratosis",
+      "dark": 14,
+      "light": 90,
+      "ratio": 0.156
+    },
+    {
+      "class": "akiec",
+      "name": "Actinic Keratosis",
+      "dark": 91,
+      "light": 462,
+      "ratio": 0.197
+    },
+    {
+      "class": "vasc",
+      "name": "Vascular Lesion",
+      "dark": 71,
+      "light": 318,
+      "ratio": 0.223
+    }
+  ],
+  "critical_gaps": [
+    {
+      "class": "bcc",
+      "skin_type": 6,
+      "skin_label": "VI",
+      "count": 7
+    },
+    {
+      "class": "bkl",
+      "skin_type": 6,
+      "skin_label": "VI",
+      "count": 4
+    },
+    {
+      "class": "df",
+      "skin_type": 4,
+      "skin_label": "IV",
+      "count": 7
+    },
+    {
+      "class": "df",
+      "skin_type": 5,
+      "skin_label": "V",
+      "count": 1
+    },
+    {
+      "class": "df",
+      "skin_type": 6,
+      "skin_label": "VI",
+      "count": 0
+    },
+    {
+      "class": "nv",
+      "skin_type": 6,
+      "skin_label": "VI",
+      "count": 8
+    }
+  ],
+  "recommendation": "Prioritize augmentation and targeted data collection for dark-skin underrepresented classes."
+}
