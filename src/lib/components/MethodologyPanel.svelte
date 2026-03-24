@@ -4,6 +4,7 @@
 	let dataOpen: boolean = $state(false);
 	let benchmarksOpen: boolean = $state(false);
 	let safetyOpen: boolean = $state(false);
+	let measurementOpen: boolean = $state(false);
 	let limitationsOpen: boolean = $state(true);
 </script>
 
@@ -327,7 +328,78 @@
 		{/if}
 	</section>
 
-	<!-- Section 6: Known Limitations -->
+	<!-- Section 6: Lesion Measurement -->
+	<section class="rounded-xl border border-gray-800 bg-gray-900/50">
+		<button
+			onclick={() => (measurementOpen = !measurementOpen)}
+			class="flex w-full items-center justify-between p-4 text-left"
+		>
+			<h3 class="text-sm font-semibold text-teal-400 flex items-center gap-2">
+				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+				</svg>
+				Lesion Measurement
+			</h3>
+			<svg
+				class="h-4 w-4 text-gray-500 transition-transform {measurementOpen ? 'rotate-180' : ''}"
+				fill="none" stroke="currentColor" viewBox="0 0 24 24"
+			>
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+			</svg>
+		</button>
+		{#if measurementOpen}
+			<div class="px-4 pb-4">
+				<p class="text-xs text-gray-400 mb-3">
+					Lesion diameter feeds into the ABCDE "D" score and TDS formula. The system selects the most accurate calibration method available, in priority order:
+				</p>
+				<div class="space-y-2">
+					<div class="flex items-start gap-2 rounded-lg bg-gray-800/50 p-3">
+						<span class="text-xs font-mono text-emerald-400 w-6 flex-shrink-0">T1</span>
+						<div>
+							<p class="text-xs font-medium text-gray-200">USB-C / Lightning / USB-A Reference (+/-0.5mm)</p>
+							<p class="text-[10px] text-gray-500 mt-0.5">
+								Place a connector next to the lesion. The system detects it via Sobel edge detection and aspect-ratio
+								matching against known dimensions (USB-C: 8.25mm, Lightning: 7.7mm, USB-A: 12.0mm). High confidence --
+								clinically useful near the 6mm melanoma threshold.
+							</p>
+						</div>
+					</div>
+					<div class="flex items-start gap-2 rounded-lg bg-gray-800/50 p-3">
+						<span class="text-xs font-mono text-amber-400 w-6 flex-shrink-0">T2</span>
+						<div>
+							<p class="text-xs font-medium text-gray-200">Skin Texture FFT Analysis (+/-2-3mm)</p>
+							<p class="text-[10px] text-gray-500 mt-0.5">
+								Analyzes pore/ridge spacing in the skin margin via 2D Fast Fourier Transform. Maps the detected frequency
+								peak to known anatomical spacing by body location (0.20mm head to 0.50mm palms/soles). Pure TypeScript
+								FFT -- no native dependencies.
+							</p>
+						</div>
+					</div>
+					<div class="flex items-start gap-2 rounded-lg bg-gray-800/50 p-3">
+						<span class="text-xs font-mono text-gray-400 w-6 flex-shrink-0">T3</span>
+						<div>
+							<p class="text-xs font-medium text-gray-200">Pixel Estimate Fallback (rough)</p>
+							<p class="text-[10px] text-gray-500 mt-0.5">
+								Assumes a 25mm dermoscope field-of-view at 10x magnification. If the estimate falls between 4-8mm
+								(near the 6mm clinical threshold), a safety warning is shown advising the user to use a connector
+								reference for an accurate measurement.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<div class="mt-3 rounded-lg bg-gray-800/30 p-2">
+					<p class="text-[10px] text-gray-500">
+						<strong class="text-gray-400">Tip:</strong>
+						For the most accurate result, place the end of a USB-C charging cable next to the lesion when taking the photo.
+						The system will automatically detect it and calibrate the measurement.
+					</p>
+				</div>
+			</div>
+		{/if}
+	</section>
+
+	<!-- Section 7: Known Limitations -->
 	<section class="rounded-xl border border-red-900/30 bg-red-950/20">
 		<button
 			onclick={() => (limitationsOpen = !limitationsOpen)}
@@ -371,7 +443,7 @@
 					</li>
 					<li class="flex items-start gap-1.5">
 						<span class="mt-0.5 flex-shrink-0">--</span>
-						<span>Diameter estimation relies on a fixed assumption of 30cm camera distance and may be inaccurate.</span>
+						<span>Diameter estimation without a physical reference (USB-C cable) relies on skin texture analysis or pixel estimates and may be inaccurate near the 6mm clinical threshold.</span>
 					</li>
 				</ul>
 			</div>

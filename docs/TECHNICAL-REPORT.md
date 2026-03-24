@@ -1,4 +1,4 @@
-Updated: 2026-03-23 21:00:00 EST | Version 1.4.0
+Updated: 2026-03-24 12:00:00 EST | Version 1.5.0
 Created: 2026-03-22
 
 # DrAgnes AI Dermatoscopy Screening Platform -- Technical Report
@@ -22,9 +22,10 @@ Created: 2026-03-22
 3. [What We Tried and What Failed](#3-what-we-tried-and-what-failed)
 4. [Calibration Against FDA-Cleared Devices](#4-calibration-against-fda-cleared-devices)
 5. [Multi-Image Consensus Classification](#5-multi-image-consensus-classification-v050)
-6. [Strategy for Further Increasing Efficacy](#6-strategy-for-further-increasing-efficacy)
-7. [Known Limitations (Complete List)](#7-known-limitations-complete-list)
-8. [References](#8-references)
+6. [Lesion Measurement System](#6-lesion-measurement-system-v070)
+7. [Strategy for Further Increasing Efficacy](#7-strategy-for-further-increasing-efficacy)
+8. [Known Limitations (Complete List)](#8-known-limitations-complete-list)
+9. [References](#9-references)
 
 ---
 
@@ -822,7 +823,68 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 ---
 
-## 6. Strategy for Further Increasing Efficacy
+## 6. Lesion Measurement System (v0.7.0)
+
+Accurate lesion diameter is clinically essential: the ABCDE "D" criterion uses a 6mm threshold as a melanoma warning sign, and the TDS formula includes diameter as one of its four weighted components. Prior to v0.7.0, DrAgnes relied on a fixed assumption of 25mm dermoscope field-of-view, which produced unreliable measurements from smartphone cameras at varying distances.
+
+The v0.7.0 measurement system uses a **3-tier calibration approach** that selects the most accurate method available from the image:
+
+### 6.1 Tier 1: Physical Connector Reference (High Confidence)
+
+If a USB-C, Lightning, or USB-A connector is visible in the image (placed next to the lesion), the system detects it via Sobel edge detection and aspect-ratio matching against known connector dimensions:
+
+| Connector | Known Width | Aspect Ratio |
+|-----------|------------|--------------|
+| USB-C     | 8.25 mm    | 3.44:1       |
+| Lightning | 7.7 mm     | 5.13:1       |
+| USB-A     | 12.0 mm    | 2.67:1       |
+
+The detected connector width in pixels establishes a pixels-per-mm calibration factor. Estimated accuracy: **+/-0.5mm**. This is the only tier with clinically useful precision near the 6mm threshold.
+
+Implementation: `src/lib/dragnes/measurement-connector.ts` -- pure TypeScript, Sobel edge detection, runs in-browser in <200ms.
+
+### 6.2 Tier 2: Skin Texture FFT Analysis (Medium Confidence)
+
+When no connector is present, the system analyzes skin texture in the image margin (outer 30%, away from the central lesion) using a 2D Fast Fourier Transform. Pore and ridge spacing produces a characteristic frequency peak that can be mapped to known anatomical spacing:
+
+| Body Location    | Expected Pore Spacing |
+|------------------|-----------------------|
+| Head             | 0.20 mm               |
+| Neck             | 0.30 mm               |
+| Upper extremity  | 0.35 mm               |
+| Trunk            | 0.40 mm               |
+| Lower extremity  | 0.40 mm               |
+| Palms/Soles      | 0.50 mm               |
+
+The process: extract a grayscale margin patch, apply a Hann window to reduce spectral leakage, compute the 2D power spectrum, take a radial average, and find the dominant frequency peak. The ratio of detected spacing (pixels) to expected spacing (mm) gives pixels-per-mm. Estimated accuracy: **+/-2-3mm**.
+
+Implementation: `src/lib/dragnes/measurement-texture.ts` and `src/lib/dragnes/fft.ts` -- a **pure TypeScript FFT** implementation (no native dependencies, no WebAssembly). The FFT uses the Cooley-Tukey radix-2 algorithm on power-of-2 padded input.
+
+### 6.3 Tier 3: Pixel Estimate Fallback (Low Confidence)
+
+When neither connector nor texture analysis produces a confident result, the system falls back to a rough estimate based on an assumed 25mm dermoscope field-of-view at 10x magnification. This is the same method used in v0.6.x and earlier.
+
+If the fallback estimate places the diameter between 4-8mm (straddling the 6mm clinical threshold), a safety warning is appended advising the user to place a USB-C cable next to the spot for an accurate measurement.
+
+### 6.4 Integration with ABCDE and TDS Scoring
+
+The measurement system feeds directly into two clinical scoring components:
+
+- **ABCDE "D" score**: Diameter >= 6mm scores D=1 (suspicious), <6mm scores D=0 (reassuring). Near the threshold (4-8mm), the confidence tier determines whether the score is presented with a warning.
+- **TDS formula**: The "D" component contributes `D x 0.5` to the Total Dermoscopy Score. With the connector reference, this component is reliable. With the fallback estimate, the D score may be inaccurate.
+
+### 6.5 Implementation Files
+
+| File | Purpose |
+|------|---------|
+| `src/lib/dragnes/measurement.ts` | Orchestrator -- selects best calibration tier, exposes `measureLesion()` |
+| `src/lib/dragnes/measurement-connector.ts` | Tier 1: USB-C/Lightning/USB-A detection via Sobel edges |
+| `src/lib/dragnes/measurement-texture.ts` | Tier 2: Skin texture FFT analysis with body-location lookup |
+| `src/lib/dragnes/fft.ts` | Pure TypeScript Cooley-Tukey FFT (radix-2, 2D power spectrum) |
+
+---
+
+## 7. Strategy for Further Increasing Efficacy
 
 ### Phase 1: Validate Current System (1-2 weeks)
 
@@ -867,7 +929,7 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 ---
 
-## 7. Known Limitations (Complete List)
+## 8. Known Limitations (Complete List)
 
 ### What we now know (validated March 22-23, 2026)
 
@@ -913,7 +975,7 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 ---
 
-## 8. References
+## 9. References
 
 1. **Stolz W, Riemann A, Cognetta AB, et al.** ABCD rule of dermatoscopy: a new practical method for early recognition of malignant melanoma. *European Journal of Dermatology*. 1994;4:521-527.
    - *Defines the ABCD scoring system (Asymmetry, Border, Color, Dermoscopic structures) and the TDS formula. Used as the basis for our feature extraction and TDS computation.*
@@ -962,9 +1024,9 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 ---
 
-## 8. Dual-Model ViT Ensemble (v1.2 -- Updated March 22, 2026)
+## 10. Dual-Model ViT Ensemble (v1.2 -- Updated March 22, 2026)
 
-### 8.1 Current Model Configuration
+### 10.1 Current Model Configuration
 
 As of v1.2, DrAgnes uses a dual-model ensemble with the following configuration:
 
@@ -980,7 +1042,7 @@ As of v1.2, DrAgnes uses a dual-model ensemble with the following configuration:
 
 **Why the model changed**: The original Model B was `actavkid/vit-large-patch32-384-finetuned-skin-lesion-classification` (305M params, 12 classes, claimed 89% melanoma recall). This model was **removed from HuggingFace** on March 22, 2026 (HTTP 410 Gone). The 89% claim cannot be verified. We evaluated 8 candidate models and selected skintaglabs SigLIP based on dermatology-specific training, MIT license, and parameter count.
 
-### 8.2 Ensemble Architecture
+### 10.2 Ensemble Architecture
 
 Both models are called in **parallel** via `Promise.allSettled` to minimize latency. The weighting is currently **equal (50/50)** for all classes:
 
@@ -1002,7 +1064,7 @@ When only one model is available (the other fails or times out):
 P(class) = 0.60 * P_single_HF + 0.25 * P_trained + 0.15 * P_rules
 ```
 
-### 8.3 SigLIP Label Mapping
+### 10.3 SigLIP Label Mapping
 
 The skintaglabs SigLIP model outputs its own label taxonomy. Labels are mapped to our canonical 7-class HAM10000 taxonomy via `SIGLIP_LABEL_MAP`:
 
@@ -1020,7 +1082,7 @@ The skintaglabs SigLIP model outputs its own label taxonomy. Labels are mapped t
 
 When multiple SigLIP labels map to the same DrAgnes class, their probabilities are summed.
 
-### 8.4 Model Disagreement Detection
+### 10.4 Model Disagreement Detection
 
 When the two ViT models disagree on the top predicted class, the system:
 
@@ -1030,7 +1092,7 @@ When the two ViT models disagree on the top predicted class, the system:
 
 **This is a safety feature**: model disagreement may indicate a difficult or ambiguous case that warrants professional review.
 
-### 8.5 Validation Status
+### 10.5 Validation Status
 
 **What we have validated (March 22-23, 2026):**
 - Custom model (stuartkerr/dragnes-classifier) on HAM10000-family data: 98.2% melanoma sensitivity on holdout (1,503), 98.7% on Nagabu/HAM10000 (1,000), 100% on marmal88 test (1,285). -0.7% train/test gap. *Evidence: `scripts/cross-validation-results.json`*
@@ -1061,9 +1123,9 @@ When the two ViT models disagree on the top predicted class, the system:
 
 ---
 
-## 9. Clinical Features Added (v0.2.0)
+## 11. Clinical Features Added (v0.2.0)
 
-### 9.1 ICD-10-CM Code Mapping
+### 11.1 ICD-10-CM Code Mapping
 
 Each of the 7 lesion classes maps to ICD-10-CM codes for clinical documentation:
 
@@ -1077,7 +1139,7 @@ Each of the 7 lesion classes maps to ICD-10-CM codes for clinical documentation:
 | nv | D22.x | Melanocytic nevi |
 | vasc | D18.x | Hemangioma / vascular lesion |
 
-### 9.2 Referral Letter Generator
+### 11.2 Referral Letter Generator
 
 One-click generation of a referral letter pre-populated with:
 - Classification result and confidence level
@@ -1086,7 +1148,7 @@ One-click generation of a referral letter pre-populated with:
 - Body location from interactive body map
 - Copy-to-clipboard functionality
 
-### 9.3 Explainability Panel
+### 11.3 Explainability Panel
 
 "Why this classification?" panel showing:
 - Which image features contributed most to the classification
@@ -1094,7 +1156,7 @@ One-click generation of a referral letter pre-populated with:
 - Literature citations for each contributing factor
 - Model agreement/disagreement status
 
-### 9.4 Analytics Dashboard
+### 11.4 Analytics Dashboard
 
 Practice-level performance monitoring:
 - Concordance rate (AI vs. clinician) with 30-day rolling trend
@@ -1104,7 +1166,7 @@ Practice-level performance monitoring:
 - Fitzpatrick equity monitoring with automatic disparity alerts
 - Discordance analysis (cases where AI and clinician disagreed)
 
-### 9.5 Interactive Body Map
+### 11.5 Interactive Body Map
 
 SVG-based clickable body map replacing the previous dropdown selector for body location input. Supports anterior and posterior views with anatomically accurate region detection.
 

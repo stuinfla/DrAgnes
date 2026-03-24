@@ -303,6 +303,15 @@
 				<div class="flex flex-col items-center gap-1.5 flex-1">
 					<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/20">
 						<svg class="h-5 w-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+						</svg>
+					</div>
+					<span class="text-[9px] text-gray-500 text-center">Measure</span>
+				</div>
+				<svg class="h-3 w-3 text-gray-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+				<div class="flex flex-col items-center gap-1.5 flex-1">
+					<div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500/10 border border-teal-500/20">
+						<svg class="h-5 w-5 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 						</svg>
 					</div>
@@ -356,6 +365,23 @@
 						based on real-world prevalence data from 37,484 diagnosed cases across multiple hospitals.
 					</p>
 				</div>
+			</div>
+
+			<!-- Smart Measurement -->
+			<div class="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+				<div class="flex items-center gap-3 mb-2">
+					<div class="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/15 shrink-0">
+						<svg class="h-4 w-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path>
+						</svg>
+					</div>
+					<p class="text-sm font-medium text-gray-200">Smart Measurement</p>
+				</div>
+				<p class="text-[11px] text-gray-500 leading-relaxed pl-10">
+					Lesion diameter feeds into the ABCDE "D" score and TDS formula. The system tries three calibration
+					methods in order: USB-C connector reference (+/-0.5mm), skin texture frequency analysis via FFT (+/-2-3mm),
+					or pixel estimation as a fallback. Place a USB-C cable next to the spot for the most accurate result.
+				</p>
 			</div>
 		</section>
 
