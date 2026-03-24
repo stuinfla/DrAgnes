@@ -566,6 +566,8 @@ practice-level performance monitoring.
 
 ---
 
+[![CI](https://github.com/stuinfla/DrAgnes/actions/workflows/ci.yml/badge.svg)](https://github.com/stuinfla/DrAgnes/actions/workflows/ci.yml)
+
 ## Quick Start
 
 ```bash

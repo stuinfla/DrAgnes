@@ -1,0 +1,32 @@
+{
+  "dataset": "ISIC 2019 external holdout",
+  "n_images": 3901,
+  "n_bootstrap": 1000,
+  "metrics": {
+    "melanoma_sensitivity": {
+      "point": 0.9597,
+      "ci_lower": 0.9452,
+      "ci_upper": 0.9744
+    },
+    "melanoma_specificity": {
+      "point": 0.8,
+      "ci_lower": 0.7869,
+      "ci_upper": 0.8129
+    },
+    "all_cancer_sensitivity": {
+      "point": 0.983,
+      "ci_lower": 0.9769,
+      "ci_upper": 0.9879
+    },
+    "overall_accuracy": {
+      "point": 0.7637,
+      "ci_lower": 0.7503,
+      "ci_upper": 0.7765
+    },
+    "melanoma_auroc": {
+      "point": 0.9595,
+      "ci_lower": 0.9528,
+      "ci_upper": 0.9656
+    }
+  }
+}
