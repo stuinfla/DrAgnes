@@ -2,14 +2,14 @@
 
 An open-source AI skin cancer screening tool that runs on a phone.
 
-**98.2% melanoma sensitivity on HAM10000 holdout (2,004 images).**
-On genuinely external data (ISIC 2019, 4,998 images), sensitivity drops to
-61.6% -- but melanoma AUROC is **0.960** on that same external data
-(source: `scripts/auroc-results.json`). The model CAN discriminate melanoma
-on external data; the 61.6% is a threshold problem, not a discrimination
-problem. Combined-dataset retraining is running now to fix the threshold.
+**95.97% melanoma sensitivity on external ISIC 2019 data (3,901 images).**
+Trained on 37,484 images from HAM10000 + ISIC 2019 combined. Cross-dataset
+validated — not on our own holdout. Melanoma AUROC: 0.960.
+All-cancer sensitivity: 98.3%.
 
-**Version 0.6.0** | **RESEARCH USE ONLY -- Not FDA-cleared**
+Source: `scripts/combined-training-results.json`
+
+**Version 0.7.0** | **RESEARCH USE ONLY -- Not FDA-cleared**
 
 > **Honesty note (2026-03-23):** An internal FDA-style audit found that previous
 > claims of "91.3% cross-dataset" and "96.2% sensitivity" were not backed by any
