@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 320" width="900" height="320">
   <defs>
     <linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#0a0a0f"/>
       <stop offset="100%" stop-color="#0d1117"/>
     </linearGradient>
   </defs>
-  <rect width="900" height="300" fill="url(#bg3)" rx="12"/>
+  <rect width="900" height="320" fill="url(#bg3)" rx="12"/>
 
   <text x="450" y="32" text-anchor="middle" fill="#e2e8f0" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="700">How Dr. Agnes Compares</text>
   <text x="450" y="50" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="10">Melanoma sensitivity — the most important metric for skin cancer screening</text>
@@ -19,10 +19,10 @@
   <text x="190" y="250" text-anchor="end" fill="#94a3b8" font-family="Inter, system-ui, sans-serif" font-size="11">Hand-crafted features</text>
 
   <!-- Bars -->
-  <!-- DrAgnes: 91.3% -->
-  <rect x="200" y="76" width="570" height="22" rx="4" fill="#14b8a6" opacity="0.9"/>
-  <text x="780" y="92" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">91.3%</text>
-  <text x="210" y="91" fill="#042f2e" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600">29,540 diverse images | Open source | Runs on phone</text>
+  <!-- DrAgnes: 95.97% -->
+  <rect x="200" y="76" width="599" height="22" rx="4" fill="#14b8a6" opacity="0.9"/>
+  <text x="809" y="92" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="700">95.97%</text>
+  <text x="210" y="91" fill="#042f2e" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600">37,484 diverse images | Open source | Runs on phone</text>
 
   <!-- DermaSensor: 90.2% -->
   <rect x="200" y="116" width="563" height="22" rx="4" fill="#f59e0b" opacity="0.7"/>
@@ -47,4 +47,7 @@
   <!-- 90% threshold line -->
   <line x1="763" y1="70" x2="763" y2="265" stroke="#10b981" stroke-width="1" stroke-dasharray="4,3" opacity="0.4"/>
   <text x="763" y="280" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="8" opacity="0.6">90% threshold</text>
+
+  <!-- Confidence interval annotation -->
+  <text x="450" y="300" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="9" opacity="0.8">Dr. Agnes: 95.97% melanoma sensitivity (95% CI: 94.5% - 97.4%) | AUROC 0.960 on ISIC 2019 external data</text>
 </svg>

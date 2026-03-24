@@ -30,10 +30,10 @@
   <line x1="175" y1="118" x2="295" y2="118" stroke="#14b8a6" stroke-width="0.5" opacity="0.3"/>
   <text x="235" y="135" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="9">Custom ViT-base</text>
   <text x="235" y="148" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="9">85.8M params</text>
-  <text x="235" y="165" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="8">Trained on 29.5K images</text>
+  <text x="235" y="165" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="8">Trained on 37,484 images</text>
   <text x="235" y="180" text-anchor="middle" fill="#99f6e4" font-family="Inter, system-ui, sans-serif" font-size="8">Focal loss (mel=6x)</text>
   <rect x="175" y="195" width="120" height="22" rx="4" fill="#14b8a6" opacity="0.15"/>
-  <text x="235" y="210" text-anchor="middle" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600">91.3% mel sens</text>
+  <text x="235" y="210" text-anchor="middle" fill="#14b8a6" font-family="Inter, system-ui, sans-serif" font-size="9" font-weight="600">95.97% mel sens</text>
   <text x="235" y="240" text-anchor="middle" fill="#475569" font-family="Inter, system-ui, sans-serif" font-size="8">Pixel patterns</text>
 
   <!-- Arrow -->

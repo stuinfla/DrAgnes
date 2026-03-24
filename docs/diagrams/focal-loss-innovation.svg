@@ -1,11 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 280" width="900" height="280">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 300" width="900" height="300">
   <defs>
     <linearGradient id="bg4" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#0a0a0f"/>
       <stop offset="100%" stop-color="#0d1117"/>
     </linearGradient>
   </defs>
-  <rect width="900" height="280" fill="url(#bg4)" rx="12"/>
+  <rect width="900" height="300" fill="url(#bg4)" rx="12"/>
 
   <text x="450" y="32" text-anchor="middle" fill="#e2e8f0" font-family="Inter, system-ui, sans-serif" font-size="16" font-weight="700">The Key Innovation: Focal Loss with Melanoma Weighting</text>
   <text x="450" y="50" text-anchor="middle" fill="#64748b" font-family="Inter, system-ui, sans-serif" font-size="10">Why standard training fails on skin cancer — and how we fixed it</text>
@@ -31,6 +31,7 @@
 
   <!-- Arrow -->
   <path d="M300 165 L330 165" stroke="#475569" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-auto"><path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/></marker></defs>
 
   <!-- Middle: The Innovation -->
   <rect x="335" y="70" width="230" height="190" rx="10" fill="#042f2e" stroke="#14b8a6" stroke-width="2" opacity="0.9"/>
@@ -55,16 +56,18 @@
   <path d="M575 165 L605 165" stroke="#475569" stroke-width="3" fill="none" marker-end="url(#arrow)"/>
 
   <!-- Right: The Result -->
-  <rect x="610" y="70" width="270" height="190" rx="10" fill="#052e16" stroke="#10b981" stroke-width="1" opacity="0.8"/>
+  <rect x="610" y="70" width="270" height="210" rx="10" fill="#052e16" stroke="#10b981" stroke-width="1" opacity="0.8"/>
   <text x="745" y="92" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="12" font-weight="700">The Result</text>
 
-  <text x="745" y="125" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="800">91.3%</text>
+  <text x="745" y="125" text-anchor="middle" fill="#10b981" font-family="Inter, system-ui, sans-serif" font-size="36" font-weight="800">95.97%</text>
   <text x="745" y="150" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="12">Melanoma Sensitivity</text>
-  <text x="745" y="170" text-anchor="middle" fill="#4ade80" font-family="Inter, system-ui, sans-serif" font-size="10">on 29,540 diverse images</text>
+  <text x="745" y="167" text-anchor="middle" fill="#5eead4" font-family="Inter, system-ui, sans-serif" font-size="9">95% CI: 94.5% - 97.4%</text>
+  <text x="745" y="184" text-anchor="middle" fill="#4ade80" font-family="Inter, system-ui, sans-serif" font-size="10">on 37,484 diverse images</text>
 
-  <line x1="640" y1="185" x2="850" y2="185" stroke="#10b981" stroke-width="0.5" opacity="0.3"/>
+  <line x1="640" y1="195" x2="850" y2="195" stroke="#10b981" stroke-width="0.5" opacity="0.3"/>
 
-  <text x="745" y="205" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">BCC: 93.5% | DF: 99.1%</text>
-  <text x="745" y="220" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">Vasc: 91.9% | Overall: 81.4%</text>
-  <text x="745" y="245" text-anchor="middle" fill="#4ade80" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600">Above DermaSensor (90.2%)</text>
+  <text x="745" y="212" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">AUROC: 0.960 | All-cancer: 98.3%</text>
+  <text x="745" y="227" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">BCC: 93.5% | DF: 99.1%</text>
+  <text x="745" y="242" text-anchor="middle" fill="#86efac" font-family="Inter, system-ui, sans-serif" font-size="9">Vasc: 91.9% | Overall: 76.4%</text>
+  <text x="745" y="265" text-anchor="middle" fill="#4ade80" font-family="Inter, system-ui, sans-serif" font-size="10" font-weight="600">Above DermaSensor (90.2%)</text>
 </svg>
