@@ -2,6 +2,8 @@
 	import { onMount, onDestroy, tick } from "svelte";
 	import CarbonCamera from "~icons/carbon/camera";
 	import type { BodyLocation } from "$lib/dragnes/types";
+	import { assessImageQuality } from "$lib/dragnes/image-quality";
+	import type { ImageQualityResult } from "$lib/dragnes/image-quality";
 	import BodyMap from "./BodyMap.svelte";
 
 	type ImageType = "dermoscopy" | "clinical" | "auto";
@@ -17,6 +19,7 @@
 		imageData: ImageData;
 		preview: string;
 		imageType: ImageType;
+		quality: ImageQualityResult;
 	}
 
 	interface Props {
@@ -49,6 +52,18 @@
 	let multiCaptureDone: boolean = $derived(
 		multiCapture && capturedImages.length >= maxImages
 	);
+
+	// Image quality state (single-capture)
+	let lastQuality: ImageQualityResult | null = $state(null);
+
+	// Derived: worst suggestion across all multi-capture images
+	let qualitySuggestion: string | null = $derived.by(() => {
+		if (!multiCapture) return lastQuality?.suggestion ?? null;
+		const worst = capturedImages
+			.filter((img) => img.quality.grade !== "good")
+			.sort((a, b) => a.quality.overallScore - b.quality.overallScore);
+		return worst.length > 0 ? worst[0].quality.suggestion : null;
+	});
 
 	// Body map drawer state
 	let showBodyMap: boolean = $state(false);
@@ -241,6 +256,7 @@
 		capturedPreview = null;
 		detectedImageType = "";
 		capturedImages = [];
+		lastQuality = null;
 		cameraActive = false;
 		cameraReady = false;
 		if (stream) {
@@ -269,10 +285,12 @@
 		const preview = canvasEl.toDataURL("image/jpeg", 0.9);
 		const resolvedType = imageType === "auto" ? detectImageType(imageData) : imageType;
 		detectedImageType = resolvedType === "dermoscopy" ? "Dermoscopy detected" : "Clinical photo detected";
+		const quality = assessImageQuality(imageData);
+		lastQuality = quality;
 
 		if (multiCapture) {
 			if (capturedImages.length < maxImages) {
-				capturedImages = [...capturedImages, { imageData, preview, imageType: resolvedType }];
+				capturedImages = [...capturedImages, { imageData, preview, imageType: resolvedType, quality }];
 			}
 			// Auto-fire when max reached
 			if (capturedImages.length >= maxImages) {
@@ -302,10 +320,12 @@
 				const preview = canvas.toDataURL("image/jpeg", 0.9);
 				const resolvedType = imageType === "auto" ? detectImageType(imageData) : imageType;
 				detectedImageType = resolvedType === "dermoscopy" ? "Dermoscopy detected" : "Clinical photo detected";
+				const quality = assessImageQuality(imageData);
+				lastQuality = quality;
 
 				if (multiCapture) {
 					if (capturedImages.length < maxImages) {
-						capturedImages = [...capturedImages, { imageData, preview, imageType: resolvedType }];
+						capturedImages = [...capturedImages, { imageData, preview, imageType: resolvedType, quality }];
 					}
 					if (capturedImages.length >= maxImages) {
 						fireMultiCapture();
@@ -325,6 +345,7 @@
 	function retake() {
 		capturedPreview = null;
 		detectedImageType = "";
+		lastQuality = null;
 	}
 
 	function fireMultiCapture() {
@@ -345,6 +366,7 @@
 	function resetMultiCapture() {
 		capturedImages = [];
 		detectedImageType = "";
+		lastQuality = null;
 	}
 
 	function bodyLocationLabel(): string {
@@ -503,7 +525,7 @@
 				{#each capturedImages as item, i (i)}
 					<div
 						class="relative flex-shrink-0 h-14 w-14 rounded-xl overflow-hidden border-2 transition-all
-							{i === capturedImages.length - 1 ? 'border-teal-500 shadow-md shadow-teal-500/20' : 'border-white/[0.08]'}"
+							{item.quality.grade === 'poor' ? 'border-red-500/70' : i === capturedImages.length - 1 ? 'border-teal-500 shadow-md shadow-teal-500/20' : 'border-white/[0.08]'}"
 						role="listitem"
 					>
 						<img
@@ -511,6 +533,15 @@
 							alt="Captured photo {i + 1}"
 							class="h-full w-full object-cover"
 						/>
+						<!-- Quality indicator dot -->
+						<div class="absolute top-0.5 left-0.5 flex items-center justify-center h-4 w-4 rounded-full
+							{item.quality.grade === 'good' ? 'bg-green-500' : item.quality.grade === 'acceptable' ? 'bg-yellow-500' : 'bg-red-500'}">
+							{#if item.quality.grade === 'acceptable'}
+								<svg class="h-2.5 w-2.5 text-yellow-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01"></path></svg>
+							{:else if item.quality.grade === 'poor'}
+								<svg class="h-2.5 w-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+							{/if}
+						</div>
 						<button
 							onclick={() => removeMultiCaptureImage(i)}
 							class="absolute -top-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-gray-900/90 text-gray-300 hover:text-white hover:bg-red-600/80 transition-all border border-white/[0.10]"
@@ -539,6 +570,21 @@
 					</div>
 				{/each}
 			</div>
+
+			<!-- Quality suggestion banner -->
+			{#if qualitySuggestion}
+				{@const hasPoor = capturedImages.some((img) => img.quality.grade === 'poor')}
+				<div class="flex items-start gap-2 rounded-xl px-3 py-2.5 text-[12px] leading-relaxed
+					{hasPoor ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400'}">
+					{#if hasPoor}
+						<svg class="h-4 w-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+						<span><strong>Retake recommended.</strong> {qualitySuggestion}</span>
+					{:else}
+						<svg class="h-4 w-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+						<span>{qualitySuggestion}</span>
+					{/if}
+				</div>
+			{/if}
 
 			<!-- Instruction text -->
 			{#if capturedImages.length === 1}
@@ -608,6 +654,20 @@
 		<div class="mx-auto flex items-center gap-1.5 rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-[11px] text-teal-400">
 			<svg class="h-2.5 w-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
 			{detectedImageType}
+		</div>
+	{/if}
+
+	<!-- Single-capture quality feedback -->
+	{#if lastQuality && !multiCapture && lastQuality.grade !== 'good'}
+		<div class="flex items-start gap-2 rounded-xl px-3 py-2.5 text-[12px] leading-relaxed
+			{lastQuality.grade === 'poor' ? 'bg-red-500/10 border border-red-500/30 text-red-400' : 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400'}">
+			{#if lastQuality.grade === 'poor'}
+				<svg class="h-4 w-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+				<span><strong>Retake recommended.</strong> {lastQuality.suggestion}</span>
+			{:else}
+				<svg class="h-4 w-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+				<span>{lastQuality.suggestion}</span>
+			{/if}
 		</div>
 	{/if}
 </div>

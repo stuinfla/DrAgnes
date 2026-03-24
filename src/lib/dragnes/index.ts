@@ -79,6 +79,10 @@ export type { ICD10Code } from "./icd10";
 export { classifyMultiImage, scoreImageQuality } from "./multi-image";
 export type { MultiImageResult, ImageQualityScore } from "./multi-image";
 
+// Image quality gating (ADR-121)
+export { assessImageQuality } from "./image-quality";
+export type { ImageQualityResult, QualityCheck } from "./image-quality";
+
 // Types
 export type {
 	ABCDEScores,
