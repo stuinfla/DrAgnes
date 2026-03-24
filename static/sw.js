@@ -61,8 +61,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first for WASM model weights
-  if (url.pathname.endsWith('.wasm') || url.pathname.includes('/wasm/')) {
+  // Cache-first for WASM model weights and ONNX models
+  if (url.pathname.endsWith('.wasm') || url.pathname.includes('/wasm/') ||
+      (url.pathname.startsWith('/models/') && url.pathname.endsWith('.onnx'))) {
     event.respondWith(cacheFirst(event.request, MODEL_CACHE));
     return;
   }

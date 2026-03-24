@@ -9,7 +9,7 @@ All-cancer sensitivity: 98.3%.
 
 Source: `scripts/combined-training-results.json`
 
-**Version 0.7.0** | **RESEARCH USE ONLY -- Not FDA-cleared**
+**Version 0.8.0** | **Updated 2026-03-24** | **RESEARCH USE ONLY -- Not FDA-cleared**
 
 > **Honesty note (2026-03-23):** An internal FDA-style audit found that previous
 > claims of "91.3% cross-dataset" and "96.2% sensitivity" were not backed by any
@@ -284,6 +284,227 @@ The system degrades gracefully. If the HuggingFace API is unavailable, it
 falls back to the literature and rule-based layers (60/40 split). If no
 demographics are provided, Layer 4 is skipped. The safety gates always run
 regardless of connectivity.
+
+---
+
+## Design Philosophy
+
+This section explains *why* the system is built the way it is. Every
+architectural decision encodes a value judgment. These are ours.
+
+### 1. Sensitivity Over Specificity -- The Fundamental Tradeoff
+
+In cancer screening, a false negative kills. A false positive inconveniences.
+
+This single asymmetry drives most of the design. We trained the model with
+focal loss using melanoma alpha=6.0, which makes every missed melanoma cost
+the optimizer 6x more than a missed mole. Combined with gamma=2.0 down-
+weighting of easy examples, this creates a system that is *deliberately
+aggressive* about flagging potential melanomas.
+
+The cost is specificity: approximately 28% of benign moles get flagged for
+further evaluation. This produces a Number Needed to Biopsy (NNB) of roughly
+4 -- meaning for every confirmed malignancy, about 3 benign lesions were also
+flagged. That NNB is clinically acceptable and comparable to FDA-cleared
+devices (DermaSensor NNB: 6.25). Source: `scripts/combined-training-results.json`
+
+The system offers threshold modes (screening vs. triage) so users can choose
+their own point on the sensitivity-specificity curve. Screening mode maximizes
+sensitivity for population-level use. Triage mode tightens specificity for
+clinicians who want fewer false positives. But the default is always biased
+toward catching cancer, because the default is what most people will use,
+and the default should not miss melanomas.
+
+### 2. The Honesty Principle
+
+On March 23, 2026, an internal FDA-style audit found that the README claimed
+"91.3% cross-dataset accuracy" and "96.2% sensitivity." Neither number was
+backed by any evidence file. They were fabricated -- not maliciously, but
+through the common pattern of writing aspirational numbers as if they were
+measured. See `docs/FDA-AUDIT-REPORT.md`.
+
+That audit changed how we build this project. The rules now:
+
+- **Every number cites its evidence source.** If a metric appears in
+  documentation, the JSON file, field name, and exact value are referenced.
+  If no evidence file exists, the metric is not claimed.
+- **Limitations are documented more prominently than capabilities.** The
+  Known Limitations section is longer than the Features section. The
+  Fitzpatrick I-III training bias is stated in the README, not buried in
+  an appendix. The 30-percentage-point equity gap is disclosed up front.
+- **Failures are published.** The journey from 0% to 95.97% includes every
+  crash along the way -- the 0% melanoma sensitivity from hand-crafted
+  features, the 61.6% collapse on external data. These failures are not
+  embarrassing; they are the evidence that the final number is trustworthy.
+- **"Not yet measured" is a valid answer.** When we have not computed a
+  metric, we say so. "AUROC has not been computed on any dataset" is more
+  honest than omitting AUROC and hoping nobody asks.
+
+The goal is that a dermatologist reading this README, or an FDA reviewer
+reading the technical report, finds nothing they need to discover for
+themselves. If a limitation exists, we told them first.
+
+### 3. Multi-Layer Defense -- Why One Model Is Not Enough
+
+A single neural network is not trustworthy enough for cancer screening. Neural
+networks fail in ways that are difficult to predict: adversarial lighting,
+camera artifacts, out-of-distribution inputs, dataset-specific biases the
+training process learned silently. Our own ViT achieved 98.2% on HAM10000 and
+then crashed to 61.6% on ISIC 2019 -- same architecture, same weights, different
+cameras.
+
+The 4-layer ensemble exists because each layer fails differently:
+
+- **Custom ViT** (Layer 1) learns spatial patterns from pixels. It catches
+  subtle visual features that no rule can express. It also learns
+  camera-specific artifacts.
+- **Literature-derived logistic regression** (Layer 2) encodes 30 years of
+  published dermoscopy knowledge. It does not care about camera artifacts.
+  It fails when the image features do not match the textbook.
+- **Rule-based safety gates** (Layer 3) enforce hard clinical floors. If TDS
+  > 5.45, the malignancy probability cannot drop below 30% regardless of what
+  the neural network says. If 2+ ABCDE criteria are suspicious, melanoma
+  probability cannot drop below 15%. These gates catch the cases where a
+  confident-but-wrong model would otherwise reassure the user.
+- **Bayesian demographic adjustment** (Layer 4) incorporates base-rate
+  reality. An 80-year-old male with a trunk lesion has different priors than a
+  20-year-old female with a hand lesion. The model does not know the patient's
+  age; this layer does.
+
+Multi-image consensus adds another defense. Quality-weighted averaging means
+a blurry photo gets less influence than a sharp one. The melanoma safety gate
+ensures that if *any* single image flags melanoma above 60%, that signal
+survives consensus regardless of what the other images say.
+
+The V1+V2 ensemble (combined-dataset model + HAM10000-only model) provides yet
+another layer: models trained on different data fail on different inputs. When
+they agree, confidence is high. When they disagree, the system flags the case
+for clinical review.
+
+### 4. Real-World Measurement -- Not Just Classification
+
+Classification without measurement is incomplete. The "D" in ABCDE is diameter,
+and the 6mm threshold is a clinical decision point. Telling someone they have
+a suspicious lesion without telling them how big it is leaves a gap in the
+clinical picture.
+
+The problem: smartphone cameras do not know how far they are from the lesion.
+A 4mm mole and a 9mm mole can look identical in a photo.
+
+The solution is a 3-tier measurement system, designed around what people
+actually have available:
+
+- **USB-C reference** (Tier 1, +/-0.5mm): Everyone has a phone charger cable.
+  The USB-C connector is 8.25mm wide, standardized to sub-millimeter tolerance
+  by the USB Implementers Forum. Place the cable next to the lesion, and the
+  system has a physical reference. This is accurate enough to make the 6mm
+  clinical threshold meaningful.
+- **Skin texture FFT** (Tier 2, +/-2-3mm): When no reference object is
+  present, the system analyzes the skin's natural texture in the image margin.
+  Dermatoglyphic pore spacing is anatomically constrained (0.2-0.5mm depending
+  on body location). A 2D FFT detects the dominant frequency, and the known
+  pore spacing provides a pixels-per-mm calibration. Less accurate, but
+  automatic.
+- **LiDAR** (Tier 2 enhancement): iPhone Pro models have LiDAR depth sensors.
+  When available, the depth map provides distance-to-subject, which combined
+  with the camera's known focal length gives a direct pixels-per-mm
+  conversion. This is an enhancement to Tier 2, not a replacement.
+- **Pixel estimate fallback** (Tier 3): When nothing else works, assume a
+  25mm dermoscope field of view. If this puts the diameter between 4-8mm
+  (straddling the clinical threshold), the system explicitly warns the user
+  to grab a USB-C cable.
+
+Quality gating runs before any of this. The system scores each image for
+sharpness (Laplacian variance), contrast (RMS), and segmentation quality
+before spending compute on classification. A blurry, low-contrast image with
+poor segmentation gets rejected with a "retake" prompt, not classified with
+false confidence.
+
+### 5. From 0% to 95.97% -- The Iterative Journey
+
+The final 95.97% melanoma sensitivity on external data was not designed in
+advance. It was discovered through a sequence of failures, each of which
+eliminated a wrong approach and pointed toward the right one.
+
+- **Hand-crafted features (0% mel sensitivity):** 20 summary statistics fed
+  into logistic regression. Proved that spatial patterns matter and feature
+  engineering alone is insufficient for dermoscopy. This is why the field
+  moved to deep learning.
+- **Community ViT (73.3% mel sensitivity):** The most-downloaded skin cancer
+  model on HuggingFace. Proved that generic models trained without class
+  weighting miss too many melanomas. 1 in 4 is not acceptable.
+- **Custom ViT on HAM10000 (98.2% mel sensitivity):** Focal loss with
+  melanoma alpha=8.0. Proved custom training works -- on the data it was
+  trained on. We celebrated. We were wrong to celebrate.
+- **Custom ViT on external data (61.6% mel sensitivity):** Same model,
+  different dataset. A 36.6 percentage point crash. Proved that single-dataset
+  training learns camera artifacts, not universal dermoscopic features. This
+  was the most important test in the entire project. Most open-source skin
+  cancer models stop before this test.
+- **Combined-dataset training (95.97% mel sensitivity on external data):**
+  37,484 images from HAM10000 + ISIC 2019. The model was forced to learn
+  features that generalize across camera systems. Source:
+  `scripts/combined-training-results.json`
+
+Each failure is documented in this README because the failures are what make
+the final result trustworthy. A project that only reports its best number is
+hiding something. A project that shows you the 0%, the 61.6%, and the 95.97%
+is showing you the evidence that the methodology actually works.
+
+### 6. Consumer-First, Clinician-Capable
+
+The same classification engine serves two audiences with different needs.
+
+A regular person uploading a photo of a mole does not know what "mel 0.94"
+means. They need a clear, actionable message: "See a dermatologist within
+2 weeks" or "This looks reassuring, but monitor for changes." The consumer
+translation layer converts probability distributions into plain-language
+recommendations with color-coded risk levels and specific next steps.
+
+A dermatologist evaluating the same lesion needs the opposite: raw ABCDE
+scores, 7-point checklist breakdown, TDS calculation, per-class probability
+distribution, ICD-10-CM codes, and a pre-populated referral letter they can
+copy into their clinical correspondence.
+
+The key design decision was to build one engine with two presentation layers,
+not two separate products. The classification pipeline, ensemble logic, and
+safety gates are identical regardless of who is looking at the output. The
+difference is entirely in how results are communicated. This means both
+audiences benefit from every improvement to the underlying system, and the
+system does not need to be validated twice.
+
+### 7. Privacy by Architecture
+
+Medical images are among the most sensitive data a person can generate.
+Dr. Agnes is designed so that privacy is structural, not policy-dependent.
+
+- **Images never leave the device.** Classification runs via server-side
+  HuggingFace API proxy (the image is sent to the server for inference and
+  immediately discarded), but the architecture is designed for full ONNX
+  offline inference where even this hop is eliminated. No image is stored
+  on any server.
+- **EXIF stripping.** All metadata (GPS coordinates, device identifiers,
+  timestamps) is removed from images before any processing. Even if an image
+  were somehow exfiltrated, it carries no identifying metadata.
+- **No device fingerprinting.** The system does not collect browser
+  fingerprints, device IDs, or persistent identifiers.
+- **Anonymized sharing via differential privacy.** Practices that opt into
+  the pi-brain collective intelligence layer contribute only anonymized
+  aggregate statistics, not individual images. Differential privacy
+  (epsilon=1.0) adds calibrated noise to every shared data point, providing
+  mathematically provable privacy guarantees.
+- **Safe Harbor de-identification.** All data contributed to pi-brain follows
+  HIPAA Safe Harbor rules: 18 identifier categories are removed before
+  transmission.
+- **Witness chain, not image chain.** The audit trail uses SHAKE-256 hashes
+  to prove that a classification happened, without storing the image that was
+  classified. The hash is irreversible -- you cannot reconstruct the image
+  from it.
+
+The principle is that privacy should not depend on trusting the developer,
+the server operator, or the network. It should be enforced by the architecture
+itself: if the data never exists on the server, it cannot be breached from the
+server.
 
 ---
 

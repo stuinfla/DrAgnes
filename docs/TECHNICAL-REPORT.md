@@ -1,4 +1,4 @@
-Updated: 2026-03-24 12:00:00 EST | Version 1.5.0
+Updated: 2026-03-24 16:00:00 EST | Version 1.6.0
 Created: 2026-03-22
 
 # DrAgnes AI Dermatoscopy Screening Platform -- Technical Report
@@ -10,22 +10,30 @@ Created: 2026-03-22
 ## Table of Contents
 
 1. [Executive Summary](#1-executive-summary)
-2. [Classification Pipeline -- Complete Technical Detail](#2-classification-pipeline----complete-technical-detail)
-   - 2.1 [Image Preprocessing](#21-image-preprocessing)
-   - 2.2 [Lesion Segmentation](#22-lesion-segmentation)
-   - 2.3 [Feature Extraction (20 Features)](#23-feature-extraction-20-features)
-   - 2.4 [Classification -- 3-Way Ensemble](#24-classification----3-way-ensemble)
-   - 2.5 [Clinical Decision Thresholds](#25-clinical-decision-thresholds)
-   - 2.6 [Total Dermoscopy Score (TDS)](#26-total-dermoscopy-score-tds)
-   - 2.7 [7-Point Checklist](#27-7-point-checklist)
-   - 2.8 [Bayesian Demographic Adjustment](#28-bayesian-demographic-adjustment)
-3. [What We Tried and What Failed](#3-what-we-tried-and-what-failed)
-4. [Calibration Against FDA-Cleared Devices](#4-calibration-against-fda-cleared-devices)
-5. [Multi-Image Consensus Classification](#5-multi-image-consensus-classification-v050)
-6. [Lesion Measurement System](#6-lesion-measurement-system-v070)
-7. [Strategy for Further Increasing Efficacy](#7-strategy-for-further-increasing-efficacy)
-8. [Known Limitations (Complete List)](#8-known-limitations-complete-list)
-9. [References](#9-references)
+2. [Design Philosophy](#2-design-philosophy)
+   - 2.1 [Sensitivity Over Specificity](#21-sensitivity-over-specificity----the-fundamental-tradeoff)
+   - 2.2 [The Honesty Principle](#22-the-honesty-principle)
+   - 2.3 [Multi-Layer Defense](#23-multi-layer-defense----why-one-model-is-not-enough)
+   - 2.4 [Real-World Measurement](#24-real-world-measurement----not-just-classification)
+   - 2.5 [The Iterative Journey](#25-from-0-to-9597----the-iterative-journey)
+   - 2.6 [Consumer-First, Clinician-Capable](#26-consumer-first-clinician-capable)
+   - 2.7 [Privacy by Architecture](#27-privacy-by-architecture)
+3. [Classification Pipeline -- Complete Technical Detail](#3-classification-pipeline----complete-technical-detail)
+   - 3.1 [Image Preprocessing](#31-image-preprocessing)
+   - 3.2 [Lesion Segmentation](#32-lesion-segmentation)
+   - 3.3 [Feature Extraction (20 Features)](#33-feature-extraction-20-features)
+   - 3.4 [Classification -- 4-Layer Ensemble](#34-classification----4-layer-ensemble)
+   - 3.5 [Clinical Decision Thresholds](#35-clinical-decision-thresholds)
+   - 3.6 [Total Dermoscopy Score (TDS)](#36-total-dermoscopy-score-tds)
+   - 3.7 [7-Point Checklist](#37-7-point-checklist)
+   - 3.8 [Bayesian Demographic Adjustment](#38-bayesian-demographic-adjustment)
+4. [What We Tried and What Failed](#4-what-we-tried-and-what-failed)
+5. [Calibration Against FDA-Cleared Devices](#5-calibration-against-fda-cleared-devices)
+6. [Multi-Image Consensus Classification](#6-multi-image-consensus-classification-v050)
+7. [Lesion Measurement System](#7-lesion-measurement-system-v070)
+8. [Strategy for Further Increasing Efficacy](#8-strategy-for-further-increasing-efficacy)
+9. [Known Limitations (Complete List)](#9-known-limitations-complete-list)
+10. [References](#10-references)
 
 ---
 
@@ -112,9 +120,122 @@ Bayesian demographic adjustment is always applied on top of the ensemble output.
 
 ---
 
-## 2. Classification Pipeline -- Complete Technical Detail
+## 2. Design Philosophy
 
-### 2.1 Image Preprocessing
+This section explains the reasoning behind Dr. Agnes's architectural decisions. Every technical choice encodes a value judgment about what matters in cancer screening. These are ours, stated explicitly so they can be evaluated, challenged, and improved.
+
+### 2.1 Sensitivity Over Specificity -- The Fundamental Tradeoff
+
+In cancer screening, a false negative kills. A false positive inconveniences.
+
+This asymmetry is not a talking point -- it is the single design constraint that drives most of the system's architecture. We trained the combined-dataset model with focal loss (Lin et al. 2017) using melanoma alpha=6.0, which makes every missed melanoma cost the optimizer 6x more than a missed mole. Combined with gamma=2.0 down-weighting of easy examples, this creates a system that is deliberately aggressive about flagging potential melanomas. Source: `scripts/combined-training-results.json`
+
+**The cost is specificity.** Approximately 28% of benign moles are flagged for further evaluation. This produces a Number Needed to Biopsy (NNB) of roughly 4 -- meaning for every confirmed malignancy, about 3 benign lesions are also flagged. For context, DermaSensor's FDA pivotal study reported NNB of 6.25, and MelaFind (withdrawn from market due to low specificity) had NNB of approximately 10.8. Our NNB of 4 is within the clinically acceptable range. Source: DermaSensor NNB from Tkaczyk et al. 2024 (FDA DEN230008).
+
+**Threshold modes let users choose their own tradeoff.** Screening mode maximizes sensitivity for population-level use (the default, because the default is what most people will use, and the default should not miss melanomas). Triage mode tightens specificity for clinicians who want fewer false positives. The decision about where to draw the line belongs to the user, but the safe default belongs to us.
+
+### 2.2 The Honesty Principle
+
+On March 23, 2026, an internal FDA-style audit found that the README claimed "91.3% cross-dataset accuracy" and "96.2% sensitivity." Neither number was backed by any evidence file. They were fabricated -- not maliciously, but through the common pattern of writing aspirational numbers as if they were measured. See `docs/FDA-AUDIT-REPORT.md`.
+
+That audit changed the project's standards for what can be written down. The rules now:
+
+1. **Every number cites its evidence source.** If a metric appears in documentation, the JSON file, field name, and exact value are referenced. If no evidence file exists, the metric is not claimed. Example: "95.97% melanoma sensitivity" always includes "Source: `scripts/combined-training-results.json`."
+
+2. **Limitations are documented more prominently than capabilities.** The Known Limitations section (Section 9) is longer than most feature descriptions. The Fitzpatrick I-III training bias is stated in the README's front matter, not buried in an appendix. The 30-percentage-point equity gap is disclosed alongside the headline sensitivity number.
+
+3. **Failures are published.** The journey from 0% to 95.97% melanoma sensitivity includes every crash: the 0% from hand-crafted features, the 73.3% from community models, the 61.6% collapse on external data. These failures are not embarrassing; they are the evidence that the methodology actually works.
+
+4. **"Not yet measured" is a valid answer.** When we have not computed a metric, we say so. This document states "AUROC has not been computed on any dataset" rather than omitting AUROC and hoping no reviewer asks.
+
+The standard is that a dermatologist reading the README, or an FDA reviewer reading this technical report, should find nothing they need to discover for themselves. If a limitation exists, we disclosed it first.
+
+### 2.3 Multi-Layer Defense -- Why One Model Is Not Enough
+
+A single neural network is not trustworthy enough for cancer screening. Neural networks fail in ways that are difficult to predict: adversarial lighting, camera artifacts, out-of-distribution inputs, dataset-specific biases the training process learned silently. Our own ViT achieved 98.2% melanoma sensitivity on HAM10000 holdout and then crashed to 61.6% on ISIC 2019 external data -- same architecture, same weights, different cameras. Source: `scripts/combined-training-results.json` (pre-combined-training results), `scripts/isic2019-validation-results.json`.
+
+The 4-layer ensemble (Section 3.4) exists because each layer fails in a different way:
+
+| Layer | What it learns from | How it fails |
+|-------|-------------------|--------------|
+| Custom ViT (Layer 1) | Spatial patterns in pixels, trained end-to-end on 37,484 images | Camera-specific artifacts, out-of-distribution inputs |
+| Literature logistic regression (Layer 2) | 30 years of published dermoscopy literature (Stolz 1994, Argenziano 1998, Menzies 1996) | When image features do not match textbook descriptions |
+| Rule-based safety gates (Layer 3) | Hard clinical thresholds (TDS > 5.45, concurrent ABCDE criteria) | Binary thresholds cannot capture continuous risk; may inflate false positives for borderline lesions |
+| Bayesian demographics (Layer 4) | HAM10000 age/sex/location priors (Tschandl et al. 2018) | Austrian hospital demographics may not generalize to other populations |
+
+The safety gates in Layer 3 deserve special emphasis. These are hard floors that cannot be overridden by a confident model. If TDS exceeds 5.45, malignancy probability cannot drop below 30%. If 2 or more ABCDE criteria are suspicious, melanoma probability cannot drop below 15%. These gates exist specifically because confident-but-wrong neural network predictions are the most dangerous failure mode in cancer screening.
+
+Multi-image consensus and V1+V2 ensemble (models trained on different datasets) add further defense layers. The principle: redundancy through diversity. If independent systems, trained on different data, using different algorithms, all agree a lesion is suspicious, that agreement carries more weight than any single system's confidence score.
+
+### 2.4 Real-World Measurement -- Not Just Classification
+
+Classification without measurement is incomplete. The "D" in ABCDE is diameter, and the 6mm threshold is a clinical decision point for melanoma suspicion (Stolz et al. 1994). Telling someone they have a suspicious lesion without telling them how big it is leaves a gap in the clinical picture.
+
+The problem: smartphone cameras do not know how far they are from the lesion. A 4mm mole and a 9mm mole can produce identical pixel areas at different distances.
+
+The solution is a 3-tier measurement system (Section 7), designed around what people actually have available:
+
+- **USB-C reference** (Tier 1, +/-0.5mm): The USB-C connector is 8.25mm wide, standardized to sub-millimeter tolerance by the USB Implementers Forum. Everyone with a smartphone has a charger cable. Place it next to the lesion and the system has a physical reference accurate enough to resolve the 6mm clinical threshold. This is the only tier with clinically useful precision.
+
+- **Skin texture FFT** (Tier 2, +/-2-3mm): When no reference is present, the system analyzes dermatoglyphic pore spacing in the image margin using a 2D FFT. Pore spacing is anatomically constrained (0.2-0.5mm depending on body location). The detected spacing provides automatic calibration without any user action.
+
+- **LiDAR enhancement**: iPhone Pro LiDAR depth data, when available, provides distance-to-subject for direct pixels-per-mm calculation.
+
+- **Pixel estimate fallback** (Tier 3): When nothing else works, assume 25mm dermoscope FOV. If this estimate places the diameter between 4-8mm (straddling the clinical threshold), the system explicitly warns the user to place a USB-C cable next to the lesion.
+
+**Quality gating runs first.** Before spending compute on classification, the system scores each image for sharpness (Laplacian variance), contrast (RMS), and segmentation quality. A blurry, low-contrast image with poor segmentation is rejected with a retake prompt, not classified with false confidence.
+
+### 2.5 From 0% to 95.97% -- The Iterative Journey
+
+The final 95.97% melanoma sensitivity on external data was not designed in advance. It was discovered through a sequence of failures. Each failure eliminated a wrong approach and pointed toward the right one. Each is documented because a project that only reports its best number is hiding something.
+
+| Stage | Approach | Melanoma Sensitivity | What it proved |
+|-------|----------|---------------------|----------------|
+| 1 | Hand-crafted features + logistic regression | **0%** | Deep learning is necessary. 20 summary statistics cannot capture spatial patterns (Section 4.1). |
+| 2 | Community ViT (Anwarkh1, 44K+ downloads) | **73.3%** | Custom training is necessary. Generic models without class weighting miss 1 in 4 melanomas. |
+| 3 | Custom ViT with focal loss, HAM10000 only | **98.2%** (HAM10000) | Cross-dataset validation is necessary. We celebrated; we were wrong to celebrate. |
+| 4 | Same model on ISIC 2019 external data | **61.6%** (ISIC 2019) | Multi-dataset training is necessary. The model learned HAM10000 camera artifacts, not dermoscopic features. |
+| 5 | Combined training (37,484 images, HAM10000 + ISIC 2019) | **95.97%** (ISIC 2019 external) | The architecture works. Cross-dataset validation confirms the model generalizes. |
+
+Sources: Stages 1-3 from `scripts/cross-validation-results.json`. Stage 4 from `scripts/isic2019-validation-results.json`. Stage 5 from `scripts/combined-training-results.json`.
+
+Stage 4 was the most important test in the entire project. If we had not tested on external data, we would still be claiming 98.2% and it would be misleading. Most open-source skin cancer models stop at Stage 3 -- they validate on their own holdout set and report a number that does not generalize. The 36.6 percentage point crash on external data is what motivated combined-dataset training, which is what produced the 95.97% that actually holds up.
+
+### 2.6 Consumer-First, Clinician-Capable
+
+The same classification engine serves two audiences with fundamentally different needs.
+
+**A regular person** uploading a photo of a mole does not know what "mel 0.94" means. They need: "See a dermatologist within 2 weeks" or "This looks reassuring, but monitor for changes." The consumer translation layer converts probability distributions into plain-language recommendations with color-coded risk levels and specific next steps. No jargon, no probability distributions, no model internals.
+
+**A dermatologist** evaluating the same lesion needs the opposite: raw ABCDE scores, 7-point checklist breakdown, TDS calculation with per-component weights, per-class probability distribution across all 7 diagnostic categories, ICD-10-CM codes, and a pre-populated referral letter they can copy into clinical correspondence.
+
+The key design decision was to build one engine with two presentation layers, not two separate products. The classification pipeline, ensemble logic, and safety gates are identical regardless of who is looking at the output. This means:
+
+- Both audiences benefit from every improvement to the underlying system
+- The system does not need to be validated twice
+- The consumer never gets a less accurate answer than the clinician
+- A clinician can always drill into the same output a consumer sees
+
+### 2.7 Privacy by Architecture
+
+Medical images are among the most sensitive data a person can generate. Dr. Agnes is designed so that privacy is structural, not policy-dependent. The principle: if the data never exists on the server, it cannot be breached from the server.
+
+| Privacy mechanism | Implementation | What it prevents |
+|-------------------|---------------|-----------------|
+| On-device inference (target) | ONNX offline model; current HuggingFace API proxy discards images immediately after inference | Image exfiltration from server storage |
+| EXIF stripping | All metadata removed before processing: GPS, device ID, timestamps | Location tracking, device fingerprinting from images |
+| No persistent identifiers | No browser fingerprints, device IDs, or session tracking | Cross-session user identification |
+| Differential privacy | Epsilon=1.0 calibrated noise on all pi-brain shared data | Statistical reconstruction of individual cases from aggregate data |
+| Safe Harbor de-identification | 18 HIPAA identifier categories removed before pi-brain contribution | Re-identification from contributed clinical data |
+| Witness chain | SHAKE-256 hashes prove a classification happened without storing the image | Reconstruction of classified images from audit trail |
+
+The differential privacy guarantee (epsilon=1.0) means that the presence or absence of any single patient's data in the pi-brain collective intelligence changes the output distribution by at most a factor of e^1.0 (approximately 2.72x). This is a mathematically provable bound, not a policy promise.
+
+---
+
+## 3. Classification Pipeline -- Complete Technical Detail
+
+### 3.1 Image Preprocessing
 
 **Source**: `src/lib/dragnes/preprocessing.ts`
 
@@ -186,7 +307,7 @@ These statistics come from the ImageNet-1K training set (Deng et al. 2009) and a
 
 ---
 
-### 2.2 Lesion Segmentation
+### 3.2 Lesion Segmentation
 
 **Source**: `src/lib/dragnes/image-analysis.ts`, function `segmentLesion()`
 
@@ -242,7 +363,7 @@ This fallback assumes dermoscopic images are typically centered on the lesion of
 
 ---
 
-### 2.3 Feature Extraction (20 Features)
+### 3.3 Feature Extraction (20 Features)
 
 The system extracts 20 numerical features from the segmented lesion, organized into 6 groups. Each feature maps to specific dermoscopic criteria from published literature.
 
@@ -341,7 +462,7 @@ Structural patterns are detected using Local Binary Pattern (LBP) analysis, loca
 
 ---
 
-### 2.4 Classification -- 4-Layer Ensemble
+### 3.4 Classification -- 4-Layer Ensemble
 
 **Source**: `src/lib/dragnes/classifier.ts`, class `DermClassifier`
 
@@ -400,7 +521,7 @@ Softmax converts logits to probabilities: `P(c) = exp(logit_c) / sum_k exp(logit
 
 **Why this approach**: The logistic regression encodes explicit clinical knowledge from dermatology literature that the ViT may not have learned, especially for rare classes where training data is limited. It acts as a regularizer -- even if the ViT makes an unusual prediction, the clinical knowledge component pulls the ensemble toward dermatologically plausible outputs.
 
-**Limitation**: All 141 parameters (140 weights + 7 biases) are hand-set from literature review, not optimized from training data. This means the weights encode the authors' interpretation of published associations rather than empirically optimal decision boundaries. As demonstrated in Section 3.1, this approach alone is insufficient for accurate classification.
+**Limitation**: All 141 parameters (140 weights + 7 biases) are hand-set from literature review, not optimized from training data. This means the weights encode the authors' interpretation of published associations rather than empirically optimal decision boundaries. As demonstrated in Section 4.1, this approach alone is insufficient for accurate classification.
 
 #### Path 3: Rule-Based Scoring (20% weight online, 40% offline)
 
@@ -446,14 +567,14 @@ P(class) = 0.60 * P_trained + 0.40 * P_rules
 
 After ensemble combination, two additional adjustments are applied:
 
-1. **Bayesian demographic adjustment** (if patient demographics are provided) -- see Section 2.8
-2. **Clinical recommendation thresholds** -- see Section 2.5
+1. **Bayesian demographic adjustment** (if patient demographics are provided) -- see Section 3.8
+2. **Clinical recommendation thresholds** -- see Section 3.5
 
 The ensemble weights (50/30/20 when dual-model, 60/25/15 when single-model, and 60/40 offline) are engineering estimates, not empirically optimized values. Determining optimal weights requires running all classifier paths on a held-out test set and optimizing the weight vector to maximize a clinical utility metric (e.g., melanoma sensitivity at a fixed NNB).
 
 ---
 
-### 2.5 Clinical Decision Thresholds
+### 3.5 Clinical Decision Thresholds
 
 **Source**: `src/lib/dragnes/clinical-baselines.ts`, `src/lib/dragnes/ham10000-knowledge.ts`
 
@@ -482,7 +603,7 @@ Malignant probability is defined as P(mel) + P(bcc) + P(akiec).
 
 ---
 
-### 2.6 Total Dermoscopy Score (TDS)
+### 3.6 Total Dermoscopy Score (TDS)
 
 **Source**: `src/lib/dragnes/clinical-baselines.ts`
 
@@ -515,7 +636,7 @@ where:
 
 ---
 
-### 2.7 7-Point Checklist
+### 3.7 7-Point Checklist
 
 **Source**: `src/lib/dragnes/clinical-baselines.ts`, function `computeSevenPointScore()`
 
@@ -540,7 +661,7 @@ The 7-point dermoscopy checklist (Argenziano et al. 1998) assigns point values t
 
 ---
 
-### 2.8 Bayesian Demographic Adjustment
+### 3.8 Bayesian Demographic Adjustment
 
 **Source**: `src/lib/dragnes/ham10000-knowledge.ts`, function `adjustForDemographics()`
 
@@ -584,11 +705,11 @@ followed by renormalization to sum to 1.
 
 ---
 
-## 3. What We Tried and What Failed
+## 4. What We Tried and What Failed
 
-### 3.1 Hand-Crafted Feature Training (Failed)
+### 4.1 Hand-Crafted Feature Training (Failed)
 
-We trained a multinomial logistic regression classifier on the 20 hand-extracted features (Section 2.3), using the HAM10000 dataset.
+We trained a multinomial logistic regression classifier on the 20 hand-extracted features (Section 3.3), using the HAM10000 dataset.
 
 **Quick mode** (700 images):
 - Accuracy: **37.1%**
@@ -610,7 +731,7 @@ We trained a multinomial logistic regression classifier on the 20 hand-extracted
 
 **Lesson**: This is exactly why the field moved from hand-crafted features to deep learning for dermoscopy classification. Esteva et al. (2017) demonstrated that a single CNN trained end-to-end on clinical images achieved dermatologist-level classification, without any explicit feature engineering. Our result empirically confirms that feature engineering alone is insufficient for this task.
 
-### 3.2 What the ViT Models Add
+### 4.2 What the ViT Models Add
 
 The dual-model ViT ensemble uses two independently-trained models:
 
@@ -630,7 +751,7 @@ The dual-model ViT ensemble uses two independently-trained models:
 
 **Note on the actavkid model**: The original Model B was `actavkid/vit-large-patch32-384-finetuned-skin-lesion-classification` (305M params, ViT-Large), which claimed 89% melanoma recall. This model was **removed from HuggingFace** on March 22, 2026 (HTTP 410 Gone). The 89% claim cannot be verified. We researched 8 candidate replacement models and selected skintaglabs SigLIP based on its dermatology-specific training, parameter count, and permissive license.
 
-### 3.3 Model Zoo Inventory
+### 4.3 Model Zoo Inventory
 
 During the March 22, 2026 model replacement research, we evaluated:
 
@@ -645,7 +766,7 @@ During the March 22, 2026 model replacement research, we evaluated:
 | stuartkerr/dragnes-classifier | 85.8M | **Deployed (Primary)** | Custom ViT, focal loss, **98.2% mel sens (measured)** |
 | Literature logistic regression | 141 params | Active (Layer 2) | 20x7 weights, all cited |
 
-### 3.4 Training Our Own Model
+### 4.4 Training Our Own Model
 
 Community ViT models do not meet the 90% melanoma sensitivity target. We trained `stuartkerr/dragnes-classifier` with the following configuration:
 
@@ -685,9 +806,9 @@ The custom model exceeds the DermaSensor DERM-ASSESS III melanoma sensitivity of
 
 ---
 
-## 4. Calibration Against FDA-Cleared Devices
+## 5. Calibration Against FDA-Cleared Devices
 
-### 4.1 DermaSensor (FDA DEN230008, cleared January 2024)
+### 5.1 DermaSensor (FDA DEN230008, cleared January 2024)
 
 **Technology**: Elastic Scattering Spectroscopy (ESS) -- measures how photons scatter through skin tissue at multiple wavelengths. The spectral signature differs between normal skin and malignant tissue due to changes in nuclear morphology and chromatin content.
 
@@ -712,7 +833,7 @@ The custom model exceeds the DermaSensor DERM-ASSESS III melanoma sensitivity of
 
 **Citation**: Tkaczyk ER, Rao BK, Grin C, et al. Clinical validation of DermaSensor for cutaneous malignancy detection. *JAMA Dermatol*. 2024.
 
-### 4.2 MelaFind (discontinued)
+### 5.2 MelaFind (discontinued)
 
 **Technology**: Multispectral dermoscopy (10 wavelengths, 430-950nm)
 
@@ -723,7 +844,7 @@ The custom model exceeds the DermaSensor DERM-ASSESS III melanoma sensitivity of
 
 MelaFind was withdrawn from the market due to its extremely low specificity, which resulted in excessive unnecessary biopsies.
 
-### 4.3 Nevisense (Scibase)
+### 5.3 Nevisense (Scibase)
 
 **Technology**: Electrical Impedance Spectroscopy (EIS) -- measures tissue impedance at multiple frequencies
 
@@ -731,7 +852,7 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 - Melanoma sensitivity: **97%**
 - Specificity: **31.3%**
 
-### 4.4 DrAgnes vs. Benchmarks
+### 5.4 DrAgnes vs. Benchmarks
 
 | Metric | DermaSensor (measured) | Nevisense (measured) | DrAgnes HAM10000 (measured) | DrAgnes ISIC 2019 (measured) |
 |--------|------------------------|----------------------|-----------------------------|------------------------------|
@@ -751,13 +872,13 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 
 ---
 
-## 5. Multi-Image Consensus Classification (v0.5.0)
+## 6. Multi-Image Consensus Classification (v0.5.0)
 
 Added 2026-03-23. This section documents the multi-image feature that allows
 users to capture 2-3 photos of the same lesion for higher classification
 confidence.
 
-### 5.1 Quality Scoring
+### 6.1 Quality Scoring
 
 Each captured image is scored on three axes before classification:
 
@@ -769,7 +890,7 @@ Each captured image is scored on three axes before classification:
 
 Overall quality = 0.4 × sharpness + 0.3 × contrast + 0.3 × segmentation quality.
 
-### 5.2 Consensus Algorithm
+### 6.2 Consensus Algorithm
 
 1. Each image is classified independently via `classifyWithDemographics()`
 2. Per-class probabilities are averaged, weighted by each image's overall quality score
@@ -779,14 +900,14 @@ Overall quality = 0.4 × sharpness + 0.3 × contrast + 0.3 × segmentation quali
    is redistributed equally from the 6 non-melanoma classes, then re-normalized. This ensures
    cancer sensitivity is never diluted by lower-quality images that happen to disagree.
 
-### 5.3 Agreement Score
+### 6.3 Agreement Score
 
 Inter-image agreement is computed as the average pairwise cosine similarity of the 7-class
 probability vectors across all image pairs. A score of 1.0 means all images produced identical
 probability distributions; lower scores indicate disagreement (which may suggest the images
 captured different features or had varying quality).
 
-### 5.4 Validation Results (Measured 2026-03-23)
+### 6.4 Validation Results (Measured 2026-03-23)
 
 Tested on 1,499 HAM10000 holdout images (15% stratified), 3 views per image,
 151.6 seconds on Apple M3 Max MPS.
@@ -813,7 +934,7 @@ a mix of good and bad photos.
 **Melanoma safety gate verified**: Sensitivity remained locked at 99.4% across all three
 methods, confirming the safety gate prevents any dilution of cancer detection.
 
-### 5.5 Implementation Files
+### 6.5 Implementation Files
 
 | File | Lines | Purpose |
 |------|-------|---------|
@@ -823,13 +944,13 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 ---
 
-## 6. Lesion Measurement System (v0.7.0)
+## 7. Lesion Measurement System (v0.7.0)
 
 Accurate lesion diameter is clinically essential: the ABCDE "D" criterion uses a 6mm threshold as a melanoma warning sign, and the TDS formula includes diameter as one of its four weighted components. Prior to v0.7.0, DrAgnes relied on a fixed assumption of 25mm dermoscope field-of-view, which produced unreliable measurements from smartphone cameras at varying distances.
 
 The v0.7.0 measurement system uses a **3-tier calibration approach** that selects the most accurate method available from the image:
 
-### 6.1 Tier 1: Physical Connector Reference (High Confidence)
+### 7.1 Tier 1: Physical Connector Reference (High Confidence)
 
 If a USB-C, Lightning, or USB-A connector is visible in the image (placed next to the lesion), the system detects it via Sobel edge detection and aspect-ratio matching against known connector dimensions:
 
@@ -843,7 +964,7 @@ The detected connector width in pixels establishes a pixels-per-mm calibration f
 
 Implementation: `src/lib/dragnes/measurement-connector.ts` -- pure TypeScript, Sobel edge detection, runs in-browser in <200ms.
 
-### 6.2 Tier 2: Skin Texture FFT Analysis (Medium Confidence)
+### 7.2 Tier 2: Skin Texture FFT Analysis (Medium Confidence)
 
 When no connector is present, the system analyzes skin texture in the image margin (outer 30%, away from the central lesion) using a 2D Fast Fourier Transform. Pore and ridge spacing produces a characteristic frequency peak that can be mapped to known anatomical spacing:
 
@@ -860,20 +981,20 @@ The process: extract a grayscale margin patch, apply a Hann window to reduce spe
 
 Implementation: `src/lib/dragnes/measurement-texture.ts` and `src/lib/dragnes/fft.ts` -- a **pure TypeScript FFT** implementation (no native dependencies, no WebAssembly). The FFT uses the Cooley-Tukey radix-2 algorithm on power-of-2 padded input.
 
-### 6.3 Tier 3: Pixel Estimate Fallback (Low Confidence)
+### 7.3 Tier 3: Pixel Estimate Fallback (Low Confidence)
 
 When neither connector nor texture analysis produces a confident result, the system falls back to a rough estimate based on an assumed 25mm dermoscope field-of-view at 10x magnification. This is the same method used in v0.6.x and earlier.
 
 If the fallback estimate places the diameter between 4-8mm (straddling the 6mm clinical threshold), a safety warning is appended advising the user to place a USB-C cable next to the spot for an accurate measurement.
 
-### 6.4 Integration with ABCDE and TDS Scoring
+### 7.4 Integration with ABCDE and TDS Scoring
 
 The measurement system feeds directly into two clinical scoring components:
 
 - **ABCDE "D" score**: Diameter >= 6mm scores D=1 (suspicious), <6mm scores D=0 (reassuring). Near the threshold (4-8mm), the confidence tier determines whether the score is presented with a warning.
 - **TDS formula**: The "D" component contributes `D x 0.5` to the Total Dermoscopy Score. With the connector reference, this component is reliable. With the fallback estimate, the D score may be inaccurate.
 
-### 6.5 Implementation Files
+### 7.5 Implementation Files
 
 | File | Purpose |
 |------|---------|
@@ -884,7 +1005,7 @@ The measurement system feeds directly into two clinical scoring components:
 
 ---
 
-## 7. Strategy for Further Increasing Efficacy
+## 8. Strategy for Further Increasing Efficacy
 
 ### Phase 1: Validate Current System (1-2 weeks)
 
@@ -929,7 +1050,7 @@ The measurement system feeds directly into two clinical scoring components:
 
 ---
 
-## 8. Known Limitations (Complete List)
+## 9. Known Limitations (Complete List)
 
 ### What we now know (validated March 22-23, 2026)
 
@@ -975,7 +1096,7 @@ The measurement system feeds directly into two clinical scoring components:
 
 ---
 
-## 9. References
+## 10. References
 
 1. **Stolz W, Riemann A, Cognetta AB, et al.** ABCD rule of dermatoscopy: a new practical method for early recognition of malignant melanoma. *European Journal of Dermatology*. 1994;4:521-527.
    - *Defines the ABCD scoring system (Asymmetry, Border, Color, Dermoscopic structures) and the TDS formula. Used as the basis for our feature extraction and TDS computation.*
@@ -1024,9 +1145,9 @@ The measurement system feeds directly into two clinical scoring components:
 
 ---
 
-## 10. Dual-Model ViT Ensemble (v1.2 -- Updated March 22, 2026)
+## 11. Dual-Model ViT Ensemble (v1.2 -- Updated March 22, 2026)
 
-### 10.1 Current Model Configuration
+### 11.1 Current Model Configuration
 
 As of v1.2, DrAgnes uses a dual-model ensemble with the following configuration:
 
@@ -1042,7 +1163,7 @@ As of v1.2, DrAgnes uses a dual-model ensemble with the following configuration:
 
 **Why the model changed**: The original Model B was `actavkid/vit-large-patch32-384-finetuned-skin-lesion-classification` (305M params, 12 classes, claimed 89% melanoma recall). This model was **removed from HuggingFace** on March 22, 2026 (HTTP 410 Gone). The 89% claim cannot be verified. We evaluated 8 candidate models and selected skintaglabs SigLIP based on dermatology-specific training, MIT license, and parameter count.
 
-### 10.2 Ensemble Architecture
+### 11.2 Ensemble Architecture
 
 Both models are called in **parallel** via `Promise.allSettled` to minimize latency. The weighting is currently **equal (50/50)** for all classes:
 
@@ -1064,7 +1185,7 @@ When only one model is available (the other fails or times out):
 P(class) = 0.60 * P_single_HF + 0.25 * P_trained + 0.15 * P_rules
 ```
 
-### 10.3 SigLIP Label Mapping
+### 11.3 SigLIP Label Mapping
 
 The skintaglabs SigLIP model outputs its own label taxonomy. Labels are mapped to our canonical 7-class HAM10000 taxonomy via `SIGLIP_LABEL_MAP`:
 
@@ -1082,7 +1203,7 @@ The skintaglabs SigLIP model outputs its own label taxonomy. Labels are mapped t
 
 When multiple SigLIP labels map to the same DrAgnes class, their probabilities are summed.
 
-### 10.4 Model Disagreement Detection
+### 11.4 Model Disagreement Detection
 
 When the two ViT models disagree on the top predicted class, the system:
 
@@ -1092,7 +1213,7 @@ When the two ViT models disagree on the top predicted class, the system:
 
 **This is a safety feature**: model disagreement may indicate a difficult or ambiguous case that warrants professional review.
 
-### 10.5 Validation Status
+### 11.5 Validation Status
 
 **What we have validated (March 22-23, 2026):**
 - Custom model (stuartkerr/dragnes-classifier) on HAM10000-family data: 98.2% melanoma sensitivity on holdout (1,503), 98.7% on Nagabu/HAM10000 (1,000), 100% on marmal88 test (1,285). -0.7% train/test gap. *Evidence: `scripts/cross-validation-results.json`*
@@ -1123,9 +1244,9 @@ When the two ViT models disagree on the top predicted class, the system:
 
 ---
 
-## 11. Clinical Features Added (v0.2.0)
+## 12. Clinical Features Added (v0.2.0)
 
-### 11.1 ICD-10-CM Code Mapping
+### 12.1 ICD-10-CM Code Mapping
 
 Each of the 7 lesion classes maps to ICD-10-CM codes for clinical documentation:
 
@@ -1139,7 +1260,7 @@ Each of the 7 lesion classes maps to ICD-10-CM codes for clinical documentation:
 | nv | D22.x | Melanocytic nevi |
 | vasc | D18.x | Hemangioma / vascular lesion |
 
-### 11.2 Referral Letter Generator
+### 12.2 Referral Letter Generator
 
 One-click generation of a referral letter pre-populated with:
 - Classification result and confidence level
@@ -1148,7 +1269,7 @@ One-click generation of a referral letter pre-populated with:
 - Body location from interactive body map
 - Copy-to-clipboard functionality
 
-### 11.3 Explainability Panel
+### 12.3 Explainability Panel
 
 "Why this classification?" panel showing:
 - Which image features contributed most to the classification
@@ -1156,7 +1277,7 @@ One-click generation of a referral letter pre-populated with:
 - Literature citations for each contributing factor
 - Model agreement/disagreement status
 
-### 11.4 Analytics Dashboard
+### 12.4 Analytics Dashboard
 
 Practice-level performance monitoring:
 - Concordance rate (AI vs. clinician) with 30-day rolling trend
@@ -1166,7 +1287,7 @@ Practice-level performance monitoring:
 - Fitzpatrick equity monitoring with automatic disparity alerts
 - Discordance analysis (cases where AI and clinician disagreed)
 
-### 11.5 Interactive Body Map
+### 12.5 Interactive Body Map
 
 SVG-based clickable body map replacing the previous dropdown selector for body location input. Supports anterior and posterior views with anatomically accurate region detection.
 
