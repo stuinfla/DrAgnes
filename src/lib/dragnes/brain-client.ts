@@ -12,6 +12,7 @@
  */
 
 import type { LesionClass, BodyLocation, WitnessChain } from "./types";
+import type { AnonymizedCase } from "./anonymization";
 import { createWitnessChain } from "./witness";
 import { OfflineQueue } from "./offline-queue";
 
@@ -447,4 +448,172 @@ export async function getStats(): Promise<DrAgnesStats | null> {
  */
 export function getQueue(): OfflineQueue {
 	return getOfflineQueue();
+}
+
+// ---- ADR-126 Phase 2: Anonymized Case Sharing ----
+
+const BRAIN_API = `${BRAIN_BASE_URL}/v1`;
+
+/**
+ * Share an anonymized case with the pi-brain collective intelligence.
+ *
+ * Posts the de-identified case (probabilities with DP noise, demographics
+ * reduced to decade/sex, no images or identifiers) under the
+ * "dermatology_case" category with dragnes tags.
+ *
+ * Fails gracefully -- brain connectivity is optional and should never
+ * block classification workflow.
+ *
+ * @param case_ - AnonymizedCase produced by the anonymization pipeline
+ * @param apiKey - Optional API key for authenticated brain access
+ * @returns true if the share succeeded, false on any failure
+ */
+export async function shareToBrain(
+	case_: AnonymizedCase,
+	apiKey?: string
+): Promise<boolean> {
+	try {
+		const headers: Record<string, string> = {
+			"Content-Type": "application/json",
+		};
+		if (apiKey) {
+			headers["Authorization"] = `Bearer ${apiKey}`;
+		}
+
+		const payload = {
+			title: `DrAgnes ${case_.topClass} classification`,
+			content: JSON.stringify(case_),
+			category: "dermatology_case",
+			tags: [
+				DRAGNES_TAG,
+				`class:${case_.topClass}`,
+				`location:${case_.bodyLocation}`,
+				case_.outcome ?? "no_outcome",
+			],
+		};
+
+		const response = await fetchWithTimeout(`${BRAIN_API}/memories/share`, {
+			method: "POST",
+			headers,
+			body: JSON.stringify(payload),
+		});
+
+		return response.ok;
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Search pi-brain for cases with similar probability distributions.
+ *
+ * Serializes the probability vector into a query string and searches
+ * the dermatology_case category for nearest neighbors. Returns empty
+ * array on any failure -- brain is never a hard dependency.
+ *
+ * @param probabilities - Probability map (class name to noised probability)
+ * @param limit - Maximum number of similar cases to return (default 5)
+ * @param apiKey - Optional API key for authenticated brain access
+ * @returns Array of similar AnonymizedCase records, or empty on failure
+ */
+export async function searchSimilarCases(
+	probabilities: Record<string, number>,
+	limit: number = 5,
+	apiKey?: string
+): Promise<AnonymizedCase[]> {
+	try {
+		const headers: Record<string, string> = {};
+		if (apiKey) {
+			headers["Authorization"] = `Bearer ${apiKey}`;
+		}
+
+		// Build a compact query from the top classes for semantic search
+		const sorted = Object.entries(probabilities)
+			.sort(([, a], [, b]) => b - a)
+			.slice(0, 3);
+		const query = sorted
+			.map(([cls, prob]) => `${cls}:${prob.toFixed(3)}`)
+			.join(" ");
+
+		const params = new URLSearchParams({
+			q: `dermatology_case ${query}`,
+			limit: String(limit),
+			tag: DRAGNES_TAG,
+		});
+
+		const response = await fetchWithTimeout(
+			`${BRAIN_API}/memories/search?${params}`,
+			{ headers }
+		);
+
+		if (!response.ok) {
+			return [];
+		}
+
+		const data = (await response.json()) as {
+			results?: Array<{
+				content?: string;
+			}>;
+		};
+
+		if (!data.results) {
+			return [];
+		}
+
+		const cases: AnonymizedCase[] = [];
+		for (const r of data.results) {
+			try {
+				const parsed = JSON.parse(r.content ?? "{}") as AnonymizedCase;
+				// Validate that it has the minimum required fields
+				if (parsed.topClass && parsed.probabilities) {
+					cases.push(parsed);
+				}
+			} catch {
+				// Skip entries that are not valid AnonymizedCase JSON
+			}
+		}
+
+		return cases;
+	} catch {
+		return [];
+	}
+}
+
+/**
+ * Check pi-brain health status.
+ *
+ * Lightweight GET to the status endpoint. Returns a summary of
+ * brain health including total memories, graph edges, and whether
+ * the service is responsive.
+ *
+ * @returns Status object, or a degraded response with healthy=false on failure
+ */
+export async function getBrainStatus(): Promise<{
+	memories: number;
+	edges: number;
+	healthy: boolean;
+}> {
+	try {
+		const response = await fetchWithTimeout(`${BRAIN_API}/status`);
+
+		if (!response.ok) {
+			return { memories: 0, edges: 0, healthy: false };
+		}
+
+		const data = (await response.json()) as {
+			totalMemories?: number;
+			memories?: number;
+			edges?: number;
+			totalEdges?: number;
+			status?: string;
+		};
+
+		return {
+			memories: data.totalMemories ?? data.memories ?? 0,
+			edges: data.totalEdges ?? data.edges ?? 0,
+			healthy: data.status === "ok" || data.status === "healthy",
+		};
+	} catch {
+		return { memories: 0, edges: 0, healthy: false };
+	}
 }

@@ -1,0 +1,110 @@
+{
+  "adr": "ADR-122",
+  "phase": "Phase 1-2: ONNX export + INT8 quantization",
+  "model": "dragnes-classifier-v2 (ViT-Base, 85.8M params)",
+  "source": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best",
+  "outputs": {
+    "onnx_fp32": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-onnx-v2",
+    "onnx_int8": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-onnx-v2-int8"
+  },
+  "file_sizes": {
+    "safetensors_bytes": 343239356,
+    "onnx_fp32_bytes": 343410431,
+    "onnx_int8_bytes": 88761298,
+    "safetensors_mb": 343.2,
+    "onnx_fp32_mb": 343.4,
+    "onnx_int8_mb": 88.8,
+    "compression_int8_vs_fp32": 0.2585,
+    "compression_int8_vs_safetensors": 0.2586
+  },
+  "validation": {
+    "test_image": "01ba602def4506d8bfd5900cccd2ab4d.jpg",
+    "pytorch_device": "mps",
+    "predictions": {
+      "pytorch": "bkl",
+      "onnx_fp32": "bkl",
+      "onnx_int8": "bkl",
+      "match": true
+    },
+    "max_diff": {
+      "fp32_vs_pytorch": 5.364418029785156e-07,
+      "int8_vs_pytorch": 0.044440627098083496
+    },
+    "mean_diff": {
+      "fp32_vs_pytorch": 1.6354690046682663e-07,
+      "int8_vs_pytorch": 0.015447376295924187
+    },
+    "thresholds": {
+      "fp32": 0.01,
+      "int8": 0.05
+    },
+    "within_threshold": {
+      "fp32": true,
+      "int8": true
+    },
+    "inference_time_seconds": {
+      "pytorch": 0.3284,
+      "onnx_fp32": 0.2777,
+      "onnx_int8": 0.1547
+    },
+    "per_class": [
+      {
+        "label": "akiec",
+        "pytorch": 0.3186364769935608,
+        "onnx_fp32": 0.31863632798194885,
+        "onnx_int8": 0.3630771040916443,
+        "diff_fp32": 1.4901161193847656e-07,
+        "diff_int8": 0.044440627098083496
+      },
+      {
+        "label": "bcc",
+        "pytorch": 0.10677505284547806,
+        "onnx_fp32": 0.10677464306354523,
+        "onnx_int8": 0.09449587762355804,
+        "diff_fp32": 4.0978193283081055e-07,
+        "diff_int8": 0.012279175221920013
+      },
+      {
+        "label": "bkl",
+        "pytorch": 0.5187153816223145,
+        "onnx_fp32": 0.5187159180641174,
+        "onnx_int8": 0.4769286811351776,
+        "diff_fp32": 5.364418029785156e-07,
+        "diff_int8": 0.04178670048713684
+      },
+      {
+        "label": "df",
+        "pytorch": 0.007897095754742622,
+        "onnx_fp32": 0.007897104136645794,
+        "onnx_int8": 0.00811130553483963,
+        "diff_fp32": 8.381903171539307e-09,
+        "diff_int8": 0.00021420978009700775
+      },
+      {
+        "label": "mel",
+        "pytorch": 0.02798888087272644,
+        "onnx_fp32": 0.027988899499177933,
+        "onnx_int8": 0.03541123867034912,
+        "diff_fp32": 1.862645149230957e-08,
+        "diff_int8": 0.007422357797622681
+      },
+      {
+        "label": "nv",
+        "pytorch": 0.017698366194963455,
+        "onnx_fp32": 0.01769835129380226,
+        "onnx_int8": 0.019260160624980927,
+        "diff_fp32": 1.4901161193847656e-08,
+        "diff_int8": 0.0015617944300174713
+      },
+      {
+        "label": "vasc",
+        "pytorch": 0.002288813702762127,
+        "onnx_fp32": 0.0022888060193508863,
+        "onnx_int8": 0.0027155792340636253,
+        "diff_fp32": 7.683411240577698e-09,
+        "diff_int8": 0.0004267655313014984
+      }
+    ]
+  },
+  "timestamp": "2026-03-24T10:23:16-0400"
+}

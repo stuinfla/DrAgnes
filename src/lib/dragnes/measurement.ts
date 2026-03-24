@@ -1,7 +1,8 @@
 /**
  * Measurement Orchestrator -- ADR-121 Phase 4
  *
- * Combines three calibration strategies in priority order:
+ * Combines four calibration strategies in priority order:
+ *   0. LiDAR depth sensing (iPhone Pro / WebXR)                  -> high confidence
  *   1. Physical connector reference (USB-C / Lightning / USB-A)  -> high confidence
  *   2. Skin texture frequency analysis                           -> medium confidence
  *   3. Dermoscope field-of-view estimate                         -> low confidence
@@ -10,6 +11,8 @@
  */
 
 import type { BodyLocation } from "./types";
+import { isLidarAvailable, measureWithLidar } from "./measurement-lidar";
+import type { LidarMeasurement } from "./measurement-lidar";
 import { detectConnector } from "./measurement-connector";
 import type { ConnectorDetection } from "./measurement-connector";
 import { measureFromSkinTexture } from "./measurement-texture";
@@ -26,7 +29,7 @@ export interface LesionMeasurement {
 	/** Confidence tier based on calibration method */
 	confidence: "high" | "medium" | "low";
 	/** Which calibration strategy produced the measurement */
-	method: "connector" | "texture" | "estimate";
+	method: "lidar" | "connector" | "texture" | "estimate";
 	/** Calibrated pixels-per-mm ratio used for the conversion */
 	pixelsPerMm: number;
 	/** Human-readable explanation of the measurement and its accuracy */
@@ -101,6 +104,7 @@ function appendSafetyWarning(
  * Measure a skin lesion using the best available calibration method.
  *
  * Priority:
+ *   0. LiDAR depth sensing (high confidence, iPhone Pro / WebXR)
  *   1. Connector detection (high confidence, +/-0.5 mm)
  *   2. Skin texture analysis (medium confidence, +/-2-3 mm)
  *   3. Dermoscope FOV estimate (low confidence, rough)
@@ -110,11 +114,29 @@ function appendSafetyWarning(
  * @param bodyLocation     - Body site (used for texture spacing lookup)
  * @returns LesionMeasurement with diameter, confidence, method, and details
  */
-export function measureLesion(
+export async function measureLesion(
 	imageData: ImageData,
 	lesionAreaPixels: number,
 	bodyLocation: BodyLocation,
-): LesionMeasurement {
+): Promise<LesionMeasurement> {
+	// ----------------------------------------------------------
+	// Strategy 0: LiDAR depth sensing (Tier 0)
+	// ----------------------------------------------------------
+	if (isLidarAvailable()) {
+		const lidar: LidarMeasurement = await measureWithLidar();
+		if (lidar.available && lidar.pixelsPerMm && lidar.pixelsPerMm > 0) {
+			const diameterMm = areaToDiameterMm(lesionAreaPixels, lidar.pixelsPerMm);
+			const details = `Measured using LiDAR depth sensing (\u00B10.3mm, ${lidar.distanceMm}mm distance)`;
+			return {
+				diameterMm,
+				confidence: "high",
+				method: "lidar",
+				pixelsPerMm: lidar.pixelsPerMm,
+				details,
+			};
+		}
+	}
+
 	// ----------------------------------------------------------
 	// Strategy 1: Physical connector reference
 	// ----------------------------------------------------------

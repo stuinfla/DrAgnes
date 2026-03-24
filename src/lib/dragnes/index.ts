@@ -63,6 +63,13 @@ export {
 // Privacy pipeline
 export { PrivacyPipeline } from "./privacy";
 
+// Anonymization pipeline (ADR-126 Phase 2)
+export { anonymizeCase } from "./anonymization";
+export type { AnonymizedCase } from "./anonymization";
+
+// Brain collective intelligence (ADR-126 Phase 2)
+export { shareToBrain, searchSimilarCases, getBrainStatus } from "./brain-client";
+
 // Configuration
 export { DRAGNES_CONFIG } from "./config";
 export type { DrAgnesConfig } from "./config";
@@ -94,6 +101,10 @@ export { fft1d, fft2d, powerSpectrum2d, nextPow2, zeroPad } from "./fft";
 export { measureFromSkinTexture, PORE_SPACING_MM } from "./measurement-texture";
 export type { TextureMeasurement } from "./measurement-texture";
 
+// LiDAR depth measurement (ADR-121 Phase 4)
+export { isLidarAvailable, measureWithLidar } from "./measurement-lidar";
+export type { LidarMeasurement } from "./measurement-lidar";
+
 // Measurement orchestrator (ADR-121 Phase 4)
 export { measureLesion } from "./measurement";
 export type { LesionMeasurement } from "./measurement";
@@ -101,6 +112,10 @@ export type { LesionMeasurement } from "./measurement";
 // Threshold-based classification (ADR-123)
 export { applyThresholds, getThresholds } from "./threshold-classifier";
 export type { ThresholdMode } from "./threshold-classifier";
+
+// V1+V2 dual-model ensemble (ADR-125)
+export { ensembleClassify } from "./ensemble";
+export type { EnsembleResult } from "./ensemble";
 
 // Types
 export type {
