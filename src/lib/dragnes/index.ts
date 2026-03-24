@@ -83,6 +83,21 @@ export type { MultiImageResult, ImageQualityScore } from "./multi-image";
 export { assessImageQuality } from "./image-quality";
 export type { ImageQualityResult, QualityCheck } from "./image-quality";
 
+// Connector-based measurement (ADR-121 Phase 2)
+export { detectConnector, measureLesionWithConnector } from "./measurement-connector";
+export type { ConnectorDetection, ConnectorBoundingBox } from "./measurement-connector";
+
+// FFT utilities (ADR-121 Phase 3)
+export { fft1d, fft2d, powerSpectrum2d, nextPow2, zeroPad } from "./fft";
+
+// Skin texture measurement (ADR-121 Phase 3)
+export { measureFromSkinTexture, PORE_SPACING_MM } from "./measurement-texture";
+export type { TextureMeasurement } from "./measurement-texture";
+
+// Measurement orchestrator (ADR-121 Phase 4)
+export { measureLesion } from "./measurement";
+export type { LesionMeasurement } from "./measurement";
+
 // Types
 export type {
 	ABCDEScores,
