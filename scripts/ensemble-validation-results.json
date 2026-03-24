@@ -1,0 +1,43 @@
+{
+  "metadata": {
+    "dataset": "kuchikihater/HAM10000",
+    "holdout": "15% stratified, seed=42",
+    "holdout_size": 1503,
+    "mel_count": 167,
+    "ensemble_weights": {
+      "v1": 0.3,
+      "v2": 0.7
+    },
+    "mel_safety_threshold": 0.15,
+    "device": "mps",
+    "v1_model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
+    "v2_model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best"
+  },
+  "v1_only": {
+    "overall_accuracy": 0.65,
+    "mel_sensitivity": 0.9701,
+    "mel_specificity": 0.6632,
+    "mel_tp": 162,
+    "mel_fn": 5,
+    "mel_fp": 450,
+    "mel_tn": 886
+  },
+  "v2_only": {
+    "overall_accuracy": 0.6321,
+    "mel_sensitivity": 0.9701,
+    "mel_specificity": 0.6564,
+    "mel_tp": 162,
+    "mel_fn": 5,
+    "mel_fp": 459,
+    "mel_tn": 877
+  },
+  "ensemble": {
+    "overall_accuracy": 0.6241,
+    "mel_sensitivity": 0.994,
+    "mel_specificity": 0.6198,
+    "mel_tp": 166,
+    "mel_fn": 1,
+    "mel_fp": 508,
+    "mel_tn": 828
+  }
+}
