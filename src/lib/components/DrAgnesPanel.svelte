@@ -23,6 +23,14 @@
 	import type { LesionMeasurement } from "$lib/dragnes/measurement";
 	import { applyThresholds } from "$lib/dragnes/threshold-classifier";
 	import type { ThresholdMode } from "$lib/dragnes/threshold-classifier";
+	import { anonymizeCase } from "$lib/dragnes/anonymization";
+	import type { AnonymizedCase } from "$lib/dragnes/anonymization";
+	import { shareToBrain, searchSimilarCases } from "$lib/dragnes/brain-client";
+	import { warmOfflineModel, isOfflineModelLoaded } from "$lib/dragnes/inference-offline";
+	import type { InferenceStrategy } from "$lib/dragnes/inference-orchestrator";
+	import { ensembleClassify } from "$lib/dragnes/ensemble";
+	import type { EnsembleResult } from "$lib/dragnes/ensemble";
+	import { imageDataToBlob, mapHFResultsToClasses } from "$lib/dragnes/hf-classifier";
 
 	import DermCapture from "./DermCapture.svelte";
 	import GradCamOverlay from "./GradCamOverlay.svelte";
@@ -133,6 +141,11 @@
 	let privacyLocalOnly: boolean = $state(true);
 	let thresholdMode: ThresholdMode = $state("triage");
 
+	// Inference strategy (ADR-122 Phase 5)
+	let inferenceStrategy: InferenceStrategy = $state("auto");
+	let offlineModelReady: boolean = $state(false);
+	let offlineModelLoading: boolean = $state(false);
+
 	// Offline indicator
 	let isOffline: boolean = $state(false);
 
@@ -148,6 +161,16 @@
 	let showCorrectDropdown: boolean = $state(false);
 	let pathologyClass: LesionClass | "" = $state("");
 	const ALL_CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
+
+	// ADR-125: V1+V2 ensemble mode
+	let ensembleResult: EnsembleResult | null = $state(null);
+	let ensembleEnabled: boolean = $state(false);
+
+	// Phase 3-4: Network sharing and similar case retrieval
+	let caseShared: boolean = $state(false);
+	let sharingCase: boolean = $state(false);
+	let similarCases: AnonymizedCase[] = $state([]);
+	let networkEnabled: boolean = $state(true);
 
 	function handleFeedback(opts: {
 		concordant: boolean;
@@ -168,6 +191,14 @@
 			"Feedback recorded";
 	}
 
+	/** Load the offline ONNX model on demand. */
+	async function loadOfflineModel() {
+		if (offlineModelReady || offlineModelLoading) return;
+		offlineModelLoading = true;
+		offlineModelReady = await warmOfflineModel();
+		offlineModelLoading = false;
+	}
+
 	function submitPathology() {
 		if (!lastEventId || !pathologyClass || !classificationResult) return;
 		const isMalignant = pathologyClass === "mel" || pathologyClass === "bcc" || pathologyClass === "akiec";
@@ -181,6 +212,59 @@
 		});
 		feedbackRecorded = "Pathology: " + LESION_LABELS[pathologyClass];
 		showPathologyInput = false;
+	}
+
+	/** Phase 3: Share anonymized case to pi-brain collective */
+	async function shareCase() {
+		if (!classificationResult || sharingCase || caseShared) return;
+		sharingCase = true;
+		try {
+			const anonCase = anonymizeCase(
+				{
+					topClass: classificationResult.topClass,
+					confidence: classificationResult.confidence,
+					probabilities: classificationResult.probabilities,
+				},
+				{
+					age: patientAge,
+					sex: patientSex,
+					bodyLocation: capturedBodyLocation,
+				},
+				{
+					diameterMm: abcdeScores?.diameterMm,
+					abcdeScore: abcdeScores?.totalScore,
+				},
+				feedbackRecorded
+					? {
+							concordant: feedbackRecorded === "Agreed",
+							biopsied: feedbackRecorded.startsWith("Pathology"),
+							pathologyResult: pathologyClass || undefined,
+						}
+					: null
+			);
+			const ok = await shareToBrain(anonCase);
+			caseShared = ok;
+		} catch {
+			// Brain sharing is never a hard dependency
+			caseShared = false;
+		} finally {
+			sharingCase = false;
+		}
+	}
+
+	/** Phase 4: Fetch similar cases from pi-brain after classification */
+	async function fetchSimilarCases() {
+		if (!classificationResult || !networkEnabled) return;
+		try {
+			const probMap: Record<string, number> = {};
+			for (const p of classificationResult.probabilities) {
+				probMap[p.className] = p.probability;
+			}
+			const results = await searchSimilarCases(probMap, 5);
+			similarCases = results;
+		} catch {
+			similarCases = [];
+		}
 	}
 
 	// Scroll container ref
@@ -380,7 +464,7 @@
 
 			// Measure lesion size using ADR-121 measurement system
 			if (realSegmentation && images[bestIdx]) {
-				lesionMeasurement = measureLesion(images[bestIdx], realSegmentation.area, capturedBodyLocation as any);
+				lesionMeasurement = await measureLesion(images[bestIdx], realSegmentation.area, capturedBodyLocation as any);
 			}
 
 			const structures = classifier.getLastStructures();
@@ -402,6 +486,9 @@
 			if (result.confidence < 0.5) {
 				lowConfidenceWarning = "The image quality or classification confidence is low. Consider retaking the photo with better lighting, or see a dermatologist for a definitive assessment.";
 			}
+
+			// Phase 4: Fetch similar cases from pi-brain (non-blocking)
+			fetchSimilarCases();
 		} catch (err) {
 			classificationError = err instanceof Error ? err.message : "Classification failed";
 		} finally {
@@ -593,7 +680,7 @@
 
 			// Measure lesion size using ADR-121 measurement system
 			if (realSegmentation && capturedImageData) {
-				lesionMeasurement = measureLesion(capturedImageData, realSegmentation.area, capturedBodyLocation as any);
+				lesionMeasurement = await measureLesion(capturedImageData, realSegmentation.area, capturedBodyLocation as any);
 			}
 
 			// 7-point dermoscopy checklist
@@ -625,6 +712,9 @@
 				demographics: { age: patientAge, sex: patientSex },
 				bodyLocation: capturedBodyLocation,
 			});
+
+			// Phase 4: Fetch similar cases from pi-brain (non-blocking)
+			fetchSimilarCases();
 
 			// Scroll to results after a brief delay for animation
 			setTimeout(() => {
@@ -669,6 +759,9 @@
 		analysisStep = "";
 		multiImageResult = null;
 		multiImageCount = 0;
+		caseShared = false;
+		sharingCase = false;
+		similarCases = [];
 
 		// Reset DermCapture component
 		dermCaptureRef?.resetCapture();
@@ -1187,6 +1280,45 @@
 						{/if}
 					</div>
 
+					<!-- Phase 3: Share anonymized case to pi-brain -->
+					{#if networkEnabled && classificationResult}
+						<div class="mx-5 mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+							<div class="flex items-center justify-between">
+								<span class="text-[11px] font-medium text-gray-400">Share anonymized case</span>
+								{#if caseShared}
+									<span class="text-[10px] text-emerald-400">Shared successfully</span>
+								{:else}
+									<button
+										onclick={shareCase}
+										disabled={sharingCase}
+										class="text-[10px] text-teal-400 hover:text-teal-300 disabled:opacity-50 disabled:cursor-wait transition-colors"
+									>
+										{sharingCase ? "Sharing..." : "Share to network"}
+									</button>
+								{/if}
+							</div>
+							<p class="text-[9px] text-gray-600 mt-1">
+								Anonymized classification data shared via pi-brain. No images leave your device.
+							</p>
+						</div>
+					{/if}
+
+					<!-- Phase 4: Similar cases from pi-brain -->
+					{#if similarCases.length > 0}
+						<div class="mx-5 mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3">
+							<h4 class="text-[11px] font-medium text-gray-400 mb-2">Similar cases from the network</h4>
+							{#each similarCases.slice(0, 3) as sc}
+								<div class="flex items-center justify-between py-1">
+									<span class="text-[10px] text-gray-400">{sc.topClass}</span>
+									<span class="text-[10px] text-gray-500">{sc.outcome || "No outcome recorded"}</span>
+								</div>
+							{/each}
+							{#if similarCases.length > 3}
+								<p class="text-[9px] text-gray-600 mt-1">+{similarCases.length - 3} more similar cases</p>
+							{/if}
+						</div>
+					{/if}
+
 					<!-- Research disclaimer -->
 					<p class="mx-5 mt-8 mb-8 text-[11px] text-gray-600 italic text-center leading-relaxed">
 						AI-generated suggestion -- clinical judgment must supersede. Not FDA-cleared.
@@ -1418,18 +1550,87 @@
 				</div>
 
 				<div class="card">
+					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Inference</h3>
+					<p class="text-[11px] text-gray-500 mb-3">Where classification runs (ADR-122)</p>
+					<div class="flex flex-col gap-2">
+						{#each [
+							{ value: "auto", label: "Auto", desc: "Offline ONNX when loaded, otherwise HF API" },
+							{ value: "online", label: "Online", desc: "Always use HF API ensemble (requires network)" },
+							{ value: "offline", label: "Offline", desc: "ONNX model only (no data leaves device)" },
+						] as opt (opt.value)}
+							<label
+								class="flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors cursor-pointer
+									{inferenceStrategy === opt.value
+										? 'bg-teal-500/10 border border-teal-500/30'
+										: 'border border-white/[0.04] hover:bg-white/[0.03]'}"
+							>
+								<input
+									type="radio"
+									name="inferenceStrategy"
+									value={opt.value}
+									checked={inferenceStrategy === opt.value}
+									onchange={() => {
+										inferenceStrategy = opt.value as InferenceStrategy;
+										if (opt.value !== "online" && !offlineModelReady) loadOfflineModel();
+									}}
+									class="mt-0.5 h-4 w-4 border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
+								/>
+								<div class="min-w-0">
+									<span class="text-[15px] text-gray-300">{opt.label}</span>
+									<p class="text-[11px] text-gray-500 mt-0.5">{opt.desc}</p>
+								</div>
+							</label>
+						{/each}
+					</div>
+					<div class="mt-3 flex items-center gap-2">
+						{#if offlineModelLoading}
+							<span class="inline-block h-2 w-2 rounded-full bg-yellow-400 animate-pulse"></span>
+							<span class="text-[11px] text-yellow-400">Loading ONNX model...</span>
+						{:else if offlineModelReady}
+							<span class="inline-block h-2 w-2 rounded-full bg-emerald-400"></span>
+							<span class="text-[11px] text-emerald-400">Offline model ready</span>
+						{:else}
+							<span class="inline-block h-2 w-2 rounded-full bg-gray-600"></span>
+							<span class="text-[11px] text-gray-500">Offline model not loaded</span>
+						{/if}
+					</div>
+				</div>
+
+				<div class="card">
 					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Brain Sync</h3>
-					<label class="flex items-center justify-between">
-						<span class="text-[15px] text-gray-300">Enable sync</span>
-						<input
-							type="checkbox"
-							bind:checked={brainSyncEnabled}
-							class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
-						/>
-					</label>
-					<p class="mt-2 text-[11px] text-gray-500">
-						{brainSyncEnabled ? "Connected" : "Local-only mode"}
-					</p>
+					<div class="flex flex-col gap-3">
+						<label class="flex items-center justify-between">
+							<span class="text-[15px] text-gray-300">Enable sync</span>
+							<input
+								type="checkbox"
+								bind:checked={brainSyncEnabled}
+								class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
+							/>
+						</label>
+						<p class="text-[11px] text-gray-500">
+							{brainSyncEnabled ? "Connected" : "Local-only mode"}
+						</p>
+					</div>
+				</div>
+
+				<div class="card">
+					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Network</h3>
+					<div class="flex flex-col gap-3">
+						<label class="flex items-center justify-between">
+							<div>
+								<span class="text-[15px] text-gray-300">Pi-brain collective intelligence</span>
+								<p class="text-[11px] text-gray-500 mt-0.5">Share anonymized cases and retrieve similar cases from the network</p>
+							</div>
+							<input
+								type="checkbox"
+								bind:checked={networkEnabled}
+								class="ml-3 h-4 w-4 flex-shrink-0 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
+							/>
+						</label>
+						<p class="text-[11px] text-gray-500">
+							{networkEnabled ? "Sharing and retrieval enabled -- no images leave your device" : "Disabled -- all data stays local"}
+						</p>
+					</div>
 				</div>
 
 				<div class="card">

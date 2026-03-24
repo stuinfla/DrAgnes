@@ -117,6 +117,13 @@ export type { ThresholdMode } from "./threshold-classifier";
 export { ensembleClassify } from "./ensemble";
 export type { EnsembleResult } from "./ensemble";
 
+// Offline ONNX inference (ADR-122 Phase 3)
+export { initOfflineModel, isOfflineModelLoaded, classifyOffline } from "./inference-offline";
+
+// Inference orchestrator (ADR-122 Phase 5)
+export { classify as classifyOrchestrated, warmOfflineModel } from "./inference-orchestrator";
+export type { InferenceStrategy, InferenceResult } from "./inference-orchestrator";
+
 // Types
 export type {
 	ABCDEScores,
