@@ -21,6 +21,8 @@
 	import type { MultiImageResult } from "$lib/dragnes/multi-image";
 	import { measureLesion } from "$lib/dragnes/measurement";
 	import type { LesionMeasurement } from "$lib/dragnes/measurement";
+	import { applyThresholds } from "$lib/dragnes/threshold-classifier";
+	import type { ThresholdMode } from "$lib/dragnes/threshold-classifier";
 
 	import DermCapture from "./DermCapture.svelte";
 	import GradCamOverlay from "./GradCamOverlay.svelte";
@@ -129,6 +131,7 @@
 	let brainSyncEnabled: boolean = $state(false);
 	let privacyStripExif: boolean = $state(true);
 	let privacyLocalOnly: boolean = $state(true);
+	let thresholdMode: ThresholdMode = $state("default");
 
 	// Offline indicator
 	let isOffline: boolean = $state(false);
@@ -331,7 +334,19 @@
 				: undefined;
 			const result = await classifyMultiImage(classifier, images, demographics);
 			multiImageResult = result;
-			classificationResult = result;
+
+			// Apply per-class thresholds (ADR-123) to adjust top class selection
+			if (thresholdMode !== "default") {
+				const adjusted = applyThresholds(result.probabilities, thresholdMode);
+				classificationResult = {
+					...result,
+					topClass: adjusted.topClass,
+					confidence: adjusted.confidence,
+					probabilities: adjusted.probabilities,
+				};
+			} else {
+				classificationResult = result;
+			}
 
 			// Use the first image's analysis for ABCDE/explanation (best quality)
 			const bestIdx = result.qualityScores.reduce((best, q, i) =>
@@ -518,7 +533,19 @@
 				? { age: patientAge, sex: patientSex, localization: capturedBodyLocation }
 				: undefined;
 			const rawResult = await classifier.classifyWithDemographics(capturedImageData, demographics);
-			classificationResult = rawResult;
+
+			// Apply per-class thresholds (ADR-123) to adjust top class selection
+			if (thresholdMode !== "default") {
+				const adjusted = applyThresholds(rawResult.probabilities, thresholdMode);
+				classificationResult = {
+					...rawResult,
+					topClass: adjusted.topClass,
+					confidence: adjusted.confidence,
+					probabilities: adjusted.probabilities,
+				};
+			} else {
+				classificationResult = rawResult;
+			}
 
 			// Generate Grad-CAM heatmap
 			try {
@@ -811,6 +838,14 @@
 							<span>{lowConfidenceWarning}</span>
 						</div>
 					{/if}
+
+					<!-- Fitzpatrick equity note -->
+					<div class="mx-5 mt-3 rounded-2xl border border-gray-700/40 bg-white/[0.02] px-4 py-2.5">
+						<p class="text-[10px] text-gray-500 leading-relaxed">
+							Skin tone note: Validation found a 30pp sensitivity gap across Fitzpatrick types. Tested on dermoscopy images, not clinical photos. Dark skin performance unverified.
+							<button onclick={() => (activeView = "learn")} class="text-gray-400 underline hover:text-gray-300 transition-colors">Details</button>
+						</p>
+					</div>
 
 					<!-- Action buttons: clean and spacious -->
 					<div class="mx-5 mt-6 grid grid-cols-2 gap-3">
@@ -1348,6 +1383,38 @@
 							class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
 						/>
 					</label>
+				</div>
+
+				<div class="card">
+					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Classification Mode</h3>
+					<p class="text-[11px] text-gray-500 mb-3">Per-class thresholds from ADR-123 ROC analysis</p>
+					<div class="flex flex-col gap-2">
+						{#each [
+							{ value: "screening", label: "Screening", desc: "Max cancer detection (fewer missed, more false alarms)" },
+							{ value: "triage", label: "Balanced", desc: "Optimised sensitivity / specificity tradeoff" },
+							{ value: "default", label: "Default", desc: "Standard argmax classification" },
+						] as opt (opt.value)}
+							<label
+								class="flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors cursor-pointer
+									{thresholdMode === opt.value
+										? 'bg-teal-500/10 border border-teal-500/30'
+										: 'border border-white/[0.04] hover:bg-white/[0.03]'}"
+							>
+								<input
+									type="radio"
+									name="thresholdMode"
+									value={opt.value}
+									checked={thresholdMode === opt.value}
+									onchange={() => (thresholdMode = opt.value as ThresholdMode)}
+									class="mt-0.5 h-4 w-4 border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
+								/>
+								<div class="min-w-0">
+									<span class="text-[15px] text-gray-300">{opt.label}</span>
+									<p class="text-[11px] text-gray-500 mt-0.5">{opt.desc}</p>
+								</div>
+							</label>
+						{/each}
+					</div>
 				</div>
 
 				<div class="card">

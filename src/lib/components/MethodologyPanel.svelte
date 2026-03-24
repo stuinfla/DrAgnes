@@ -254,6 +254,14 @@
 						Fitzpatrick disparity cap: 5%.
 					</p>
 				</div>
+				<div class="rounded-lg bg-gray-800/50 p-2">
+					<p class="font-medium text-gray-300">Threshold Optimization (Optional Mode)</p>
+					<p class="text-gray-500">
+						An optimized threshold mode trades melanoma sensitivity for higher specificity:
+						88.4% melanoma sensitivity, 91.1% specificity, 97.4% all-cancer sensitivity, 83.2% overall accuracy.
+						Default mode prioritizes sensitivity: 95.97% melanoma sensitivity, 80.0% specificity.
+					</p>
+				</div>
 			</div>
 		{/if}
 	</section>
@@ -431,7 +439,7 @@
 					</li>
 					<li class="flex items-start gap-1.5">
 						<span class="mt-0.5 flex-shrink-0">--</span>
-						<span>Training data is predominantly Fitzpatrick I-III (lighter skin tones). Performance on Fitzpatrick IV-VI has not been validated.</span>
+						<span><strong class="text-red-300">Skin tone equity: DANGEROUS gaps.</strong> Fitzpatrick validation found a 30 percentage-point melanoma sensitivity gap between skin types. Training data is predominantly Fitzpatrick I-III. Model tested on dermoscopy images, not clinical photos. Dark skin performance on dermoscopy data is unverified.</span>
 					</li>
 					<li class="flex items-start gap-1.5">
 						<span class="mt-0.5 flex-shrink-0">--</span>

@@ -98,6 +98,10 @@ export type { TextureMeasurement } from "./measurement-texture";
 export { measureLesion } from "./measurement";
 export type { LesionMeasurement } from "./measurement";
 
+// Threshold-based classification (ADR-123)
+export { applyThresholds, getThresholds } from "./threshold-classifier";
+export type { ThresholdMode } from "./threshold-classifier";
+
 // Types
 export type {
 	ABCDEScores,

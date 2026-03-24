@@ -81,7 +81,7 @@
 
 	const LIMITATIONS: { title: string; detail: string }[] = [
 		{ title: "Screening tool, not a diagnosis", detail: "This is a research prototype. It must not replace a dermatologist's judgment. Not FDA-cleared." },
-		{ title: "Skin tone limitation", detail: "Trained primarily on Fitzpatrick I-III (lighter skin). Accuracy on darker skin tones has not been independently verified and may be degraded." },
+		{ title: "Skin tone equity: DANGEROUS gaps detected", detail: "Fitzpatrick validation found a 30 percentage-point melanoma sensitivity gap between skin types. The model was tested primarily on dermoscopy images, not clinical photos. Dark skin performance on dermoscopy data is unverified. Until this gap is closed, results for darker skin tones should be treated with extra caution." },
 		{ title: "95.97% is on external data", detail: "Combined-dataset training on 37,484 images (HAM10000 + ISIC 2019). 95.97% melanoma sensitivity validated on 3,901 external ISIC 2019 images. This is real generalization, not same-distribution performance. If in doubt, always see a dermatologist." },
 		{ title: "Deliberate false positive rate", detail: "About 1 in 5 benign moles are flagged (80% melanoma specificity). This is by design -- in cancer screening, false negatives kill and false positives inconvenience." },
 	];
