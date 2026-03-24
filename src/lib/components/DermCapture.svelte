@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from "svelte";
+	import { onMount, onDestroy, tick } from "svelte";
 	import CarbonCamera from "~icons/carbon/camera";
 	import type { BodyLocation } from "$lib/dragnes/types";
 	import BodyMap from "./BodyMap.svelte";
@@ -35,6 +35,8 @@
 	let cameraError: string = $state("");
 	let cameraLoading: boolean = $state(false);
 	let showUploadFallback: boolean = $state(false);
+	/** Whether the getUserMedia live-preview camera view is active */
+	let cameraActive: boolean = $state(false);
 
 	let bodyLocation: BodyLocation = $state("unknown");
 	let deviceModel: string = $state("phone_only");
@@ -50,6 +52,18 @@
 
 	// Body map drawer state
 	let showBodyMap: boolean = $state(false);
+
+	/**
+	 * Detect mobile/tablet devices. On iOS Safari, getUserMedia is unreliable --
+	 * a native file input with capture="environment" opens the camera directly
+	 * and is far more dependable.
+	 */
+	let isMobileDevice: boolean = $state(false);
+
+	onMount(() => {
+		isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+			|| (navigator.maxTouchPoints > 0 && /Macintosh/i.test(navigator.userAgent));
+	});
 
 	const IMAGE_TYPES: { value: ImageType; label: string; description: string }[] = [
 		{ value: "auto", label: "Auto-detect", description: "Automatically determine image type" },
@@ -136,6 +150,7 @@
 		cameraReady = false;
 		cameraLoading = true;
 		capturedPreview = null;
+		cameraActive = true;
 
 		// Show upload fallback after 3 seconds if camera hasn't loaded
 		const fallbackTimer = setTimeout(() => {
@@ -145,25 +160,77 @@
 		}, 3000);
 
 		try {
+			if (!navigator.mediaDevices?.getUserMedia) {
+				cameraError = "Camera not supported in this browser. Tap Upload Photo to use your camera roll instead.";
+				showUploadFallback = true;
+				return;
+			}
+
 			if (stream) {
 				stream.getTracks().forEach((t) => t.stop());
 			}
+
 			stream = await navigator.mediaDevices.getUserMedia(getConstraints());
+
+			// Wait for Svelte to flush DOM updates so the video element exists
+			await tick();
+
 			if (videoEl) {
 				videoEl.srcObject = stream;
+
+				// Wait for actual video dimensions before marking ready.
+				// On iPhone Safari, videoWidth/videoHeight are 0 until
+				// the loadedmetadata event fires.
+				await new Promise<void>((resolve, reject) => {
+					const onMeta = () => {
+						videoEl!.removeEventListener('loadedmetadata', onMeta);
+						resolve();
+					};
+					videoEl!.addEventListener('loadedmetadata', onMeta);
+					// If metadata already loaded (desktop Chrome fires synchronously),
+					// resolve immediately
+					if (videoEl!.readyState >= 1) {
+						videoEl!.removeEventListener('loadedmetadata', onMeta);
+						resolve();
+					}
+					// Timeout after 5 seconds
+					setTimeout(() => reject(new Error('Video metadata timeout')), 5000);
+				});
+
 				await videoEl.play();
+
+				// Final safety check: wait for non-zero dimensions
+				if (videoEl.videoWidth === 0) {
+					await new Promise<void>((resolve) => {
+						const check = () => {
+							if (videoEl && videoEl.videoWidth > 0) {
+								resolve();
+							} else {
+								requestAnimationFrame(check);
+							}
+						};
+						requestAnimationFrame(check);
+						setTimeout(resolve, 2000); // give up after 2s
+					});
+				}
+
 				cameraReady = true;
 				showUploadFallback = false;
 			}
 		} catch (err) {
 			if (err instanceof DOMException && err.name === 'NotAllowedError') {
-				cameraError = "Camera not available";
+				cameraError = "Camera access denied. Tap Upload Photo to use your camera roll instead.";
 			} else if (err instanceof DOMException && err.name === 'NotFoundError') {
-				cameraError = "No camera found";
+				cameraError = "No camera found on this device. Tap Upload Photo to select a photo.";
+			} else if (err instanceof DOMException && err.name === 'NotReadableError') {
+				cameraError = "Camera is in use by another app. Close other apps using the camera and try again.";
+			} else if (err instanceof Error && err.message === 'Video metadata timeout') {
+				cameraError = "Camera took too long to respond. Tap Upload Photo to use your camera roll instead.";
 			} else {
-				cameraError = "Camera unavailable";
+				cameraError = "Camera unavailable. Tap Upload Photo to select a photo instead.";
 			}
 			showUploadFallback = true;
+			cameraActive = false;
 		} finally {
 			clearTimeout(fallbackTimer);
 			cameraLoading = false;
@@ -174,6 +241,12 @@
 		capturedPreview = null;
 		detectedImageType = "";
 		capturedImages = [];
+		cameraActive = false;
+		cameraReady = false;
+		if (stream) {
+			stream.getTracks().forEach((t) => t.stop());
+			stream = null;
+		}
 	}
 
 	function captureFrame() {
@@ -182,8 +255,14 @@
 		const ctx = canvasEl.getContext("2d");
 		if (!ctx) return;
 
-		canvasEl.width = videoEl.videoWidth;
-		canvasEl.height = videoEl.videoHeight;
+		// Guard against zero-dimension video (can happen on iPhone if
+		// metadata hasn't fully loaded despite the loadedmetadata event)
+		const vw = videoEl.videoWidth;
+		const vh = videoEl.videoHeight;
+		if (vw === 0 || vh === 0) return;
+
+		canvasEl.width = vw;
+		canvasEl.height = vh;
 		ctx.drawImage(videoEl, 0, 0);
 
 		const imageData = ctx.getImageData(0, 0, canvasEl.width, canvasEl.height);
@@ -288,17 +367,29 @@
 	onDestroy(() => {
 		if (stream) {
 			stream.getTracks().forEach((t) => t.stop());
+			stream = null;
 		}
+		cameraActive = false;
 	});
 </script>
 
 <div class="flex flex-col gap-3 w-full">
-	{#if !stream && !cameraError && !capturedPreview && (!multiCapture || !multiCaptureDone)}
+	{#if !cameraActive && !cameraError && !capturedPreview && (!multiCapture || !multiCaptureDone)}
 		<div class="flex flex-col sm:flex-row gap-3 justify-center py-6">
-			<button onclick={startCamera} disabled={multiCaptureDone} class="rounded-full bg-teal-600 px-8 py-4 text-base font-semibold text-white hover:bg-teal-500 active:scale-95 transition-all flex items-center gap-2.5 justify-center disabled:opacity-40 disabled:pointer-events-none">
-				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-				Take Photo
-			</button>
+			{#if isMobileDevice}
+				<!-- Mobile: native camera capture via file input -- most reliable on iOS Safari -->
+				<label class="rounded-full bg-teal-600 px-8 py-4 text-base font-semibold text-white hover:bg-teal-500 active:scale-95 transition-all flex items-center gap-2.5 justify-center cursor-pointer {multiCaptureDone ? 'opacity-40 pointer-events-none' : ''}">
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+					Take Photo
+					<input type="file" accept="image/*" capture="environment" class="hidden" onchange={handleFileUpload} />
+				</label>
+			{:else}
+				<!-- Desktop: getUserMedia live preview -->
+				<button onclick={startCamera} disabled={multiCaptureDone} class="rounded-full bg-teal-600 px-8 py-4 text-base font-semibold text-white hover:bg-teal-500 active:scale-95 transition-all flex items-center gap-2.5 justify-center disabled:opacity-40 disabled:pointer-events-none">
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+					Take Photo
+				</button>
+			{/if}
 			<label class="rounded-full border border-white/[0.10] bg-white/[0.04] px-8 py-4 text-base font-semibold text-gray-200 cursor-pointer hover:bg-white/[0.08] active:scale-95 transition-all flex items-center gap-2.5 justify-center {multiCaptureDone ? 'opacity-40 pointer-events-none' : ''}">
 				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
 				Upload Photo
@@ -306,8 +397,8 @@
 			</label>
 		</div>
 	{/if}
-	<!-- Camera / preview area (hidden until camera starts or image captured) -->
-	{#if stream || cameraError || capturedPreview}
+	<!-- Camera / preview area -->
+	{#if cameraActive || cameraError || capturedPreview}
 	<div
 		class="relative aspect-[3/4] sm:aspect-[4/3] w-full max-h-[55vh] sm:max-h-none overflow-hidden rounded-2xl bg-gray-900 border border-white/[0.06]"
 	>
@@ -319,15 +410,16 @@
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
 				</svg>
-				<p class="text-[15px] text-gray-400 leading-relaxed">{cameraError}</p>
-				<div class="flex gap-3">
+				<p class="text-[15px] text-gray-400 leading-relaxed max-w-xs">{cameraError}</p>
+				<div class="flex flex-col sm:flex-row gap-3">
 					<button
 						onclick={startCamera}
 						class="rounded-full bg-teal-600 px-6 py-3 text-sm font-medium text-white hover:bg-teal-500 active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/40 touch-target"
 					>
 						Retry Camera
 					</button>
-					<label class="rounded-full border border-white/[0.08] bg-white/[0.03] px-6 py-3 text-sm font-medium text-gray-300 cursor-pointer hover:bg-white/[0.06] active:scale-95 transition-all touch-target flex items-center">
+					<label class="rounded-full border border-white/[0.08] bg-white/[0.03] px-6 py-3 text-sm font-medium text-gray-300 cursor-pointer hover:bg-white/[0.06] active:scale-95 transition-all touch-target flex items-center justify-center gap-2">
+						<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
 						Upload Photo
 						<input type="file" accept="image/*" class="hidden" onchange={handleFileUpload} />
 					</label>
@@ -346,6 +438,7 @@
 				Retake
 			</button>
 		{:else}
+			<!-- Live camera feed -- bind:this so startCamera() can assign srcObject -->
 			<!-- svelte-ignore element_invalid_self_closing_tag -->
 			<video
 				bind:this={videoEl}

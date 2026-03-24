@@ -154,6 +154,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, "No image provided");
 	}
 
+	// Security: validate file size and content type
+	const MAX_SIZE = 10 * 1024 * 1024;
+	if (imageFile.size > MAX_SIZE) throw error(413, "Image too large (max 10MB)");
+	if (imageFile.size === 0) throw error(400, "Empty file");
+
 	const buffer = Buffer.from(await imageFile.arrayBuffer());
 
 	// Try ONNX first, fall back to Python

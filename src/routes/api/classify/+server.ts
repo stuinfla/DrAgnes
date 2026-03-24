@@ -39,6 +39,19 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, "No image provided");
 	}
 
+	// Security: validate file size (max 10MB) and content type
+	const MAX_SIZE = 10 * 1024 * 1024;
+	if (imageFile.size > MAX_SIZE) {
+		throw error(413, "Image too large (max 10MB)");
+	}
+	if (imageFile.size === 0) {
+		throw error(400, "Empty file");
+	}
+	const validTypes = ["image/jpeg", "image/png", "image/webp", "image/bmp"];
+	if (imageFile.type && !validTypes.includes(imageFile.type)) {
+		throw error(415, `Unsupported image type: ${imageFile.type}. Use JPEG, PNG, WebP, or BMP.`);
+	}
+
 	const apiKey = getApiKey();
 	const headers: Record<string, string> = {};
 	if (apiKey) {
