@@ -3,7 +3,8 @@ Created: 2026-03-24
 
 # ADR-124: Fitzpatrick Skin Tone Equity -- Proving It Works for Everyone
 
-## Status: PROPOSED
+## Status: TESTED -- DANGEROUS GAPS FOUND | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: fitzpatrick-v2-validation.json contains full results. 355 images evaluated (76% URL download failures from stale Fitzpatrick17k links). Results: melanoma sensitivity gap = 30% (FST II: 80% vs FST V: 50%) -- severity DANGEROUS. Accuracy gap = 30.55% (FST II: 46.3% vs FST V: 15.8%) -- severity DANGEROUS. Cancer sensitivity gap = 39.58% -- severity DANGEROUS. Overall accuracy only 25.9%. Sample sizes critically small (FST VI: n=18, FST I: n=27). Remediation plan needed before any claims of equity.
 
 ---
 

@@ -3,7 +3,8 @@ Created: 2026-03-24
 
 # ADR-121: Optimized Image Capture — Measurement, Quality Gating, and Retake Guidance
 
-## Status: PROPOSED
+## Status: IMPLEMENTED -- Phases 1-3 | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: Phase 1 (quality gating) done -- image-quality.ts (139 lines) implements sharpness, contrast, brightness checks. Phase 2 (USB-C reference detection) done -- measurement-connector.ts (186 lines) implements contour-based connector detection. Phase 3 (skin texture measurement) done -- measurement-texture.ts (122 lines) implements FFT-based dermatoglyphic spacing analysis. measurement.ts (179 lines) ties all tiers together. Phase 4 (LiDAR) and Phase 5 (validation) not yet implemented.
 
 ## Context
 

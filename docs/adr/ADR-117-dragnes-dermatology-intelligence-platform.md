@@ -1,6 +1,7 @@
 # ADR-117: DrAgnes Dermatology Intelligence Platform
 
-**Status**: Proposed
+**Status**: IMPLEMENTED | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: Core platform built -- classifier.ts (973 lines, 4-layer ensemble), image-analysis.ts (2059 lines, full CV pipeline), consumer-translation.ts, DermCapture.svelte, DrAgnesPanel.svelte, trained ViT model on HAM10000 + ISIC 2019. Phase 1 foundation complete. Phases 2-4 (clinical integration, advanced imaging, autonomous intelligence) remain future roadmap.
 **Date**: 2026-03-21
 **Author**: Claude (ruvnet)
 **Crates**: `ruvector-cnn`, `ruvector-cnn-wasm`, `mcp-brain-server`, `ruvector-sparsifier`, `ruvector-mincut`, `ruvector-solver`

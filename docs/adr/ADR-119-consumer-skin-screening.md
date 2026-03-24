@@ -3,7 +3,8 @@ Created: 2026-03-23
 
 # ADR-119: Consumer Skin Screening — "Is This Something I Should Worry About?"
 
-## Status: PROPOSED
+## Status: IMPLEMENTED | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: consumer-translation.ts (169 lines) maps all 7 classes to plain English with 4 risk levels (green/yellow/orange/red). multi-image.ts (200 lines) implements multi-image consensus classification. DermCapture.svelte (721 lines) provides camera capture with multi-photo mode. Image quality gate in image-quality.ts (139 lines) and image-analysis.ts. PWA manifest present. Lesion tracking over time not yet implemented.
 
 ## Context
 

@@ -3,7 +3,8 @@ Created: 2026-03-24
 
 # ADR-126: Pi-Brain Collective Intelligence -- Every Practice Makes Every Other Practice Better
 
-## Status: PROPOSED
+## Status: PROPOSED (not started) | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: brain-client.ts (450 lines) exists with API wrappers for pi-brain, but no production integration is active. No feedback capture UI, no anonymization pipeline, no live brain_share() calls from the classification flow. Pi-brain infrastructure exists at pi.ruv.io but is not connected to DrAgnes in production.
 
 ## Context
 

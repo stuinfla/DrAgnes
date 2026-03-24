@@ -3,7 +3,8 @@ Created: 2026-03-24
 
 # ADR-125: V1+V2 Dual Model Ensemble -- Best of Both Worlds
 
-## Status: PROPOSED
+## Status: PROPOSED (not started) | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: No ensemble.ts module exists. The current classifier.ts uses a single-model ensemble (HF API + trained-weights + rule-based) but does NOT implement the V1+V2 dual ViT model ensemble described in this ADR. The v2 combined model exists (scripts/dragnes-classifier-v2/) but is not wired into a dual-inference pipeline.
 
 ---
 

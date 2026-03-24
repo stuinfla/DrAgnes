@@ -3,7 +3,8 @@ Created: 2026-03-23
 
 # ADR-118: Dr. Agnes — Production Validation & World-Class Medical Proof
 
-## Status: IN PROGRESS -- Claims Corrected 2026-03-23
+## Status: IN PROGRESS -- Phase 1-2 Partial, Phase 3-5 Not Started | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: Phase 1 (model training) completed -- combined-training-results.json shows v2 ViT-Base trained on HAM10000 + ISIC 2019 (37,484 images after oversampling). AUROC computed (auroc-results.json: mel AUROC 0.926 HAM10000, weighted 0.943). Phase 2 partial -- Fitzpatrick equity tested (DANGEROUS gaps found, see ADR-124). Threshold optimization done (ADR-123). Phases 3-5 (clinical validation, publication, FDA) not started. Claims corrected 2026-03-23.
 
 ---
 

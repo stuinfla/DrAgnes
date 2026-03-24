@@ -3,7 +3,8 @@ Created: 2026-03-24
 
 # ADR-123: Per-Class Threshold Optimization -- Free Accuracy from Existing Model
 
-## Status: PROPOSED
+## Status: IMPLEMENTED | Last Updated: 2026-03-24 10:30 EST
+**Implementation Note**: threshold-classifier.ts (106 lines) implements per-class optimal thresholds with 3 modes (default/screening/triage). optimal-thresholds.json contains computed thresholds from ROC analysis on ISIC 2019 test set. threshold-optimization-results.json has full per-class sensitivity/specificity at threshold. Settings UI in DrAgnesPanel.svelte exposes threshold mode selector. Mel threshold = 0.6204 (93.88% sensitivity, 85.34% specificity at threshold).
 
 ## Context
 
