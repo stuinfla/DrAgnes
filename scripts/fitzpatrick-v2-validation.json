@@ -1,0 +1,660 @@
+{
+  "adr": "ADR-124",
+  "title": "Fitzpatrick Skin Tone Equity Validation \u2014 DrAgnes v2",
+  "timestamp": "2026-03-24T13:26:15.806885+00:00",
+  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best",
+  "model_type": "ViT-Base (google/vit-base-patch16-224)",
+  "device": "mps",
+  "dataset": {
+    "name": "Fitzpatrick17k",
+    "csv_url": "https://raw.githubusercontent.com/mattgroh/fitzpatrick17k/master/fitzpatrick17k.csv",
+    "total_csv_rows": 16577,
+    "eligible_with_skin_type": 3276,
+    "sampled": 1466,
+    "downloaded_successfully": 355,
+    "download_failures": 1111,
+    "download_failure_rate": 0.7578,
+    "download_cached": 0,
+    "inference_errors": 0,
+    "total_evaluated": 355,
+    "sampling_strategy": "up to 50 per class per skin type"
+  },
+  "stale_urls_warning": "WARNING: 76% of image URLs failed to download. The Fitzpatrick17k URLs are likely stale (images hosted on dermatology atlas sites that rotate URLs). Recommended alternatives: (1) Use the DDI (Diverse Dermatology Images) dataset from Stanford; (2) Use ISIC Archive with self-reported Fitzpatrick metadata; (3) Contact dataset authors for updated URLs; (4) Use a local Fitzpatrick17k image archive if available.",
+  "overall": {
+    "accuracy": 0.2592,
+    "melanoma_sensitivity": 0.625,
+    "melanoma_specificity": 0.7726,
+    "melanoma_support": 56,
+    "total_images": 355
+  },
+  "per_fitzpatrick_type": {
+    "I": {
+      "n_images": 27,
+      "accuracy": 0.2963,
+      "melanoma_sensitivity": 1.0,
+      "melanoma_specificity": 0.8462,
+      "melanoma_support": 1,
+      "cancer_sensitivity": 0.4167,
+      "cancer_support": 24,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.0,
+          "specificity": 0.9412,
+          "support": 10,
+          "tp": 0,
+          "fn": 10,
+          "fp": 1,
+          "tn": 16
+        },
+        "bcc": {
+          "sensitivity": 0.4615,
+          "specificity": 1.0,
+          "support": 13,
+          "tp": 6,
+          "fn": 7,
+          "fp": 0,
+          "tn": 14
+        },
+        "bkl": {
+          "sensitivity": null,
+          "specificity": 0.4815,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 14,
+          "tn": 13
+        },
+        "df": {
+          "sensitivity": null,
+          "specificity": 1.0,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "tn": 27
+        },
+        "mel": {
+          "sensitivity": 1.0,
+          "specificity": 0.8462,
+          "support": 1,
+          "tp": 1,
+          "fn": 0,
+          "fp": 4,
+          "tn": 22
+        },
+        "nv": {
+          "sensitivity": null,
+          "specificity": 1.0,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "tn": 27
+        },
+        "vasc": {
+          "sensitivity": 0.3333,
+          "specificity": 1.0,
+          "support": 3,
+          "tp": 1,
+          "fn": 2,
+          "fp": 0,
+          "tn": 24
+        }
+      }
+    },
+    "II": {
+      "n_images": 41,
+      "accuracy": 0.4634,
+      "melanoma_sensitivity": 0.8,
+      "melanoma_specificity": 0.8889,
+      "melanoma_support": 5,
+      "cancer_sensitivity": 0.5938,
+      "cancer_support": 32,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.0,
+          "specificity": 0.9394,
+          "support": 8,
+          "tp": 0,
+          "fn": 8,
+          "fp": 2,
+          "tn": 31
+        },
+        "bcc": {
+          "sensitivity": 0.4737,
+          "specificity": 0.9545,
+          "support": 19,
+          "tp": 9,
+          "fn": 10,
+          "fp": 1,
+          "tn": 21
+        },
+        "bkl": {
+          "sensitivity": 1.0,
+          "specificity": 0.7,
+          "support": 1,
+          "tp": 1,
+          "fn": 0,
+          "fp": 12,
+          "tn": 28
+        },
+        "df": {
+          "sensitivity": 0.0,
+          "specificity": 1.0,
+          "support": 2,
+          "tp": 0,
+          "fn": 2,
+          "fp": 0,
+          "tn": 39
+        },
+        "mel": {
+          "sensitivity": 0.8,
+          "specificity": 0.8889,
+          "support": 5,
+          "tp": 4,
+          "fn": 1,
+          "fp": 4,
+          "tn": 32
+        },
+        "nv": {
+          "sensitivity": null,
+          "specificity": 1.0,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "tn": 41
+        },
+        "vasc": {
+          "sensitivity": 0.8333,
+          "specificity": 0.9143,
+          "support": 6,
+          "tp": 5,
+          "fn": 1,
+          "fp": 3,
+          "tn": 32
+        }
+      }
+    },
+    "III": {
+      "n_images": 88,
+      "accuracy": 0.2045,
+      "melanoma_sensitivity": 0.6429,
+      "melanoma_specificity": 0.7703,
+      "melanoma_support": 14,
+      "cancer_sensitivity": 0.4776,
+      "cancer_support": 67,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.0435,
+          "specificity": 1.0,
+          "support": 23,
+          "tp": 1,
+          "fn": 22,
+          "fp": 0,
+          "tn": 65
+        },
+        "bcc": {
+          "sensitivity": 0.2,
+          "specificity": 0.931,
+          "support": 30,
+          "tp": 6,
+          "fn": 24,
+          "fp": 4,
+          "tn": 54
+        },
+        "bkl": {
+          "sensitivity": 0.3333,
+          "specificity": 0.5176,
+          "support": 3,
+          "tp": 1,
+          "fn": 2,
+          "fp": 41,
+          "tn": 44
+        },
+        "df": {
+          "sensitivity": 0.0,
+          "specificity": 0.9882,
+          "support": 3,
+          "tp": 0,
+          "fn": 3,
+          "fp": 1,
+          "tn": 84
+        },
+        "mel": {
+          "sensitivity": 0.6429,
+          "specificity": 0.7703,
+          "support": 14,
+          "tp": 9,
+          "fn": 5,
+          "fp": 17,
+          "tn": 57
+        },
+        "nv": {
+          "sensitivity": 0.0,
+          "specificity": 0.9419,
+          "support": 2,
+          "tp": 0,
+          "fn": 2,
+          "fp": 5,
+          "tn": 81
+        },
+        "vasc": {
+          "sensitivity": 0.0769,
+          "specificity": 0.9733,
+          "support": 13,
+          "tp": 1,
+          "fn": 12,
+          "fp": 2,
+          "tn": 73
+        }
+      }
+    },
+    "IV": {
+      "n_images": 105,
+      "accuracy": 0.2667,
+      "melanoma_sensitivity": 0.6111,
+      "melanoma_specificity": 0.7931,
+      "melanoma_support": 18,
+      "cancer_sensitivity": 0.5195,
+      "cancer_support": 77,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.0417,
+          "specificity": 1.0,
+          "support": 24,
+          "tp": 1,
+          "fn": 23,
+          "fp": 0,
+          "tn": 81
+        },
+        "bcc": {
+          "sensitivity": 0.3429,
+          "specificity": 0.9143,
+          "support": 35,
+          "tp": 12,
+          "fn": 23,
+          "fp": 6,
+          "tn": 64
+        },
+        "bkl": {
+          "sensitivity": 0.5,
+          "specificity": 0.5464,
+          "support": 8,
+          "tp": 4,
+          "fn": 4,
+          "fp": 44,
+          "tn": 53
+        },
+        "df": {
+          "sensitivity": 0.0,
+          "specificity": 0.9902,
+          "support": 3,
+          "tp": 0,
+          "fn": 3,
+          "fp": 1,
+          "tn": 101
+        },
+        "mel": {
+          "sensitivity": 0.6111,
+          "specificity": 0.7931,
+          "support": 18,
+          "tp": 11,
+          "fn": 7,
+          "fp": 18,
+          "tn": 69
+        },
+        "nv": {
+          "sensitivity": 0.0,
+          "specificity": 0.9519,
+          "support": 1,
+          "tp": 0,
+          "fn": 1,
+          "fp": 5,
+          "tn": 99
+        },
+        "vasc": {
+          "sensitivity": 0.0,
+          "specificity": 0.9663,
+          "support": 16,
+          "tp": 0,
+          "fn": 16,
+          "fp": 3,
+          "tn": 86
+        }
+      }
+    },
+    "V": {
+      "n_images": 76,
+      "accuracy": 0.1579,
+      "melanoma_sensitivity": 0.5,
+      "melanoma_specificity": 0.6935,
+      "melanoma_support": 14,
+      "cancer_sensitivity": 0.4237,
+      "cancer_support": 59,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.04,
+          "specificity": 0.9608,
+          "support": 25,
+          "tp": 1,
+          "fn": 24,
+          "fp": 2,
+          "tn": 49
+        },
+        "bcc": {
+          "sensitivity": 0.15,
+          "specificity": 0.9821,
+          "support": 20,
+          "tp": 3,
+          "fn": 17,
+          "fp": 1,
+          "tn": 55
+        },
+        "bkl": {
+          "sensitivity": null,
+          "specificity": 0.4737,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 40,
+          "tn": 36
+        },
+        "df": {
+          "sensitivity": null,
+          "specificity": 1.0,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "tn": 76
+        },
+        "mel": {
+          "sensitivity": 0.5,
+          "specificity": 0.6935,
+          "support": 14,
+          "tp": 7,
+          "fn": 7,
+          "fp": 19,
+          "tn": 43
+        },
+        "nv": {
+          "sensitivity": null,
+          "specificity": 0.9868,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 1,
+          "tn": 75
+        },
+        "vasc": {
+          "sensitivity": 0.0588,
+          "specificity": 0.9831,
+          "support": 17,
+          "tp": 1,
+          "fn": 16,
+          "fp": 1,
+          "tn": 58
+        }
+      }
+    },
+    "VI": {
+      "n_images": 18,
+      "accuracy": 0.3889,
+      "melanoma_sensitivity": 0.75,
+      "melanoma_specificity": 0.5714,
+      "melanoma_support": 4,
+      "cancer_sensitivity": 0.8125,
+      "cancer_support": 16,
+      "per_class": {
+        "akiec": {
+          "sensitivity": 0.125,
+          "specificity": 1.0,
+          "support": 8,
+          "tp": 1,
+          "fn": 7,
+          "fp": 0,
+          "tn": 10
+        },
+        "bcc": {
+          "sensitivity": 0.5,
+          "specificity": 0.9286,
+          "support": 4,
+          "tp": 2,
+          "fn": 2,
+          "fp": 1,
+          "tn": 13
+        },
+        "bkl": {
+          "sensitivity": null,
+          "specificity": 0.7778,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 4,
+          "tn": 14
+        },
+        "df": {
+          "sensitivity": null,
+          "specificity": 1.0,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "tn": 18
+        },
+        "mel": {
+          "sensitivity": 0.75,
+          "specificity": 0.5714,
+          "support": 4,
+          "tp": 3,
+          "fn": 1,
+          "fp": 6,
+          "tn": 8
+        },
+        "nv": {
+          "sensitivity": null,
+          "specificity": 1.0,
+          "support": 0,
+          "tp": 0,
+          "fn": 0,
+          "fp": 0,
+          "tn": 18
+        },
+        "vasc": {
+          "sensitivity": 0.5,
+          "specificity": 1.0,
+          "support": 2,
+          "tp": 1,
+          "fn": 1,
+          "fp": 0,
+          "tn": 16
+        }
+      }
+    }
+  },
+  "equity_gaps": {
+    "accuracy": {
+      "max": {
+        "type": "II",
+        "value": 0.4634
+      },
+      "min": {
+        "type": "V",
+        "value": 0.1579
+      },
+      "gap": 0.3055,
+      "gap_pct": 30.55,
+      "severity": "DANGEROUS"
+    },
+    "melanoma_sensitivity": {
+      "max": {
+        "type": "II",
+        "value": 0.8
+      },
+      "min": {
+        "type": "V",
+        "value": 0.5
+      },
+      "gap": 0.3,
+      "gap_pct": 30.0,
+      "severity": "DANGEROUS"
+    },
+    "cancer_sensitivity": {
+      "max": {
+        "type": "VI",
+        "value": 0.8125
+      },
+      "min": {
+        "type": "I",
+        "value": 0.4167
+      },
+      "gap": 0.3958,
+      "gap_pct": 39.58,
+      "severity": "DANGEROUS"
+    },
+    "melanoma_specificity": {
+      "max": {
+        "type": "II",
+        "value": 0.8889
+      },
+      "min": {
+        "type": "VI",
+        "value": 0.5714
+      },
+      "gap": 0.3175,
+      "gap_pct": 31.75,
+      "severity": "DANGEROUS"
+    }
+  },
+  "per_class_equity_gaps": {
+    "akiec": {
+      "max_type": "VI",
+      "max_value": 0.125,
+      "min_type": "I",
+      "min_value": 0.0,
+      "gap": 0.125,
+      "gap_pct": 12.5,
+      "severity": "DANGEROUS"
+    },
+    "bcc": {
+      "max_type": "VI",
+      "max_value": 0.5,
+      "min_type": "V",
+      "min_value": 0.15,
+      "gap": 0.35,
+      "gap_pct": 35.0,
+      "severity": "DANGEROUS"
+    },
+    "bkl": {
+      "max_type": "IV",
+      "max_value": 0.5,
+      "min_type": "III",
+      "min_value": 0.3333,
+      "gap": 0.1667,
+      "gap_pct": 16.67,
+      "severity": "DANGEROUS"
+    },
+    "df": {
+      "max_type": "III",
+      "max_value": 0.0,
+      "min_type": "III",
+      "min_value": 0.0,
+      "gap": 0.0,
+      "gap_pct": 0.0,
+      "severity": "ACCEPTABLE"
+    },
+    "mel": {
+      "max_type": "II",
+      "max_value": 0.8,
+      "min_type": "V",
+      "min_value": 0.5,
+      "gap": 0.3,
+      "gap_pct": 30.0,
+      "severity": "DANGEROUS"
+    },
+    "vasc": {
+      "max_type": "II",
+      "max_value": 0.8333,
+      "min_type": "IV",
+      "min_value": 0.0,
+      "gap": 0.8333,
+      "gap_pct": 83.33,
+      "severity": "DANGEROUS"
+    }
+  },
+  "verdict": "DANGEROUS",
+  "verdict_criteria": {
+    "ACCEPTABLE": "all gaps < 5%",
+    "CRITICAL": "any gap 5-10%",
+    "DANGEROUS": "any gap > 10%"
+  },
+  "inference": {
+    "batch_size": 16,
+    "time_seconds": 2.68,
+    "images_per_second": 132.5
+  },
+  "sample_distribution": {
+    "akiec": {
+      "I": 50,
+      "II": 50,
+      "III": 50,
+      "IV": 50,
+      "V": 50,
+      "VI": 25
+    },
+    "bcc": {
+      "I": 50,
+      "II": 50,
+      "III": 50,
+      "IV": 50,
+      "V": 26,
+      "VI": 7
+    },
+    "bkl": {
+      "I": 31,
+      "II": 50,
+      "III": 19,
+      "IV": 23,
+      "V": 10,
+      "VI": 4
+    },
+    "df": {
+      "I": 16,
+      "II": 30,
+      "III": 24,
+      "IV": 7,
+      "V": 1,
+      "VI": 0
+    },
+    "mel": {
+      "I": 50,
+      "II": 50,
+      "III": 50,
+      "IV": 50,
+      "V": 31,
+      "VI": 14
+    },
+    "nv": {
+      "I": 50,
+      "II": 50,
+      "III": 50,
+      "IV": 50,
+      "V": 22,
+      "VI": 8
+    },
+    "vasc": {
+      "I": 50,
+      "II": 50,
+      "III": 50,
+      "IV": 50,
+      "V": 50,
+      "VI": 18
+    }
+  },
+  "recommendations": [
+    "WARNING: 76% of image URLs failed to download. The Fitzpatrick17k URLs are likely stale (images hosted on dermatology atlas sites that rotate URLs). Recommended alternatives: (1) Use the DDI (Diverse Dermatology Images) dataset from Stanford; (2) Use ISIC Archive with self-reported Fitzpatrick metadata; (3) Contact dataset authors for updated URLs; (4) Use a local Fitzpatrick17k image archive if available.",
+    "DANGEROUS gaps detected. Prioritize: (1) collect more training images for underperforming skin types, (2) apply skin-type-aware data augmentation, (3) consider Fitzpatrick-stratified training with class weights.",
+    "Continuously validate on diverse datasets. Consider adding DDI (Diverse Dermatology Images) and PAD-UFES-20 to the validation pipeline."
+  ]
+}
