@@ -3,7 +3,7 @@ Created: 2026-03-24
 
 # ADR-122: ONNX/WASM Offline Inference -- Zero Network Dependency
 
-## Status: PROPOSED (not started) | Last Updated: 2026-03-24 10:30 EST
+## Status: IMPLEMENTED -- ONNX FP32 + INT8 Exported, Browser Integration Pending | Last Updated: 2026-03-24 12:00 EST
 **Implementation Note**: No ONNX Runtime Web integration exists yet. The ONNX FP32 model (327MB) and INT8 model (83MB) have been exported (scripts/dragnes-onnx/ and scripts/dragnes-onnx-int8/) but ConvInteger compatibility issue blocks browser inference. No Service Worker model caching implemented. Classification still relies on HuggingFace Inference API or local trained-weights fallback.
 
 ## Context
