@@ -767,15 +767,34 @@ Asymmetry from principal-axis moment analysis, border from 8-octant
 irregularity, color from k-means++ clustering in LAB space, texture from
 GLCM analysis. Each score includes the literature-cited rationale.
 
-**4. "Why This Classification?" Panel.** Shows which features contributed
-most, with citations to Stolz 1994 (ABCDE), Argenziano 1998 (7-point
-checklist), and other published dermoscopy literature. Clinicians can
-understand and challenge the AI's reasoning.
+**4. "What Mela Found" Explainability.** Every result shows the top clinical
+findings that drove the classification -- asymmetry, border irregularity,
+color diversity, blue-white veil, atypical network, streaks, texture. Each
+finding includes impact direction (supports/opposes the diagnosis), weight
+(strong/moderate/weak), and citation to published literature (Stolz 1994,
+Argenziano 1998). Full clinical details available on tap. Users see exactly
+what the AI looked at and why it matters.
 
-**5. ICD-10 Code + Referral Letter.** One-click generation of a
-pre-populated referral letter with ICD-10-CM codes, classification results,
-ABCDE scores, and clinical recommendation. Copy to clipboard for immediate
-use in clinical correspondence.
+**5. Clinical Context Questions.** Five optional questions that personalize
+the risk assessment: Is this new? Has it changed? Previously biopsied?
+Family history of melanoma? Any symptoms? Answers feed directly into the
+Bayesian risk model as evidence-based multipliers (e.g., family history =
+1.7x melanoma prior per Gandini et al. 2005). A new, changing mole with
+family history gets a fundamentally different risk score than a stable,
+longstanding spot.
+
+**6. Photo Capture Guidance.** Tips displayed before every scan: good
+lighting, 4-6 inches distance, one spot per photo, clean lens. Reduces
+garbage-in/garbage-out and improves classification accuracy.
+
+**7. Low-Confidence Safety Net.** When the AI cannot classify with enough
+confidence (< 40%), the result defaults to "See a dermatologist to be safe"
+instead of forcing a possibly wrong classification. This catches amelanotic
+melanomas (flesh-colored, no pigment contrast) and poor-quality photos.
+
+**8. ICD-10 Code + Patient Self-Referral.** Generate a printable letter with
+ICD-10-CM codes, ABCDE scores, and classification results. Clearly marked
+as a patient self-referral, not a provider referral. Copy to clipboard.
 
 **6. Attention Heatmap.** Weighted visualization of color irregularity, local
 entropy, and border proximity showing which image regions drove the
