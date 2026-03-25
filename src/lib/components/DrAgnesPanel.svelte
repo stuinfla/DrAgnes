@@ -404,6 +404,14 @@
 		classificationError = null;
 		lowConfidenceWarning = null;
 
+		// SAFETY GATE: Check first image for lesion presence
+		const lesionCheck = detectLesionPresence(images[0]);
+		if (!lesionCheck.hasLesion) {
+			classificationError = lesionCheck.reason + ". Please photograph a specific mole, spot, or lesion.";
+			analyzing = false;
+			return;
+		}
+
 		const MULTI_STEPS = [
 			`Analyzing image 1 of ${images.length}...`,
 			...images.slice(1).map((_, i) => `Analyzing image ${i + 2} of ${images.length}...`),

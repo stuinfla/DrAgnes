@@ -1980,80 +1980,166 @@ export interface LesionPresenceResult {
  * label it as melanoma because the model was trained only on
  * lesion images.
  *
- * Checks:
- * 1. Segmentation quality: did Otsu find a meaningful boundary?
- * 2. Color contrast: is there a distinct lesion vs surrounding skin?
- * 3. Size: is the segmented area reasonable (not too small, not the whole image)?
- * 4. Shape: does it look like a lesion (roughly circular/oval)?
+ * Multi-layer gating (strictest first):
+ * 1. Overall color uniformity — reject images with very low variance (plain skin)
+ * 2. Center-vs-periphery luminance — a real lesion has a DARK CENTER
+ * 3. Segmentation area ratio — must be 1-70% of image
+ * 4. Color contrast (Euclidean RGB) — raised to 35 from old 15 to reject shadows/veins
+ * 5. Compactness — real lesions are roughly round/oval, not linear shadows
  */
 export function detectLesionPresence(imageData: ImageData): LesionPresenceResult {
-	const { width, height } = imageData;
+	const { data, width, height } = imageData;
 	const totalPixels = width * height;
 
-	// Run segmentation
+	// Step 1: Check overall image color uniformity.
+	// Normal skin has LOW variance. Lesions create HIGH local variance.
+	let rSum = 0, gSum = 0, bSum = 0;
+	let rSqSum = 0, gSqSum = 0, bSqSum = 0;
+	let n = 0;
+	const S = 3; // sample every 3rd pixel for speed
+
+	for (let y = 0; y < height; y += S) {
+		for (let x = 0; x < width; x += S) {
+			const i = (y * width + x) * 4;
+			const r = data[i], g = data[i + 1], b = data[i + 2];
+			rSum += r; gSum += g; bSum += b;
+			rSqSum += r * r; gSqSum += g * g; bSqSum += b * b;
+			n++;
+		}
+	}
+
+	const rMean = rSum / n, gMean = gSum / n, bMean = bSum / n;
+	const rVar = rSqSum / n - rMean * rMean;
+	const gVar = gSqSum / n - gMean * gMean;
+	const bVar = bSqSum / n - bMean * bMean;
+	const overallVariance = Math.sqrt(Math.max(0, rVar) + Math.max(0, gVar) + Math.max(0, bVar));
+
+	// GATE 1: If the image is very uniform (low variance), it's probably just skin
+	if (overallVariance < 25) {
+		return {
+			hasLesion: false,
+			confidence: 0.15,
+			reason: "Image appears to be uniform skin with no distinct spot or mole",
+		};
+	}
+
+	// Step 2: Check center vs periphery contrast in luminance space.
+	// A real lesion photo has a DARK CENTER relative to surrounding skin.
+	const cx = width / 2, cy = height / 2;
+	const innerR = Math.min(width, height) * 0.15;
+	const outerR = Math.min(width, height) * 0.4;
+
+	let centerL = 0, centerCount = 0;
+	let outerL = 0, outerCount = 0;
+
+	for (let y = 0; y < height; y += S) {
+		for (let x = 0; x < width; x += S) {
+			const dx = x - cx, dy = y - cy;
+			const dist = Math.sqrt(dx * dx + dy * dy);
+			const i = (y * width + x) * 4;
+			const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+
+			if (dist < innerR) {
+				centerL += lum;
+				centerCount++;
+			} else if (dist <= outerR) {
+				outerL += lum;
+				outerCount++;
+			}
+			// skip pixels beyond outerR (edge noise)
+		}
+	}
+
+	if (centerCount > 0 && outerCount > 0) {
+		centerL /= centerCount;
+		outerL /= outerCount;
+		const lumDiff = Math.abs(centerL - outerL);
+
+		// GATE 2: If center and surround have similar luminance, no lesion
+		if (lumDiff < 12) {
+			return {
+				hasLesion: false,
+				confidence: 0.2,
+				reason: "No distinct spot detected — skin appears uniform",
+			};
+		}
+	}
+
+	// Step 3: Run segmentation and check the result is plausible
 	const seg = segmentLesion(imageData);
-
-	// Check 1: Area ratio — lesion should be 2-60% of image
 	const areaRatio = seg.area / totalPixels;
-	if (areaRatio < 0.02) {
-		return { hasLesion: false, confidence: 0.2, reason: "No distinct lesion detected — area too small" };
-	}
-	if (areaRatio > 0.85) {
-		return { hasLesion: false, confidence: 0.3, reason: "No distinct lesion boundary — image may not contain a focused lesion" };
+
+	// GATE 3: Area too small or too large
+	if (areaRatio < 0.01 || areaRatio > 0.70) {
+		return {
+			hasLesion: false,
+			confidence: 0.2,
+			reason: areaRatio < 0.01
+				? "No visible spot detected in image"
+				: "No clear lesion boundary — image may show general skin area",
+		};
 	}
 
-	// Check 2: Compactness — real lesions are roughly circular
-	const expectedPerimeter = 2 * Math.sqrt(Math.PI * seg.area);
-	const compactness = expectedPerimeter / Math.max(seg.perimeter, 1);
-	// Very low compactness = irregular/fragmented = probably not a real lesion
-	if (compactness < 0.2) {
-		return { hasLesion: false, confidence: 0.3, reason: "Segmentation is fragmented — no clear lesion boundary" };
-	}
-
-	// Check 3: Color contrast between lesion and surrounding skin
-	const data = imageData.data;
-	let lesionR = 0, lesionG = 0, lesionB = 0, lesionCount = 0;
-	let skinR = 0, skinG = 0, skinB = 0, skinCount = 0;
+	// Step 4: Check color contrast in a perceptually meaningful way.
+	// Use the segmentation mask but require STRONG contrast.
+	let lesionR = 0, lesionG = 0, lesionB = 0, lCount = 0;
+	let skinR = 0, skinG = 0, skinB = 0, sCount = 0;
 
 	for (let y = 0; y < height; y += 2) {
 		for (let x = 0; x < width; x += 2) {
 			const i = (y * width + x) * 4;
-			const maskIdx = y * width + x;
-			if (seg.mask[maskIdx]) {
+			if (seg.mask[y * width + x]) {
 				lesionR += data[i]; lesionG += data[i + 1]; lesionB += data[i + 2];
-				lesionCount++;
+				lCount++;
 			} else {
 				skinR += data[i]; skinG += data[i + 1]; skinB += data[i + 2];
-				skinCount++;
+				sCount++;
 			}
 		}
 	}
 
 	let colorDiff = 0;
-	if (lesionCount > 0 && skinCount > 0) {
-		lesionR /= lesionCount; lesionG /= lesionCount; lesionB /= lesionCount;
-		skinR /= skinCount; skinG /= skinCount; skinB /= skinCount;
-
+	if (lCount > 0 && sCount > 0) {
+		lesionR /= lCount; lesionG /= lCount; lesionB /= lCount;
+		skinR /= sCount; skinG /= sCount; skinB /= sCount;
 		colorDiff = Math.sqrt(
 			(lesionR - skinR) ** 2 + (lesionG - skinG) ** 2 + (lesionB - skinB) ** 2
 		);
-
-		// Low color difference = no distinct lesion
-		if (colorDiff < 15) {
-			return { hasLesion: false, confidence: 0.25, reason: "No color contrast between lesion and skin — may be normal skin" };
-		}
 	}
 
-	// All checks passed — compute overall confidence
-	const lesionConfidence = Math.min(1,
-		(areaRatio > 0.05 ? 0.3 : 0.1) +
-		(compactness > 0.4 ? 0.3 : 0.1) +
-		(colorDiff > 30 ? 0.4 : 0.2)
+	// GATE 4: Color contrast must be STRONG (raised from 15 to 35)
+	if (colorDiff < 35) {
+		return {
+			hasLesion: false,
+			confidence: 0.25,
+			reason: "No color contrast between potential spot and surrounding skin — likely normal skin",
+		};
+	}
+
+	// Step 5: Compactness — real lesions are roughly round/oval
+	const expectedPerimeter = 2 * Math.sqrt(Math.PI * seg.area);
+	const compactness = expectedPerimeter / Math.max(seg.perimeter, 1);
+
+	if (compactness < 0.25) {
+		return {
+			hasLesion: false,
+			confidence: 0.3,
+			reason: "Detected shape is too irregular — likely a shadow or skin fold, not a mole",
+		};
+	}
+
+	// All gates passed — compute overall confidence
+	const confidence = Math.min(1,
+		(areaRatio > 0.03 && areaRatio < 0.50 ? 0.3 : 0.1) +
+		(compactness > 0.4 ? 0.3 : 0.15) +
+		(colorDiff > 50 ? 0.4 : 0.2)
 	);
 
 	return {
-		hasLesion: lesionConfidence > 0.5,
-		confidence: lesionConfidence,
-		reason: lesionConfidence > 0.5 ? "Lesion detected" : "Uncertain — image may not contain a clear lesion",
+		hasLesion: confidence > 0.5,
+		confidence,
+		reason: confidence > 0.5
+			? "Lesion detected"
+			: "No clear lesion found — try photographing a specific spot",
 	};
 }

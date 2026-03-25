@@ -162,6 +162,30 @@ export function translateForConsumer(
 	allProbabilities?: Array<{ className: string; probability: number }>,
 	demographics?: { age?: number; bodyLocation?: string },
 ): ConsumerResult {
+	// SAFETY: If the top probability is below 0.40 for ANY class, the model
+	// is not confident enough to classify. This prevents spurious "see a
+	// dermatologist" results when the image doesn't contain a clear lesion
+	// or is ambiguous. The threshold is intentionally conservative: a model
+	// that can't even reach 40% for its top pick is essentially guessing.
+	if (confidence < 0.40) {
+		return {
+			headline: "Unable to classify",
+			riskLevel: "yellow",
+			riskColor: RISK_COLORS["yellow"],
+			explanation:
+				"The AI could not identify a specific skin condition with sufficient confidence. " +
+				"This may happen when the image does not contain a clear lesion, the lighting is poor, " +
+				"or the image is taken from too far away.",
+			action:
+				"Try a closer photo of a specific spot with good lighting. " +
+				"If you have a mole or spot that concerns you, see a dermatologist for a definitive assessment.",
+			shouldSeeDoctor: false,
+			urgency: "none",
+			medicalTerm: topClass,
+			confidence,
+		};
+	}
+
 	const translation = TRANSLATIONS[topClass] || TRANSLATIONS["nv"];
 
 	// When we have full probability data, use Bayesian risk stratification
