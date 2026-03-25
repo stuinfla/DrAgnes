@@ -7,6 +7,7 @@
  */
 
 import type { ImageTensor, SegmentationMask } from "./types";
+import { morphClose as cvMorphClose, otsuThreshold as cvOtsuThreshold } from "./cv/morphology";
 
 /** ImageNet channel means (RGB) */
 const IMAGENET_MEAN = [0.485, 0.456, 0.406];
@@ -175,8 +176,8 @@ export function segmentLesion(imageData: ImageData): SegmentationMask {
 		gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
 	}
 
-	// Otsu's threshold
-	const threshold = otsuThreshold(gray);
+	// Otsu's threshold (delegated to cv/morphology.ts single source of truth)
+	const threshold = cvOtsuThreshold(gray, gray.length);
 
 	// Binary mask (lesion = darker than or equal to threshold)
 	const mask = new Uint8Array(width * height);
@@ -185,7 +186,7 @@ export function segmentLesion(imageData: ImageData): SegmentationMask {
 	}
 
 	// Morphological closing (dilate then erode) to fill gaps
-	const closed = morphClose(mask, width, height, 3);
+	const closed = cvMorphClose(mask, width, height, 3);
 
 	// Compute bounding box and area
 	let minX = width,
@@ -219,91 +220,8 @@ export function segmentLesion(imageData: ImageData): SegmentationMask {
 	};
 }
 
-/**
- * Otsu's method for automatic threshold selection.
- * Maximizes inter-class variance of foreground/background.
- */
-function otsuThreshold(gray: Uint8Array): number {
-	const histogram = new Int32Array(256);
-	for (let i = 0; i < gray.length; i++) {
-		histogram[gray[i]]++;
-	}
-
-	const total = gray.length;
-	let sumAll = 0;
-	for (let i = 0; i < 256; i++) sumAll += i * histogram[i];
-
-	let sumBg = 0;
-	let weightBg = 0;
-	let maxVariance = 0;
-	let bestThreshold = 0;
-
-	for (let t = 0; t < 256; t++) {
-		weightBg += histogram[t];
-		if (weightBg === 0) continue;
-		const weightFg = total - weightBg;
-		if (weightFg === 0) break;
-
-		sumBg += t * histogram[t];
-		const meanBg = sumBg / weightBg;
-		const meanFg = (sumAll - sumBg) / weightFg;
-		const variance = weightBg * weightFg * (meanBg - meanFg) * (meanBg - meanFg);
-
-		if (variance > maxVariance) {
-			maxVariance = variance;
-			bestThreshold = t;
-		}
-	}
-
-	return bestThreshold;
-}
-
-/**
- * Morphological closing: dilate then erode.
- */
-function morphClose(mask: Uint8Array, width: number, height: number, radius: number): Uint8Array {
-	return morphErode(morphDilate(mask, width, height, radius), width, height, radius);
-}
-
-function morphDilate(mask: Uint8Array, w: number, h: number, r: number): Uint8Array {
-	const out = new Uint8Array(w * h);
-	for (let y = 0; y < h; y++) {
-		for (let x = 0; x < w; x++) {
-			let val = 0;
-			for (let dy = -r; dy <= r && !val; dy++) {
-				for (let dx = -r; dx <= r && !val; dx++) {
-					const ny = y + dy,
-						nx = x + dx;
-					if (ny >= 0 && ny < h && nx >= 0 && nx < w && mask[ny * w + nx] === 1) {
-						val = 1;
-					}
-				}
-			}
-			out[y * w + x] = val;
-		}
-	}
-	return out;
-}
-
-function morphErode(mask: Uint8Array, w: number, h: number, r: number): Uint8Array {
-	const out = new Uint8Array(w * h);
-	for (let y = 0; y < h; y++) {
-		for (let x = 0; x < w; x++) {
-			let val = 1;
-			for (let dy = -r; dy <= r && val; dy++) {
-				for (let dx = -r; dx <= r && val; dx++) {
-					const ny = y + dy,
-						nx = x + dx;
-					if (ny < 0 || ny >= h || nx < 0 || nx >= w || mask[ny * w + nx] === 0) {
-						val = 0;
-					}
-				}
-			}
-			out[y * w + x] = val;
-		}
-	}
-	return out;
-}
+// otsuThreshold and morphological operations are imported from cv/morphology.ts
+// (single source of truth). See imports at the top of this file.
 
 /**
  * Bilinear interpolation resize.
