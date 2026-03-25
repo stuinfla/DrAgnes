@@ -8,7 +8,7 @@ import {
 	tdsRiskLevel,
 	computeSevenPointScore,
 	TDS,
-} from "../src/lib/dragnes/clinical-baselines";
+} from "../src/lib/mela/clinical-baselines";
 
 describe("computeTDS", () => {
 	it("computes A*1.3 + B*0.1 + C*0.5 + D*0.5", () => {

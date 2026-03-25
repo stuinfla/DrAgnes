@@ -1,5 +1,5 @@
 /**
- * DrAgnes Benchmark Module Tests
+ * Mela Benchmark Module Tests
  *
  * Tests synthetic image generation, benchmark execution,
  * latency measurement, and per-class metric computation.
@@ -13,9 +13,9 @@ import {
 	type ClassMetrics,
 	type LatencyStats,
 	type FitzpatrickType,
-} from "../src/lib/dragnes/benchmark";
-import { DermClassifier } from "../src/lib/dragnes/classifier";
-import type { LesionClass } from "../src/lib/dragnes/types";
+} from "../src/lib/mela/benchmark";
+import { DermClassifier } from "../src/lib/mela/classifier";
+import type { LesionClass } from "../src/lib/mela/types";
 
 // ---- Polyfill ImageData for Node.js ----
 

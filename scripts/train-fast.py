@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fast DrAgnes ViT training — direct PyTorch loop, no Trainer overhead."""
+"""Fast Mela ViT training — direct PyTorch loop, no Trainer overhead."""
 
 import torch
 import torch.nn.functional as F
@@ -152,8 +152,8 @@ for epoch in range(EPOCHS):
 
     if mel_sens > best_mel_sens:
         best_mel_sens = mel_sens
-        model.save_pretrained('scripts/dragnes-classifier/best')
-        processor.save_pretrained('scripts/dragnes-classifier/best')
+        model.save_pretrained('scripts/mela-classifier/best')
+        processor.save_pretrained('scripts/mela-classifier/best')
         print(f'  >> SAVED best model (melanoma sens: {mel_sens:.1%})')
 
 print(f'\n{"="*60}')

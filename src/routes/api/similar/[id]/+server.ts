@@ -1,5 +1,5 @@
 /**
- * DrAgnes Similar Cases Lookup Endpoint
+ * Mela Similar Cases Lookup Endpoint
  *
  * GET /api/similar/[id]
  *
@@ -9,8 +9,8 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { searchSimilar } from "$lib/dragnes/brain-client";
-import type { LesionClass, BodyLocation } from "$lib/dragnes/types";
+import { searchSimilar } from "$lib/mela/brain-client";
+import type { LesionClass, BodyLocation } from "$lib/mela/types";
 
 const VALID_LESION_CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
 
@@ -81,7 +81,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
 			throw err;
 		}
 
-		console.error("[dragnes/similar] Error:", err);
+		console.error("[mela/similar] Error:", err);
 		throw error(500, "Failed to search for similar cases");
 	}
 };

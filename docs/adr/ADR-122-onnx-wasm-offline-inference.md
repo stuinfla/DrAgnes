@@ -4,11 +4,11 @@ Created: 2026-03-24
 # ADR-122: ONNX/WASM Offline Inference -- Zero Network Dependency
 
 ## Status: IMPLEMENTED -- ONNX FP32 + INT8 Exported, Browser Integration Pending | Last Updated: 2026-03-24 12:00 EST
-**Implementation Note**: No ONNX Runtime Web integration exists yet. The ONNX FP32 model (327MB) and INT8 model (83MB) have been exported (scripts/dragnes-onnx/ and scripts/dragnes-onnx-int8/) but ConvInteger compatibility issue blocks browser inference. No Service Worker model caching implemented. Classification still relies on HuggingFace Inference API or local trained-weights fallback.
+**Implementation Note**: No ONNX Runtime Web integration exists yet. The ONNX FP32 model (327MB) and INT8 model (83MB) have been exported (scripts/mela-onnx/ and scripts/mela-onnx-int8/) but ConvInteger compatibility issue blocks browser inference. No Service Worker model caching implemented. Classification still relies on HuggingFace Inference API or local trained-weights fallback.
 
 ## Context
 
-Dr. Agnes currently relies on the HuggingFace Inference API for its primary classification
+Mela currently relies on the HuggingFace Inference API for its primary classification
 pathway (`hf-classifier.ts` calls `https://router.huggingface.co/hf-inference/models/...`).
 The `classifier.ts` ensemble blends HF API results with local trained-weights and rule-based
 analysis, but the HF component carries the highest weight (50-70%) in all online strategies.
@@ -224,12 +224,12 @@ routes through our own infrastructure, not third-party APIs.
 2. Validate ONNX model output matches PyTorch within tolerance (max abs diff < 1e-5)
 3. Quantize to INT8 using `onnxruntime.quantization.quantize_dynamic()`
 4. Validate INT8 model accuracy on HAM10000 test set (target: <0.5% accuracy drop)
-5. Store ONNX artifacts in `scripts/dragnes-classifier-v2/onnx/`
+5. Store ONNX artifacts in `scripts/mela-classifier-v2/onnx/`
 
 ### Phase 2: ONNX Runtime Web Integration (3-4 days)
 
-1. Add `onnxruntime-web` dependency to `examples/dragnes/package.json`
-2. Create `src/lib/dragnes/onnx-inference.ts` implementing `InferenceStrategyPort`
+1. Add `onnxruntime-web` dependency to `examples/mela/package.json`
+2. Create `src/lib/mela/onnx-inference.ts` implementing `InferenceStrategyPort`
 3. Implement tensor preprocessing using existing `preprocessing.ts` + `@ruvector/cnn SimdOps`
 4. Wire `OfflineStrategy` into `classifier.ts` ensemble as a new inference source
 5. Add `inferenceSource` field to `ClassificationResult` type
@@ -294,8 +294,8 @@ routes through our own infrastructure, not third-party APIs.
 
 - ONNX Runtime Web: https://onnxruntime.ai/docs/tutorials/web/
 - `@ruvector/cnn` WASM: `npm/packages/ruvector-cnn/ruvector_cnn_wasm.d.ts`
-- Current classifier: `examples/dragnes/src/lib/dragnes/classifier.ts`
-- ADR-117: DrAgnes platform architecture; ADR-121: Image capture and quality gating
+- Current classifier: `examples/mela/src/lib/mela/classifier.ts`
+- ADR-117: Mela platform architecture; ADR-121: Image capture and quality gating
 
 ## Author
 Stuart Kerr + Claude Flow

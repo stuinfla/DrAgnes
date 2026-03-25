@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Classify a single image using the trained DrAgnes ViT model.
+Classify a single image using the trained Mela ViT model.
 
 Usage:
     python3 scripts/classify-image.py <image_path>
@@ -16,7 +16,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 from PIL import Image
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_DIR = os.path.join(SCRIPT_DIR, "dragnes-classifier", "best")
+MODEL_DIR = os.path.join(SCRIPT_DIR, "mela-classifier", "best")
 
 CLASS_NAMES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
 

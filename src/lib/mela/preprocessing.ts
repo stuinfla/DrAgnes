@@ -1,5 +1,5 @@
 /**
- * DrAgnes Image Preprocessing Pipeline
+ * Mela Image Preprocessing Pipeline
  *
  * Provides color normalization, hair removal, lesion segmentation,
  * resizing, and ImageNet normalization for dermoscopic images.

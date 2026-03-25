@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ADR-122 Phase 1-2: Export DrAgnes v2 ViT classifier to ONNX and quantize to INT8.
+ADR-122 Phase 1-2: Export Mela v2 ViT classifier to ONNX and quantize to INT8.
 
 Pipeline:
   1. Load v2 safetensors model via transformers
@@ -30,9 +30,9 @@ from PIL import Image
 # Paths
 # ---------------------------------------------------------------------------
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier-v2" / "best"
-ONNX_FP32_DIR = SCRIPT_DIR / "dragnes-onnx-v2"
-ONNX_INT8_DIR = SCRIPT_DIR / "dragnes-onnx-v2-int8"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier-v2" / "best"
+ONNX_FP32_DIR = SCRIPT_DIR / "mela-onnx-v2"
+ONNX_INT8_DIR = SCRIPT_DIR / "mela-onnx-v2-int8"
 VALIDATION_OUT = SCRIPT_DIR / "onnx-v2-validation.json"
 
 # Find a test image from the fitzpatrick cache (any .jpg will do)
@@ -349,7 +349,7 @@ def main():
     results = {
         "adr": "ADR-122",
         "phase": "Phase 1-2: ONNX export + INT8 quantization",
-        "model": "dragnes-classifier-v2 (ViT-Base, 85.8M params)",
+        "model": "mela-classifier-v2 (ViT-Base, 85.8M params)",
         "source": str(MODEL_DIR),
         "outputs": {
             "onnx_fp32": str(ONNX_FP32_DIR),

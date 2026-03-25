@@ -1,11 +1,11 @@
-# DrAgnes Google Cloud Deployment Plan
+# Mela Google Cloud Deployment Plan
 
 **Status**: Research & Planning
 **Date**: 2026-03-21
 
 ## Overview
 
-DrAgnes leverages the existing pi.ruv.io Google Cloud infrastructure, extending it with dermatology-specific services. The deployment follows a multi-region, HIPAA-compliant architecture using Google Cloud's BAA-covered services.
+Mela leverages the existing pi.ruv.io Google Cloud infrastructure, extending it with dermatology-specific services. The deployment follows a multi-region, HIPAA-compliant architecture using Google Cloud's BAA-covered services.
 
 ## Architecture Overview
 
@@ -26,7 +26,7 @@ DrAgnes leverages the existing pi.ruv.io Google Cloud infrastructure, extending 
          │                  Service Mesh                      │
          │                                                    │
          │  ┌────────────┐  ┌────────────┐  ┌────────────┐   │
-         │  │ DrAgnes    │  │ Brain      │  │ CNN Model  │   │
+         │  │ Mela    │  │ Brain      │  │ CNN Model  │   │
          │  │ API        │  │ Server     │  │ Server     │   │
          │  │ (Cloud Run)│  │ (Cloud Run)│  │ (Cloud Run)│   │
          │  └─────┬──────┘  └─────┬──────┘  └─────┬──────┘   │
@@ -53,16 +53,16 @@ DrAgnes leverages the existing pi.ruv.io Google Cloud infrastructure, extending 
 
 ## Service Configuration
 
-### 1. DrAgnes API Service (Cloud Run)
+### 1. Mela API Service (Cloud Run)
 
 Primary API service for classification requests and practice management.
 
 ```yaml
-# dragnes-api.yaml
+# mela-api.yaml
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: dragnes-api
+  name: mela-api
   annotations:
     run.googleapis.com/launch-stage: GA
     run.googleapis.com/ingress: internal-and-cloud-load-balancing
@@ -78,7 +78,7 @@ spec:
       containerConcurrency: 80
       timeoutSeconds: 300
       containers:
-        - image: gcr.io/ruvector-brain-dev/dragnes-api:latest
+        - image: gcr.io/ruvector-brain-dev/mela-api:latest
           ports:
             - containerPort: 8080
           resources:
@@ -89,7 +89,7 @@ spec:
             - name: BRAIN_URL
               value: "https://brain-server-internal.run.app"
             - name: MODEL_BUCKET
-              value: "gs://dragnes-models"
+              value: "gs://mela-models"
             - name: RUST_LOG
               value: "info"
           startupProbe:
@@ -104,11 +104,11 @@ spec:
 Server-side CNN inference for practices without WASM capability.
 
 ```yaml
-# dragnes-cnn.yaml
+# mela-cnn.yaml
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: dragnes-cnn
+  name: mela-cnn
 spec:
   template:
     metadata:
@@ -121,7 +121,7 @@ spec:
       containerConcurrency: 20
       timeoutSeconds: 30
       containers:
-        - image: gcr.io/ruvector-brain-dev/dragnes-cnn:latest
+        - image: gcr.io/ruvector-brain-dev/mela-cnn:latest
           ports:
             - containerPort: 8080
           resources:
@@ -150,8 +150,8 @@ The existing pi.ruv.io brain server at `brain-server-*.run.app` handles:
 - Sparsifier analytics (ADR-116)
 - Witness chain management
 
-**DrAgnes-specific extensions**:
-- New memory namespace: `dragnes-dermatology`
+**Mela-specific extensions**:
+- New memory namespace: `mela-dermatology`
 - Custom similarity threshold for dermoscopic embeddings
 - Dermoscopy-specific PubMed search templates
 - Classification feedback ingestion endpoint
@@ -166,7 +166,7 @@ Firebase Hosting Configuration
     │       ├── CDN caching (immutable assets: 1 year)
     │       ├── WASM files: Cache-Control: public, max-age=31536000
     │       ├── Model weights: Cache-Control: public, max-age=86400
-    │       └── API proxy: /api/** → Cloud Run dragnes-api
+    │       └── API proxy: /api/** → Cloud Run mela-api
     │
     ├── Service Worker (Workbox)
     │       ├── Precache: app shell, WASM module, model weights
@@ -175,7 +175,7 @@ Firebase Hosting Configuration
     │       └── Offline fallback page
     │
     └── PWA Manifest
-            ├── name: "DrAgnes"
+            ├── name: "Mela"
             ├── display: "standalone"
             ├── orientation: "portrait"
             ├── theme_color: "#1a365d"
@@ -241,22 +241,22 @@ Firestore Collections
 ```
 GCS Buckets
     │
-    ├── gs://dragnes-models/
+    ├── gs://mela-models/
     │       ├── mobilenetv3_small_int8.bin          (INT8 model, ~5MB)
     │       ├── mobilenetv3_small_fp32.bin           (FP32 model, ~15MB)
     │       ├── mobilenetv3_small.wasm               (WASM module, ~2MB)
     │       ├── lora_weights/{practiceId}/latest.bin (per-practice LoRA)
     │       └── reference_embeddings/top1000.bin     (offline cache)
     │       Encryption: CMEK (AES-256)
-    │       Access: dragnes-api service account only
+    │       Access: mela-api service account only
     │
-    ├── gs://dragnes-rvf/
+    ├── gs://mela-rvf/
     │       ├── {contributorHash}/{memoryId}.rvf     (RVF containers)
     │       Encryption: CMEK (AES-256)
     │       Access: brain server service account only
     │       Lifecycle: Archive after 90 days, delete after 7 years
     │
-    └── gs://dragnes-audit/
+    └── gs://mela-audit/
             ├── access_logs/YYYY/MM/DD/*.jsonl
             ├── classification_logs/YYYY/MM/DD/*.jsonl
             └── security_events/YYYY/MM/DD/*.jsonl
@@ -283,23 +283,23 @@ Redis Instance (Basic tier, 1GB)
 ```
 Pub/Sub Configuration
     │
-    ├── dragnes-classification (new classification events)
-    │       ├── Publisher: dragnes-api
+    ├── mela-classification (new classification events)
+    │       ├── Publisher: mela-api
     │       ├── Subscriber: brain-server (brain ingestion)
-    │       ├── Subscriber: dragnes-analytics (BigQuery sink)
-    │       └── Subscriber: dragnes-alerts (monitoring)
+    │       ├── Subscriber: mela-analytics (BigQuery sink)
+    │       └── Subscriber: mela-alerts (monitoring)
     │
-    ├── dragnes-feedback (clinician feedback events)
-    │       ├── Publisher: dragnes-api
+    ├── mela-feedback (clinician feedback events)
+    │       ├── Publisher: mela-api
     │       ├── Subscriber: brain-server (model improvement)
-    │       └── Subscriber: dragnes-analytics (accuracy tracking)
+    │       └── Subscriber: mela-analytics (accuracy tracking)
     │
-    ├── dragnes-model-update (model version events)
-    │       ├── Publisher: dragnes-training (Cloud Run job)
-    │       ├── Subscriber: dragnes-api (hot-reload)
-    │       └── Subscriber: dragnes-cnn (hot-reload)
+    ├── mela-model-update (model version events)
+    │       ├── Publisher: mela-training (Cloud Run job)
+    │       ├── Subscriber: mela-api (hot-reload)
+    │       └── Subscriber: mela-cnn (hot-reload)
     │
-    └── dragnes-alerts (monitoring alerts)
+    └── mela-alerts (monitoring alerts)
             ├── Publisher: various services
             └── Subscriber: Cloud Monitoring → PagerDuty
 ```
@@ -309,28 +309,28 @@ Pub/Sub Configuration
 ```
 Scheduled Jobs
     │
-    ├── dragnes-model-retrain
+    ├── mela-model-retrain
     │       ├── Schedule: Weekly (Sunday 02:00 UTC)
     │       ├── Action: Trigger Cloud Run job for model retraining
     │       ├── Input: New feedback + brain embeddings since last train
     │       └── Output: New model version to GCS
     │
-    ├── dragnes-drift-check
+    ├── mela-drift-check
     │       ├── Schedule: Daily (06:00 UTC)
     │       ├── Action: Brain drift analysis on dermoscopy namespace
     │       └── Alert: If drift > 0.15, trigger early retrain
     │
-    ├── dragnes-fairness-audit
+    ├── mela-fairness-audit
     │       ├── Schedule: Weekly (Monday 08:00 UTC)
     │       ├── Action: Compute accuracy by Fitzpatrick type
     │       └── Alert: If disparity > 5%, flag for investigation
     │
-    ├── dragnes-privacy-audit
+    ├── mela-privacy-audit
     │       ├── Schedule: Daily (04:00 UTC)
     │       ├── Action: Verify no PII in Firestore/GCS
     │       └── Alert: Any PII detection triggers incident
     │
-    └── dragnes-backup
+    └── mela-backup
             ├── Schedule: Daily (00:00 UTC)
             ├── Action: Firestore export to GCS
             └── Retention: 30 daily + 12 monthly + 7 yearly
@@ -343,13 +343,13 @@ Scheduled Jobs
 ```
 Secrets (extending existing pi.ruv.io secrets)
     │
-    ├── dragnes-api-key              (API authentication key)
-    ├── dragnes-jwt-signing-key      (JWT token signing)
-    ├── dragnes-cmek-key-id          (CMEK key reference)
-    ├── dragnes-oauth-client-id      (Google OAuth client)
-    ├── dragnes-oauth-client-secret  (Google OAuth secret)
-    ├── dragnes-firebase-config      (Firebase project config)
-    └── dragnes-pubmed-api-key       (NCBI E-utilities key)
+    ├── mela-api-key              (API authentication key)
+    ├── mela-jwt-signing-key      (JWT token signing)
+    ├── mela-cmek-key-id          (CMEK key reference)
+    ├── mela-oauth-client-id      (Google OAuth client)
+    ├── mela-oauth-client-secret  (Google OAuth secret)
+    ├── mela-firebase-config      (Firebase project config)
+    └── mela-pubmed-api-key       (NCBI E-utilities key)
 
     Existing secrets reused:
     ├── ANTHROPIC_API_KEY            (for chat interface LLM)
@@ -361,18 +361,18 @@ Secrets (extending existing pi.ruv.io secrets)
 ```
 Service Accounts
     │
-    ├── dragnes-api@ruvector-brain-dev.iam.gserviceaccount.com
+    ├── mela-api@ruvector-brain-dev.iam.gserviceaccount.com
     │       ├── roles/run.invoker (invoke brain server)
     │       ├── roles/datastore.user (Firestore read/write)
     │       ├── roles/storage.objectViewer (model bucket)
     │       ├── roles/pubsub.publisher (classification events)
     │       └── roles/secretmanager.secretAccessor (secrets)
     │
-    ├── dragnes-cnn@ruvector-brain-dev.iam.gserviceaccount.com
+    ├── mela-cnn@ruvector-brain-dev.iam.gserviceaccount.com
     │       ├── roles/storage.objectViewer (model bucket)
     │       └── roles/secretmanager.secretAccessor (secrets)
     │
-    └── dragnes-training@ruvector-brain-dev.iam.gserviceaccount.com
+    └── mela-training@ruvector-brain-dev.iam.gserviceaccount.com
             ├── roles/storage.objectAdmin (model bucket, write new versions)
             ├── roles/datastore.viewer (read feedback data)
             ├── roles/pubsub.publisher (model update events)
@@ -382,7 +382,7 @@ Service Accounts
 ### VPC Service Controls
 
 ```
-VPC-SC Perimeter: dragnes-perimeter
+VPC-SC Perimeter: mela-perimeter
     │
     ├── Protected Services
     │       ├── firestore.googleapis.com
@@ -429,7 +429,7 @@ Data Residency Rules
 ### Cloud Monitoring Dashboard
 
 ```
-DrAgnes Operations Dashboard
+Mela Operations Dashboard
     │
     ├── Service Health
     │       ├── API latency (p50, p95, p99)
@@ -515,7 +515,7 @@ DrAgnes Operations Dashboard
 ```
 Deployment Pipeline (Cloud Build)
     │
-    ├── Source: GitHub (ruvector/dragnes)
+    ├── Source: GitHub (ruvector/mela)
     ├── Trigger: Push to main branch
     │
     ├── Build Stage

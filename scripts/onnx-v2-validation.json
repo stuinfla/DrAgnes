@@ -1,11 +1,11 @@
 {
   "adr": "ADR-122",
   "phase": "Phase 1-2: ONNX export + INT8 quantization",
-  "model": "dragnes-classifier-v2 (ViT-Base, 85.8M params)",
-  "source": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best",
+  "model": "mela-classifier-v2 (ViT-Base, 85.8M params)",
+  "source": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier-v2/best",
   "outputs": {
-    "onnx_fp32": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-onnx-v2",
-    "onnx_int8": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-onnx-v2-int8"
+    "onnx_fp32": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-onnx-v2",
+    "onnx_int8": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-onnx-v2-int8"
   },
   "file_sizes": {
     "safetensors_bytes": 343239356,

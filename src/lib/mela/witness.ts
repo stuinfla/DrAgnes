@@ -1,5 +1,5 @@
 /**
- * Witness Chain Implementation for DrAgnes
+ * Witness Chain Implementation for Mela
  *
  * Creates a 3-entry audit chain for each classification using SubtleCrypto SHA-256.
  * Each entry links to the previous via hash chaining, providing tamper-evident

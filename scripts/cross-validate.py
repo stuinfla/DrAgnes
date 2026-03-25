@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DrAgnes Cross-Dataset Validation
+Mela Cross-Dataset Validation
 
 Validates the custom-trained ViT model against external dermoscopy datasets
 to prove generalization beyond the HAM10000 training data.
@@ -47,7 +47,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier" / "best"
 RESULTS_FILE = SCRIPT_DIR / "cross-validation-results.json"
 
 # HAM10000 class taxonomy (must match training order exactly)
@@ -717,7 +717,7 @@ def try_overfitting_check(model, processor, device):
 
 def main():
     p("=" * 60)
-    p("  DrAgnes Cross-Dataset Validation")
+    p("  Mela Cross-Dataset Validation")
     p("  Proving generalization of custom-trained ViT model")
     p("=" * 60)
     p(f"Model:  {MODEL_DIR}")

@@ -1,7 +1,7 @@
 {
   "adr": "ADR-123",
-  "description": "Per-class threshold optimization for DrAgnes v2 combined model",
-  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best",
+  "description": "Per-class threshold optimization for Mela v2 combined model",
+  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier-v2/best",
   "dataset": "akinsanyaayomide/skin_cancer_dataset_balanced_labels_2",
   "test_set_size": 3901,
   "split": {

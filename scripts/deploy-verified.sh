@@ -1,11 +1,11 @@
 #!/bin/bash
-# Dr. Agnes Verified Deployment Script (Standalone Repo)
+# Mela Verified Deployment Script (Standalone Repo)
 #
 # 7-step pipeline:
 # 1. Pre-flight checks (gh CLI, vercel CLI, agent-browser, git clean)
 # 2. Bumps version in all 3 places (package.json, +page.svelte, README.md)
 # 3. Build check (vite build)
-# 4. Commit + push to GitHub (stuinfla/DrAgnes)
+# 4. Commit + push to GitHub (stuinfla/Mela)
 # 5. GitHub verification (commit visible, no CI failures)
 # 6. Vercel verification (deployment ready, no build errors)
 # 7. Agent-browser verification (load live site, confirm version, screenshot)
@@ -17,10 +17,10 @@ set -euo pipefail
 
 BUMP_TYPE="${1:-patch}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-GITHUB_REPO="stuinfla/DrAgnes"
-VERCEL_URL="https://dragnes.vercel.app"
-VERCEL_PROJECT="dragnes"
-REPORT_FILE="/tmp/dragnes-deploy-report.txt"
+GITHUB_REPO="stuinfla/Mela"
+VERCEL_URL="https://mela.vercel.app"
+VERCEL_PROJECT="mela"
+REPORT_FILE="/tmp/mela-deploy-report.txt"
 
 cd "$REPO_DIR"
 
@@ -36,7 +36,7 @@ warn() { echo -e "   ${YELLOW}WARN${NC} $1"; }
 step() { echo -e "\n${YELLOW}[$1/7]${NC} $2"; }
 
 # Initialize report
-echo "DrAgnes Deploy Report — $(date)" > "$REPORT_FILE"
+echo "Mela Deploy Report — $(date)" > "$REPORT_FILE"
 echo "========================================" >> "$REPORT_FILE"
 ERRORS=0
 
@@ -185,7 +185,7 @@ fi
 step 4 "Commit + push"
 
 git add package.json src/routes/+page.svelte README.md
-git commit -m "chore(dragnes): bump version to $NEW_VERSION
+git commit -m "chore(mela): bump version to $NEW_VERSION
 
 Co-Authored-By: claude-flow <ruv@ruv.net>"
 pass "Committed v$NEW_VERSION"
@@ -270,7 +270,7 @@ if [ "$DEPLOY_READY" = "true" ]; then
   pass "Vercel deployment ready"
 
   # Get deployment details
-  DEPLOY_URL=$(echo "$INSPECT_OUT" | grep -o 'https://dragnes[^ ]*vercel.app' | head -1 || echo "$VERCEL_URL")
+  DEPLOY_URL=$(echo "$INSPECT_OUT" | grep -o 'https://mela[^ ]*vercel.app' | head -1 || echo "$VERCEL_URL")
   pass "Deployment URL: $DEPLOY_URL"
   echo "Vercel: deployment ready at $DEPLOY_URL" >> "$REPORT_FILE"
 else
@@ -317,12 +317,12 @@ if command -v agent-browser &> /dev/null; then
     VERSION_OK="true"
   fi
 
-  if echo "$SNAPSHOT" | grep -q "Dr. Agnes\|Dr Agnes"; then
+  if echo "$SNAPSHOT" | grep -q "Mela\|Dr Agnes"; then
     HEADER_OK="true"
   fi
 
   # Take screenshot for the record
-  SCREENSHOT="/tmp/dragnes-deploy-v${NEW_VERSION}.png"
+  SCREENSHOT="/tmp/mela-deploy-v${NEW_VERSION}.png"
   agent-browser screenshot "$SCREENSHOT" 2>/dev/null || true
 
   # Close
@@ -340,7 +340,7 @@ else
     VERSION_OK="true"
   fi
 
-  if echo "$SITE_HTML" | grep -q "Dr. Agnes\|Dr Agnes"; then
+  if echo "$SITE_HTML" | grep -q "Mela\|Dr Agnes"; then
     HEADER_OK="true"
   fi
 
@@ -409,7 +409,7 @@ fi
 # Write full report to file
 {
   echo ""
-  echo "DrAgnes Deployment Report"
+  echo "Mela Deployment Report"
   echo "========================"
   echo "Date: $(date)"
   echo "Version: $OLD_VERSION -> $NEW_VERSION ($BUMP_TYPE)"

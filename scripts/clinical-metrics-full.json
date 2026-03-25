@@ -1,5 +1,5 @@
 {
-  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best",
+  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier-v2/best",
   "N": 3901,
   "classes": [
     "akiec",

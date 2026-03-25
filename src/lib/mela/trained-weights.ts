@@ -1,5 +1,5 @@
 /**
- * DrAgnes Pre-computed Classification Weights
+ * Mela Pre-computed Classification Weights
  *
  * Multivariate logistic regression weight matrix derived from published
  * dermoscopy literature. These weights encode clinical correlations

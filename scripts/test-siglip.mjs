@@ -1,5 +1,5 @@
 /**
- * DrAgnes SigLIP / SwinV2 / ViT-Melanoma Model Benchmark
+ * Mela SigLIP / SwinV2 / ViT-Melanoma Model Benchmark
  *
  * Tests three dermatology-specific models against HAM10000 test images:
  *   1. skintaglabs/siglip-skin-lesion-classifier  (SigLIP 400M, MIT)
@@ -122,7 +122,7 @@ function findHFToken() {
     if (process.env.HF_TOKEN) return process.env.HF_TOKEN;
     if (process.env.HUGGINGFACE_TOKEN) return process.env.HUGGINGFACE_TOKEN;
 
-    // Try dragnes .env
+    // Try mela .env
     const localEnv = path.join(PROJECT_DIR, '.env');
     if (fs.existsSync(localEnv)) {
         const token = extractEnvVar(localEnv, ['HF_TOKEN', 'HUGGINGFACE_TOKEN', 'HuggingFace_Key']);
@@ -521,7 +521,7 @@ function printBinaryReport(model, results) {
 // -------- Main --------
 async function main() {
     console.log('='.repeat(70));
-    console.log('  DrAgnes Model Benchmark: SigLIP / SwinV2 / ViT-Melanoma');
+    console.log('  Mela Model Benchmark: SigLIP / SwinV2 / ViT-Melanoma');
     console.log('='.repeat(70));
 
     // Find HF token

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DrAgnes Skin Lesion Classifier — Proper Training Pipeline
+Mela Skin Lesion Classifier — Proper Training Pipeline
 
 Fine-tunes a Vision Transformer (ViT-base-patch16-224) on the HAM10000 dataset
 with focal loss, aggressive class balancing, and melanoma-sensitivity-first
@@ -22,9 +22,9 @@ Hardware:
     fp32 for stability.
 
 Output:
-    ./dragnes-classifier/best/          — Final model + processor
-    ./dragnes-classifier/checkpoint-*/  — Per-epoch checkpoints
-    ./dragnes-classifier/training.log   — Full training log
+    ./mela-classifier/best/          — Final model + processor
+    ./mela-classifier/checkpoint-*/  — Per-epoch checkpoints
+    ./mela-classifier/training.log   — Full training log
 """
 
 import os
@@ -68,7 +68,7 @@ warnings.filterwarnings("ignore", message=".*tokenizer.*")
 
 # Paths
 SCRIPT_DIR = Path(__file__).resolve().parent
-OUTPUT_DIR = SCRIPT_DIR / "dragnes-classifier"
+OUTPUT_DIR = SCRIPT_DIR / "mela-classifier"
 BEST_MODEL_DIR = OUTPUT_DIR / "best"
 LOG_FILE = OUTPUT_DIR / "training.log"
 
@@ -158,7 +158,7 @@ def setup_logging() -> logging.Logger:
     """Configure logging to both console and file."""
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-    logger = logging.getLogger("dragnes-train")
+    logger = logging.getLogger("mela-train")
     logger.setLevel(logging.INFO)
 
     # Console handler
@@ -693,7 +693,7 @@ def print_detailed_evaluation(trainer, test_dataset, labels_test: list[int]):
 
 def main():
     log.info("=" * 70)
-    log.info("  DrAgnes Skin Lesion Classifier — Training Pipeline")
+    log.info("  Mela Skin Lesion Classifier — Training Pipeline")
     log.info("=" * 70)
     log.info(f"  Model:       {MODEL_NAME}")
     log.info(f"  Dataset:     marmal88/skin_cancer (HAM10000)")
@@ -936,8 +936,8 @@ def main():
     log.info("  Next steps:")
     log.info("    1. Review confusion matrix for systematic misclassifications")
     log.info("    2. If mel sensitivity < 90%, increase FOCAL_ALPHA['mel'] or OVERSAMPLE_FACTORS['mel']")
-    log.info("    3. Push to HuggingFace: model.push_to_hub('stuinfla/dragnes-classifier')")
-    log.info("    4. Integrate into DrAgnes app by updating the /api/classify endpoint")
+    log.info("    3. Push to HuggingFace: model.push_to_hub('stuinfla/mela-classifier')")
+    log.info("    4. Integrate into Mela app by updating the /api/classify endpoint")
     log.info("=" * 70)
 
     return results

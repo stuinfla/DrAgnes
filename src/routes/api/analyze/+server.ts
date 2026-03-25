@@ -1,5 +1,5 @@
 /**
- * DrAgnes Analysis API Endpoint
+ * Mela Analysis API Endpoint
  *
  * POST /api/analyze
  *
@@ -10,8 +10,8 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { searchSimilar, searchLiterature } from "$lib/dragnes/brain-client";
-import type { LesionClass } from "$lib/dragnes/types";
+import { searchSimilar, searchLiterature } from "$lib/mela/brain-client";
+import type { LesionClass } from "$lib/mela/types";
 
 /** In-memory rate limiter: IP -> { count, windowStart } */
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
@@ -118,7 +118,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			throw err;
 		}
 
-		console.error("[dragnes/analyze] Error:", err);
+		console.error("[mela/analyze] Error:", err);
 		throw error(500, "Analysis failed. The brain may be temporarily unavailable.");
 	}
 };

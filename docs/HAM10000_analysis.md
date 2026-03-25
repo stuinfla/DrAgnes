@@ -276,7 +276,7 @@ At P(mel) > 0.70 threshold:
 
 ## 7. Summary of Key Findings
 
-### Critical Takeaways for DrAgnes Classifier
+### Critical Takeaways for Mela Classifier
 
 1. **Severe class imbalance** (58.3:1 ratio) -- must use Bayesian calibration
 2. **Melanoma prevalence is 11.1%** -- not rare enough to ignore, not common enough to over-predict

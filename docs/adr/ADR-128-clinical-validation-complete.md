@@ -7,7 +7,7 @@ Created: 2026-03-24
 
 ## Context
 
-Dr. Agnes is a consumer-facing AI skin lesion classifier targeting Class II medical device clearance under FDA CDRH review. The proposed regulatory pathway is 510(k) with DermaSensor (DEN230008, cleared January 2024) as the predicate device. This ADR documents every metric and validation step needed for FDA clearance, written from the perspective of an FDA CDRH reviewer. It separates what we have measured from what we have not, what we can compute from code from what requires a clinical study, and what gaps make the current regulatory pathway inadequate.
+Mela is a consumer-facing AI skin lesion classifier targeting Class II medical device clearance under FDA CDRH review. The proposed regulatory pathway is 510(k) with DermaSensor (DEN230008, cleared January 2024) as the predicate device. This ADR documents every metric and validation step needed for FDA clearance, written from the perspective of an FDA CDRH reviewer. It separates what we have measured from what we have not, what we can compute from code from what requires a clinical study, and what gaps make the current regulatory pathway inadequate.
 
 ---
 
@@ -51,11 +51,11 @@ An FDA reviewer would accept 1.1-1.3 as preliminary analytical validation on der
 
 ### 2.1 PPV/NPV at Real-World Prevalence
 
-**Why:** PPV answers "when Dr. Agnes says melanoma, is it right?" -- the metric consumers act on. Current test-set PPV (47.6%) is misleading because test prevalence (15.9%) vastly exceeds real-world screening prevalence (~2%). At 2% prevalence:
+**Why:** PPV answers "when Mela says melanoma, is it right?" -- the metric consumers act on. Current test-set PPV (47.6%) is misleading because test prevalence (15.9%) vastly exceeds real-world screening prevalence (~2%). At 2% prevalence:
 - PPV = (0.9597 * 0.02) / (0.9597 * 0.02 + 0.20 * 0.98) = **8.9%**
 - NPV = (0.80 * 0.98) / (0.80 * 0.98 + 0.0403 * 0.02) = **99.9%**
 
-When Dr. Agnes says "melanoma" at real-world prevalence, it is correct ~9% of the time. When it says "not melanoma," it is right 99.9%. This is the fundamental screening tradeoff.
+When Mela says "melanoma" at real-world prevalence, it is correct ~9% of the time. When it says "not melanoma," it is right 99.9%. This is the fundamental screening tradeoff.
 
 **How:** Re-derive at prevalences 1%, 2%, 5%, 10% using Bayes' theorem. An FDA reviewer will demand all four.
 
@@ -63,13 +63,13 @@ When Dr. Agnes says "melanoma" at real-world prevalence, it is correct ~9% of th
 
 **Why:** NNB = 1/PPV. "How many biopsies to find one cancer?" DermaSensor's NNB = 6.25.
 
-| Prevalence | Dr. Agnes NNB | DermaSensor NNB |
+| Prevalence | Mela NNB | DermaSensor NNB |
 |------------|--------------|-----------------|
 | 2% | 11.2 | 6.25 |
 | 5% | 4.7 | -- |
 | 10% | 2.4 | -- |
 
-At 2% prevalence, Dr. Agnes is worse than DermaSensor (11.2 vs 6.25) because our specificity (80%) is lower.
+At 2% prevalence, Mela is worse than DermaSensor (11.2 vs 6.25) because our specificity (80%) is lower.
 
 ### 2.3 Calibration (Expected Calibration Error)
 
@@ -79,7 +79,7 @@ At 2% prevalence, Dr. Agnes is worse than DermaSensor (11.2 vs 6.25) because our
 
 ### 2.4 Net Benefit / Decision Curve Analysis
 
-**Why:** Is Dr. Agnes better than "refer all lesions" or "refer none"? If net benefit falls below "treat all" at clinical thresholds, the device is actively harmful.
+**Why:** Is Mela better than "refer all lesions" or "refer none"? If net benefit falls below "treat all" at clinical thresholds, the device is actively harmful.
 
 **How:** Net benefit = (TP/n) - (FP/n) * (p_t / (1 - p_t)). Plot across threshold probabilities 1-50%. The model adds value only where its curve exceeds both baselines.
 
@@ -105,7 +105,7 @@ At 2% prevalence, Dr. Agnes is worse than DermaSensor (11.2 vs 6.25) because our
 FDA requires images collected in the intended use environment (phone camera, consumer setting), with histopathology ground truth for biopsied lesions, expert panel consensus for non-biopsied, IRB approval, and pre-registration on clinicaltrials.gov.
 
 ### 3.2 Inter-Reader Reliability (MRMC Study)
-Compare Dr. Agnes against GPs (70-80% mel sensitivity), dermatologists (85-95%), and DermaSensor (96% sensitivity, 84% specificity) on the same lesion set.
+Compare Mela against GPs (70-80% mel sensitivity), dermatologists (85-95%), and DermaSensor (96% sensitivity, 84% specificity) on the same lesion set.
 
 ### 3.3 Real-World Phone Camera Testing
 All training used dermoscopy. Consumers will submit phone photos with variable lighting, no polarization, surface reflections, hair/shadows, variable distance/angle, and diverse camera sensors. ADR-127 Gap #2 describes a validation protocol. Until done, ALL performance claims carry the caveat "on dermoscopic images only."
@@ -114,7 +114,7 @@ All training used dermoscopy. Consumers will submit phone photos with variable l
 Track same lesion over time (the "E" in ABCDE: Evolving). Requires user accounts, image registration, change detection, and 12+ month study. Not required for initial clearance but strengthens the clinical case.
 
 ### 3.5 Intended Use Statement (Draft)
-> "Dr. Agnes is a software-only medical device intended to assist adult consumers (18+) in evaluating skin lesions for potential malignancy using smartphone camera images. It provides a risk assessment and recommends whether to seek professional dermatological evaluation. It is NOT intended to diagnose, treat, or replace professional medical evaluation."
+> "Mela is a software-only medical device intended to assist adult consumers (18+) in evaluating skin lesions for potential malignancy using smartphone camera images. It provides a risk assessment and recommends whether to seek professional dermatological evaluation. It is NOT intended to diagnose, treat, or replace professional medical evaluation."
 
 Must be validated by regulatory counsel. Every word constrains testing requirements.
 
@@ -148,7 +148,7 @@ Must be validated by regulatory counsel. Every word constrains testing requireme
 
 DermaSensor was cleared via **De Novo** (not 510(k)) because no predicate existed. It uses elastic scattering spectroscopy (ESS), not imaging.
 
-| Dimension | DermaSensor | Dr. Agnes |
+| Dimension | DermaSensor | Mela |
 |-----------|-------------|-----------|
 | Input | Spectroscopy signal (ESS) | RGB image (phone camera) |
 | Hardware | Proprietary device ($5,900) | Any smartphone |

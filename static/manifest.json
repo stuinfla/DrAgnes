@@ -1,7 +1,7 @@
 {
-  "name": "Dr. Agnes — AI Skin Screening",
-  "short_name": "Dr. Agnes",
-  "description": "AI-powered skin lesion screening. 95.97% melanoma sensitivity on external data, trained on 37,484 images.",
+  "name": "Mela — Because catching it early changes everything",
+  "short_name": "Mela",
+  "description": "AI-powered skin cancer screening. 95.97% melanoma sensitivity on external data, trained on 37,484 images. Because catching it early changes everything.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",

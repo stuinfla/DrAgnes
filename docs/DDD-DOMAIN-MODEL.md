@@ -1,11 +1,11 @@
 Updated: 2026-03-25 | Version 1.0.0
 Created: 2026-03-25
 
-# DrAgnes Domain-Driven Design Model
+# Mela Domain-Driven Design Model
 
 ## Purpose
 
-This document defines the bounded contexts, aggregates, domain events, ubiquitous language, and context map for Dr. Agnes. It serves as the blueprint for:
+This document defines the bounded contexts, aggregates, domain events, ubiquitous language, and context map for Mela. It serves as the blueprint for:
 - V2 model wiring (which context owns inference?)
 - File decomposition (image-analysis.ts → 9 modules)
 - Test organization (test per bounded context)
@@ -41,7 +41,7 @@ These terms have precise meanings in this project. Use them consistently in code
 
 **Responsibility:** Capture or receive an image, validate quality, strip metadata.
 
-**Current code:** `DrAgnesPanel.svelte` (capture logic), `DermCapture.svelte`
+**Current code:** `MelaPanel.svelte` (capture logic), `DermCapture.svelte`
 
 **Aggregates:**
 - `CapturedImage` — imageData, bodyLocation, capturedAt, magnification
@@ -268,7 +268,7 @@ These terms have precise meanings in this project. Use them consistently in code
                      └──────────┬───────────────┘
                                 ▼
                          UI Display
-                    (DrAgnesPanel.svelte)
+                    (MelaPanel.svelte)
 ```
 
 **Communication patterns:**
@@ -285,13 +285,13 @@ These terms have precise meanings in this project. Use them consistently in code
 
 ### Phase 1: Foundation (before V2 wiring)
 1. Create shared types module (`types.ts` — already exists, verify complete)
-2. Extract morphology helpers into `lib/dragnes/cv/morphology.ts` (resolve duplicates)
-3. Extract color space helpers into `lib/dragnes/cv/color-space.ts` (resolve `rgbToLab` duplicate)
+2. Extract morphology helpers into `lib/mela/cv/morphology.ts` (resolve duplicates)
+3. Extract color space helpers into `lib/mela/cv/color-space.ts` (resolve `rgbToLab` duplicate)
 
 ### Phase 2: Feature Extraction decomposition
 4. Split `image-analysis.ts` into 9 modules per the table above
-5. Create `lib/dragnes/cv/` directory for all CV modules
-6. Update imports in `classifier.ts` and `DrAgnesPanel.svelte`
+5. Create `lib/mela/cv/` directory for all CV modules
+6. Update imports in `classifier.ts` and `MelaPanel.svelte`
 7. Verify all 98 passing tests still pass
 
 ### Phase 3: V2 model wiring (ADR-127 Gap 1)
@@ -301,7 +301,7 @@ These terms have precise meanings in this project. Use them consistently in code
 11. Verify melanoma safety gates still fire correctly
 
 ### Phase 4: UI decomposition
-12. Split `DrAgnesPanel.svelte` into 9 components per the analysis
+12. Split `MelaPanel.svelte` into 9 components per the analysis
 13. Create state stores: `analysisState.ts`, `settingsState.ts`, `navigationState.ts`
 14. Wire components to stores
 

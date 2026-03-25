@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { ABCDEScores, RiskLevel } from "$lib/dragnes/types";
+	import type { ABCDEScores, RiskLevel } from "$lib/mela/types";
 
 	interface Props {
 		scores: ABCDEScores;

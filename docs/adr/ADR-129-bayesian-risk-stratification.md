@@ -7,7 +7,7 @@ Created: 2026-03-24
 
 ## Context
 
-Binary classification ("melanoma yes/no") produces a PPV of only 8.9% at real-world 2% melanoma prevalence. When Dr. Agnes says "melanoma detected," it's wrong 91% of the time. This destroys user trust and is clinically irresponsible.
+Binary classification ("melanoma yes/no") produces a PPV of only 8.9% at real-world 2% melanoma prevalence. When Mela says "melanoma detected," it's wrong 91% of the time. This destroys user trust and is clinically irresponsible.
 
 But the model's AUROC is 0.960 — it discriminates melanoma brilliantly. The problem isn't the model; it's the threshold-based presentation.
 

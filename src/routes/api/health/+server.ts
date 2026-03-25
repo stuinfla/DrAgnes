@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import { DRAGNES_CONFIG } from "$lib/dragnes/config";
+import { MELA_CONFIG } from "$lib/mela/config";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
@@ -9,7 +9,7 @@ import path from "node:path";
  */
 const PROJECT_ROOT = process.cwd();
 
-const MODEL_DIR = path.join(PROJECT_ROOT, "scripts", "dragnes-classifier", "best");
+const MODEL_DIR = path.join(PROJECT_ROOT, "scripts", "mela-classifier", "best");
 
 function isCustomModelAvailable(): boolean {
 	return (
@@ -23,15 +23,15 @@ export async function GET() {
 
 	return json({
 		status: "ok",
-		version: DRAGNES_CONFIG.modelVersion,
-		backbone: DRAGNES_CONFIG.cnnBackbone,
-		classes: DRAGNES_CONFIG.classes.length,
+		version: MELA_CONFIG.modelVersion,
+		backbone: MELA_CONFIG.cnnBackbone,
+		classes: MELA_CONFIG.classes.length,
 		customModel: customModelAvailable,
 		customModelSensitivity: customModelAvailable ? "95.97% melanoma (external ISIC 2019)" : null,
-		customModelId: customModelAvailable ? "dragnes-custom-vit-v1" : null,
+		customModelId: customModelAvailable ? "mela-custom-vit-v1" : null,
 		privacy: {
-			dpEpsilon: DRAGNES_CONFIG.privacy.dpEpsilon,
-			kAnonymity: DRAGNES_CONFIG.privacy.kAnonymity,
+			dpEpsilon: MELA_CONFIG.privacy.dpEpsilon,
+			kAnonymity: MELA_CONFIG.privacy.kAnonymity,
 		},
 		timestamp: new Date().toISOString(),
 	});

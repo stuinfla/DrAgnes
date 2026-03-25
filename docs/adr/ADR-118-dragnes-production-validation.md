@@ -1,7 +1,7 @@
 Updated: 2026-03-23 14:00:00 EST | Version 1.1.0
 Created: 2026-03-23
 
-# ADR-118: Dr. Agnes — Production Validation & World-Class Medical Proof
+# ADR-118: Mela — Production Validation & World-Class Medical Proof
 
 ## Status: IMPLEMENTED -- Phase 1-2 Complete, Phase 3-5 Require Clinical Partners | Last Updated: 2026-03-24 12:00 EST
 **Implementation Note**: Phase 1 (model training) completed -- combined-training-results.json shows v2 ViT-Base trained on HAM10000 + ISIC 2019 (37,484 images after oversampling). AUROC computed (auroc-results.json: mel AUROC 0.926 HAM10000, weighted 0.943). Phase 2 partial -- Fitzpatrick equity tested (DANGEROUS gaps found, see ADR-124). Threshold optimization done (ADR-123). Phases 3-5 (clinical validation, publication, FDA) not started. Claims corrected 2026-03-23.
@@ -25,9 +25,9 @@ Created: 2026-03-23
 
 ## Context
 
-Dr. Agnes has achieved measurable results on HAM10000 that are competitive with the only FDA-cleared skin cancer AI device (DermaSensor). However, performance drops significantly on external data (ISIC 2019), indicating the model has not yet generalized. Combined-dataset training is in progress.
+Mela has achieved measurable results on HAM10000 that are competitive with the only FDA-cleared skin cancer AI device (DermaSensor). However, performance drops significantly on external data (ISIC 2019), indicating the model has not yet generalized. Combined-dataset training is in progress.
 
-| Metric | DrAgnes on HAM10000 | DrAgnes on ISIC 2019 (external) | DermaSensor (FDA pivotal) | Evidence File |
+| Metric | Mela on HAM10000 | Mela on ISIC 2019 (external) | DermaSensor (FDA pivotal) | Evidence File |
 |--------|--------------------|---------------------------------|--------------------------|---------------|
 | Melanoma sensitivity | **98.2%** (n=225) | **61.6%** (n=714) | 90.2-95.5% | cross-validation-results.json (mel sensitivity=0.9822) / isic2019-validation-results.json (mel sensitivity=0.6162) |
 | Melanoma specificity | **80.4%** | **88.2%** | 20.7-32.5% | cross-validation-results.json (mel specificity=0.8038) / isic2019-validation-results.json (mel specificity=0.8819) |
@@ -49,7 +49,7 @@ This ADR defines the complete roadmap to achieve irrefutable medical and scienti
 
 ## Decision
 
-Execute a 5-phase validation program that transforms DrAgnes from "impressive prototype" to "scientifically proven, clinically validated AI dermatoscopy system."
+Execute a 5-phase validation program that transforms Mela from "impressive prototype" to "scientifically proven, clinically validated AI dermatoscopy system."
 
 ---
 
@@ -180,7 +180,7 @@ Comparison: DermaSensor showed 4% gap (96% FST I-III, 92% FST IV-VI). We must ma
 | Sites | 3-5 dermatology practices |
 | Duration | 3 months |
 | Metrics | Concordance, NNB, patient outcomes |
-| Analytics | DrAgnes dashboard collects all data |
+| Analytics | Mela dashboard collects all data |
 | Feedback loop | Clinician feedback improves model via pi-brain |
 
 ### 3.3 AI-vs-Dermatologist Comparison
@@ -188,9 +188,9 @@ Comparison: DermaSensor showed 4% gap (96% FST I-III, 92% FST IV-VI). We must ma
 
 | Arm | Description |
 |-----|------------|
-| DrAgnes alone | AI classification without clinician |
+| Mela alone | AI classification without clinician |
 | Dermatologist alone | Clinical + dermoscopy examination |
-| DrAgnes + Dermatologist | AI-assisted clinical examination |
+| Mela + Dermatologist | AI-assisted clinical examination |
 
 Expected finding: AI + Dermatologist > Dermatologist alone > AI alone (augmentation, not replacement).
 
@@ -269,10 +269,10 @@ Expected finding: AI + Dermatologist > Dermatologist alone > AI alone (augmentat
 
 | Asset | Location |
 |-------|---------|
-| Model weights | HuggingFace: stuartkerr/dragnes-classifier |
-| Training scripts | GitHub: stuinfla/DrAgnes/scripts/ |
-| Validation results | GitHub: stuinfla/DrAgnes/scripts/*-results.json |
-| Architecture docs | GitHub: stuinfla/DrAgnes/docs/ |
+| Model weights | HuggingFace: stuartkerr/mela-classifier |
+| Training scripts | GitHub: stuinfla/Mela/scripts/ |
+| Validation results | GitHub: stuinfla/Mela/scripts/*-results.json |
+| Architecture docs | GitHub: stuinfla/Mela/docs/ |
 | Pi-brain knowledge | pi.ruv.io (1,807+ memories) |
 
 ---

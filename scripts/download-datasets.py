@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DrAgnes Dataset Downloader & Verifier
+Mela Dataset Downloader & Verifier
 ======================================
 Downloads and verifies access to dermatology training datasets:
   1. BCN20000 / ISIC 2019  -- dermoscopy images with histopathology labels
@@ -11,7 +11,7 @@ For each dataset we:
   - Stream metadata (no bulk image download to disk)
   - Report total images, class distribution, available metadata columns
   - Save a manifest JSON to scripts/dataset-manifests/
-  - Map source labels to the DrAgnes 7-class system where possible
+  - Map source labels to the Mela 7-class system where possible
 
 Usage:
     python3 scripts/download-datasets.py
@@ -31,12 +31,12 @@ from pathlib import Path
 from typing import Any
 
 # ---------------------------------------------------------------------------
-# DrAgnes 7-class taxonomy
+# Mela 7-class taxonomy
 # ---------------------------------------------------------------------------
-DRAGNES_CLASSES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
+MELA_CLASSES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
 
 # ---------------------------------------------------------------------------
-# ISIC / HAM10000 label mapping (dx field or class label -> DrAgnes class)
+# ISIC / HAM10000 label mapping (dx field or class label -> Mela class)
 # Covers abbreviations, full names, and underscore variants from various
 # HuggingFace dataset uploads.
 # ---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ ISIC_MAP: dict[str, str] = {
 }
 
 # ---------------------------------------------------------------------------
-# Fitzpatrick17k: mapping of 114 disease categories to DrAgnes 7-class
+# Fitzpatrick17k: mapping of 114 disease categories to Mela 7-class
 # Only conditions that clearly map are included; rest tagged "other".
 # ---------------------------------------------------------------------------
 FITZ17K_MAP: dict[str, str] = {
@@ -347,7 +347,7 @@ def download_isic_datasets() -> None:
             print(f"    Has image data: {stats['has_image']}")
             print(f"    Label column: {stats['label_col']}")
             print_distribution(stats["raw_counts"], f"Raw Labels ({ds_id})")
-            print_distribution(stats["mapped_counts"], f"Mapped to DrAgnes 7-Class ({ds_id})")
+            print_distribution(stats["mapped_counts"], f"Mapped to Mela 7-Class ({ds_id})")
 
             if stats["unmapped_labels"]:
                 total_unmapped = sum(stats["unmapped_labels"].values())
@@ -400,7 +400,7 @@ def download_isic_datasets() -> None:
                 "label_column": ds_info["stats"]["label_col"],
                 "label_names": ds_info["stats"].get("label_names"),
                 "raw_class_distribution": ds_info["stats"]["raw_counts"],
-                "dragnes_7class_distribution": ds_info["stats"]["mapped_counts"],
+                "mela_7class_distribution": ds_info["stats"]["mapped_counts"],
                 "unmapped_labels": ds_info["stats"]["unmapped_labels"],
             })
         save_manifest("isic-dermoscopy", manifest)
@@ -510,7 +510,7 @@ def download_fitzpatrick17k() -> None:
             )
             print(f"\n    Total: {stats['total']:,}, Has images: {stats['has_image']}")
             print_distribution(stats["raw_counts"], "Raw Labels")
-            print_distribution(stats["mapped_counts"], "Mapped to DrAgnes 7-Class")
+            print_distribution(stats["mapped_counts"], "Mapped to Mela 7-Class")
             if stats["fitzpatrick_dist"]:
                 print_distribution(stats["fitzpatrick_dist"], "Fitzpatrick Skin Type")
 
@@ -573,7 +573,7 @@ def download_fitzpatrick_csv() -> None:
                 unmapped_labels[label_lower] += count
 
     print_distribution(raw_counts, "Raw Label Distribution (all 114 categories)")
-    print_distribution(dict(mapped_counts), "Mapped to DrAgnes 7-Class")
+    print_distribution(dict(mapped_counts), "Mapped to Mela 7-Class")
 
     total_unmapped = sum(unmapped_labels.values())
     total_mapped = sum(mapped_counts.values())
@@ -622,7 +622,7 @@ def download_fitzpatrick_csv() -> None:
         "label_column": label_col,
         "fitzpatrick_column": fitz_col,
         "raw_class_distribution": {str(k): int(v) for k, v in raw_counts.items()},
-        "dragnes_7class_distribution": dict(mapped_counts.most_common()),
+        "mela_7class_distribution": dict(mapped_counts.most_common()),
         "mapped_count": total_mapped,
         "unmapped_count": total_unmapped,
         "unmapped_categories": len(unmapped_labels),
@@ -666,7 +666,7 @@ def download_pad_ufes() -> None:
             )
             print(f"\n    Total: {stats['total']:,}, Has images: {stats['has_image']}")
             print_distribution(stats["raw_counts"], "Raw Labels")
-            print_distribution(stats["mapped_counts"], "Mapped to DrAgnes 7-Class")
+            print_distribution(stats["mapped_counts"], "Mapped to Mela 7-Class")
 
             # Resolve integer labels
             label_names = resolve_classlabel_names(ds_id, config, stats["label_col"])
@@ -722,10 +722,10 @@ def download_pad_ufes() -> None:
 # ============================================================================
 def main() -> None:
     print("=" * 72)
-    print("DrAgnes Dataset Downloader & Verifier")
+    print("Mela Dataset Downloader & Verifier")
     print(f"Time: {datetime.now(timezone.utc).isoformat()}")
     print("=" * 72)
-    print(f"\nTarget DrAgnes classes: {DRAGNES_CLASSES}")
+    print(f"\nTarget Mela classes: {MELA_CLASSES}")
     print(f"Manifest output: {MANIFEST_DIR}")
 
     # Check torch/MPS availability
@@ -776,7 +776,7 @@ def main() -> None:
     save_manifest("_download-summary", {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "results": results,
-        "target_classes": DRAGNES_CLASSES,
+        "target_classes": MELA_CLASSES,
     })
     print(f"\nDone. All manifests saved to {MANIFEST_DIR}/")
 

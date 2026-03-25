@@ -1,5 +1,5 @@
 /**
- * DrAgnes HuggingFace Classification Proxy
+ * Mela HuggingFace Classification Proxy
  *
  * POST /api/classify
  *
@@ -15,7 +15,7 @@ import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
 
-const DEFAULT_MODEL_1 = "stuartkerr/dragnes-classifier";
+const DEFAULT_MODEL_1 = "stuartkerr/mela-classifier";
 
 /** Read the model name from environment or use the default */
 function getModel(): string {
@@ -70,7 +70,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(`[dragnes/classify] HF API error: ${response.status} ${text}`);
+			console.error(`[mela/classify] HF API error: ${response.status} ${text}`);
 			throw error(response.status, `Classification service error: ${text}`);
 		}
 
@@ -81,7 +81,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (err && typeof err === "object" && "status" in err) {
 			throw err;
 		}
-		console.error("[dragnes/classify] Classification failed:", err);
+		console.error("[mela/classify] Classification failed:", err);
 		throw error(500, "Classification service unavailable");
 	}
 };

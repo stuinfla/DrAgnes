@@ -1,9 +1,9 @@
 Updated: 2026-03-25 | Version 1.0.0
 Created: 2026-03-25
 
-# Dr. Agnes -- Complete Project History and Context
+# Mela -- Complete Project History and Context
 
-This document captures everything a new session needs to understand how Dr. Agnes got to where it is today. Every claim cites its evidence file. Read this before touching any code.
+This document captures everything a new session needs to understand how Mela got to where it is today. Every claim cites its evidence file. Read this before touching any code.
 
 ---
 
@@ -24,9 +24,9 @@ This document captures everything a new session needs to understand how Dr. Agne
 
 ## 1. Project Overview
 
-### What Dr. Agnes Is
+### What Mela Is
 
-Dr. Agnes is an open-source, browser-based AI skin cancer screening tool. A user photographs a mole, spot, or mark on their skin with their phone camera and receives a clear recommendation: "Looks healthy," "Worth monitoring," or "See a dermatologist." No special equipment is needed.
+Mela is an open-source, browser-based AI skin cancer screening tool. A user photographs a mole, spot, or mark on their skin with their phone camera and receives a clear recommendation: "Looks healthy," "Worth monitoring," or "See a dermatologist." No special equipment is needed.
 
 The system classifies dermoscopic and clinical images into 7 diagnostic categories from the HAM10000 taxonomy:
 
@@ -77,7 +77,7 @@ The system classifies dermoscopic and clinical images into 7 diagnostic categori
 ### October 2025 -- Project Inception
 
 - RuVector project started as an AI vector intelligence platform
-- DrAgnes conceived as an example application demonstrating the RuVector CNN stack
+- Mela conceived as an example application demonstrating the RuVector CNN stack
 - SvelteKit prototype with placeholder color-histogram classifier
 
 ### March 21, 2026 -- v0.1.0: Initial Prototype
@@ -109,7 +109,7 @@ The system classifies dermoscopic and clinical images into 7 diagnostic categori
 ### March 22, 2026 -- v0.3.0: Custom ViT Training
 
 - Custom-trained ViT-Base on HAM10000 with focal loss (gamma=2.0, melanoma alpha=8.0)
-- Model uploaded to HuggingFace as `stuartkerr/dragnes-classifier`
+- Model uploaded to HuggingFace as `stuartkerr/mela-classifier`
 - **98.2% melanoma sensitivity** on HAM10000 holdout (2,004 images)
   - Source: `scripts/cross-validation-results.json`
 - **98.7% on Nagabu/HAM10000** (1,000 images), **100% on marmal88 test** (1,285 images)
@@ -174,7 +174,7 @@ The system classifies dermoscopic and clinical images into 7 diagnostic categori
 
 ### Current State: v0.9.4 (March 25, 2026)
 
-The app is live at https://dragnes.vercel.app. The architecture is sound, the science is real, the evidence chain is intact, but production deployment still serves the V1 model via HuggingFace Inference API. The V2 combined model (95.97%) exists as ONNX exports and local trained weights but is not yet the default production inference path.
+The app is live at https://mela.vercel.app. The architecture is sound, the science is real, the evidence chain is intact, but production deployment still serves the V1 model via HuggingFace Inference API. The V2 combined model (95.97%) exists as ONNX exports and local trained weights but is not yet the default production inference path.
 
 ---
 
@@ -326,7 +326,7 @@ Step 7:  Threshold Application    (threshold-classifier.ts)
 Step 8:  Meta-Classifier Fusion   (meta-classifier.ts)
 Step 9:  Bayesian Risk Strat.     (risk-stratification.ts)
 Step 10: Consumer Translation     (consumer-translation.ts)
-Step 11: Display Result           (DrAgnesPanel.svelte)
+Step 11: Display Result           (MelaPanel.svelte)
 ```
 
 ### Classification Strategies (Priority Order)
@@ -359,7 +359,7 @@ Safety gates always run regardless of strategy:
 
 ## 5. Key Files
 
-### Source Code -- `src/lib/dragnes/`
+### Source Code -- `src/lib/mela/`
 
 | File | Lines | Purpose |
 |---|---|---|
@@ -399,7 +399,7 @@ Safety gates always run regardless of strategy:
 
 | File | Lines | Purpose |
 |---|---|---|
-| `DrAgnesPanel.svelte` | ~2,000 | **Largest component -- needs splitting.** Main application panel with Scan/History/Learn/Settings tabs, result display, analysis orchestration |
+| `MelaPanel.svelte` | ~2,000 | **Largest component -- needs splitting.** Main application panel with Scan/History/Learn/Settings tabs, result display, analysis orchestration |
 | `DermCapture.svelte` | ~720 | Camera capture, multi-photo mode, thumbnail strip, file upload, body map |
 | `AboutPage.svelte` | ~800 | About/methodology page with competitive comparison |
 | `ClassificationResult.svelte` | ~500 | Medical details display (ABCDE, probabilities, model provenance) |
@@ -465,7 +465,7 @@ Safety gates always run regardless of strategy:
 | `package.json` | v0.9.4, SvelteKit + Vite + Vitest + TailwindCSS |
 | `svelte.config.js` | Dual adapter: Vercel (production) / Node (local) |
 | `vite.config.ts` | Externals: @ruvector/cnn, onnxruntime-node, sharp. `__APP_VERSION__` injected from package.json |
-| `dragnes.config.ts` | Domain config: class labels, privacy params, brain connection, performance budgets |
+| `mela.config.ts` | Domain config: class labels, privacy params, brain connection, performance budgets |
 | `tailwind.config.cjs` | TailwindCSS configuration |
 | `tsconfig.json` | TypeScript configuration |
 | `.env.example` | Template for HF_TOKEN and model configuration |
@@ -506,7 +506,7 @@ Every claimed number traces to one of these JSON files. If a number does not cit
 
 | ADR | Title | Status | Key Decision |
 |---|---|---|---|
-| 117 | DrAgnes Dermatology Intelligence Platform | IMPLEMENTED | Build DrAgnes on RuVector stack with DermLite imaging, CNN classification, pi-brain collective learning. Phase 1 foundation complete. |
+| 117 | Mela Dermatology Intelligence Platform | IMPLEMENTED | Build Mela on RuVector stack with DermLite imaging, CNN classification, pi-brain collective learning. Phase 1 foundation complete. |
 | 118 | Production Validation & World-Class Medical Proof | IMPLEMENTED (Phase 1-2) | Defines complete roadmap to FDA clearance. Phase 1 (training) done. Phase 2 (Fitzpatrick) partially done (DANGEROUS gaps found). Phases 3-5 (clinical validation, publication, FDA) not started. **Contains corrections log documenting every inflated number that was fixed.** |
 | 119 | Consumer Skin Screening | IMPLEMENTED | Redesign for consumer self-screening with "worry gate" architecture. consumer-translation.ts maps all 7 classes to plain English. |
 | 120 | Make It Actually Work | IMPLEMENTED | Brutally honest deployment checklist. Fixed: normal skin classified as melanoma, medical jargon in results, no image quality feedback. |
@@ -530,34 +530,34 @@ Every claimed number traces to one of these JSON files. If a number does not cit
 | Repository | Purpose | URL |
 |---|---|---|
 | RuVector monorepo | Parent project (source of truth for development) | `/Users/stuartkerr/RuVector_New/RuVector/` |
-| stuinfla/DrAgnes | Standalone GitHub repo (deployment target) | https://github.com/stuinfla/DrAgnes |
-| HuggingFace model | stuartkerr/dragnes-classifier | https://huggingface.co/stuartkerr/dragnes-classifier |
+| stuinfla/Mela | Standalone GitHub repo (deployment target) | https://github.com/stuinfla/Mela |
+| HuggingFace model | stuartkerr/mela-classifier | https://huggingface.co/stuartkerr/mela-classifier |
 
 ### Deployment Architecture
 
-DrAgnes lives in `examples/dragnes/` within the RuVector monorepo. Deployment to Vercel uses a **subtree split** workflow:
+Mela lives in `examples/mela/` within the RuVector monorepo. Deployment to Vercel uses a **subtree split** workflow:
 
 ```bash
 # From the RuVector monorepo root:
-git subtree split --prefix=examples/dragnes -b deploy
+git subtree split --prefix=examples/mela -b deploy
 git push fork deploy:main --force
 
 # Or use the deploy script:
-cd examples/dragnes
+cd examples/mela
 bash scripts/deploy-verified.sh patch
 ```
 
-The `stuinfla/DrAgnes` GitHub repo is connected to a Vercel project. Every push to `main` on that repo triggers a Vercel build.
+The `stuinfla/Mela` GitHub repo is connected to a Vercel project. Every push to `main` on that repo triggers a Vercel build.
 
 ### Vercel Configuration
 
 | Setting | Value |
 |---|---|
-| Project name | dragnes |
+| Project name | mela |
 | Project ID | prj_FORojA8ujKmBMIH9IyAb1IFTXnCi |
 | Team | stuart-kerrs-projects |
 | User | sikerr-6092 |
-| Domain | https://dragnes.vercel.app |
+| Domain | https://mela.vercel.app |
 | Adapter | @sveltejs/adapter-vercel (runtime: nodejs22.x) |
 | Build command | vite build |
 | Framework | SvelteKit |
@@ -568,7 +568,7 @@ A GitHub Actions workflow exists at `.github/workflows/ci.yml`:
 - **test job:** checkout, Node 22, npm ci, npm run build, npx vitest run
 - **lint job:** checkout, Node 22, npm ci, npx svelte-check
 
-This runs on push/PR to main on the stuinfla/DrAgnes repo.
+This runs on push/PR to main on the stuinfla/Mela repo.
 
 ### Environment Variables
 
@@ -577,7 +577,7 @@ This runs on push/PR to main on the stuinfla/DrAgnes repo.
 HF_TOKEN=hf_your_token_here
 
 # Optional model overrides:
-HF_MODEL_1=stuartkerr/dragnes-classifier
+HF_MODEL_1=stuartkerr/mela-classifier
 ```
 
 The `.env` file is gitignored. `.env.example` is committed.
@@ -585,12 +585,12 @@ The `.env` file is gitignored. `.env.example` is committed.
 ### Key Directories (gitignored)
 
 These directories contain large binary artifacts and are NOT committed:
-- `scripts/dragnes-classifier/` -- V1 trained model weights
-- `scripts/dragnes-classifier-v2/` -- V2 trained model weights
-- `scripts/dragnes-onnx/` -- ONNX FP32 export (327MB)
-- `scripts/dragnes-onnx-int8/` -- ONNX INT8 export (85MB)
-- `scripts/dragnes-onnx-v2/` -- V2 ONNX FP32
-- `scripts/dragnes-onnx-v2-int8/` -- V2 ONNX INT8
+- `scripts/mela-classifier/` -- V1 trained model weights
+- `scripts/mela-classifier-v2/` -- V2 trained model weights
+- `scripts/mela-onnx/` -- ONNX FP32 export (327MB)
+- `scripts/mela-onnx-int8/` -- ONNX INT8 export (85MB)
+- `scripts/mela-onnx-v2/` -- V2 ONNX FP32
+- `scripts/mela-onnx-v2-int8/` -- V2 ONNX INT8
 - `scripts/.fitzpatrick-image-cache/` -- Downloaded Fitzpatrick17k images
 
 ---
@@ -623,7 +623,7 @@ These directories contain large binary artifacts and are NOT committed:
 
 10. **image-analysis.ts is 2,059 lines** -- 4x the 500-line guideline. Needs splitting into segmentation, asymmetry, border, color, texture, structures, attention, classifier, and lesion-detection modules.
 
-11. **DrAgnesPanel.svelte is ~2,000 lines** -- needs decomposition into sub-components.
+11. **MelaPanel.svelte is ~2,000 lines** -- needs decomposition into sub-components.
 
 12. **Duplicate implementations:** segmentLesion (preprocessing.ts vs image-analysis.ts), cosineSimilarity (classifier.ts vs multi-image.ts), morphological ops (preprocessing.ts vs image-analysis.ts).
 
@@ -665,7 +665,7 @@ These directories contain large binary artifacts and are NOT committed:
 
 3. **Add CI/CD with GitHub Actions.** The ci.yml exists but needs to run reliably on every push. Add deploy step.
 
-4. **Decompose large files.** Split image-analysis.ts (2,059 lines) into 8-9 focused modules. Split DrAgnesPanel.svelte into sub-components.
+4. **Decompose large files.** Split image-analysis.ts (2,059 lines) into 8-9 focused modules. Split MelaPanel.svelte into sub-components.
 
 5. **Fix security gaps.** File upload validation (size, type, header bytes), CSP headers, rate limiting on classify endpoints.
 

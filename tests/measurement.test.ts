@@ -4,8 +4,8 @@
  * safety warnings appear for uncertain measurements near 6mm.
  */
 import { describe, it, expect } from "vitest";
-import { measureLesion } from "../src/lib/dragnes/measurement";
-import type { LesionMeasurement } from "../src/lib/dragnes/measurement";
+import { measureLesion } from "../src/lib/mela/measurement";
+import type { LesionMeasurement } from "../src/lib/mela/measurement";
 
 // Polyfill ImageData for Node.js
 if (typeof globalThis.ImageData === "undefined") {

@@ -8,7 +8,7 @@ Created: 2026-03-24
 
 ## Context
 
-The "D" in ABCDE scoring (diameter > 6mm is suspicious) is a key clinical criterion for melanoma detection. Dr. Agnes currently has a crude `estimateDiameterMm()` function that assumes a fixed camera distance — unreliable across different phones held at different distances.
+The "D" in ABCDE scoring (diameter > 6mm is suspicious) is a key clinical criterion for melanoma detection. Mela currently has a crude `estimateDiameterMm()` function that assumes a fixed camera distance — unreliable across different phones held at different distances.
 
 Additionally, classification accuracy degrades significantly on blurry, poorly lit, or badly framed images. The system currently analyzes whatever it receives without checking input quality first. Garbage in = garbage out.
 

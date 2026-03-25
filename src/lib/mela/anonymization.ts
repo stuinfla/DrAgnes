@@ -1,5 +1,5 @@
 /**
- * DrAgnes Anonymization Pipeline (ADR-126 Phase 2)
+ * Mela Anonymization Pipeline (ADR-126 Phase 2)
  *
  * Transforms raw classification outputs and patient demographics into
  * de-identified, differentially private AnonymizedCase records suitable
@@ -163,6 +163,6 @@ export function anonymizeCase(
 		outcome: outcomeCategory,
 		pathologyResult: outcome?.pathologyResult ?? null,
 		timestamp,
-		modelVersion: "dragnes-v1",
+		modelVersion: "mela-v1",
 	};
 }

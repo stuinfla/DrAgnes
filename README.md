@@ -1,6 +1,6 @@
-# Dr. Agnes -- AI Dermatoscopy Screening
+# Mela -- AI Dermatoscopy Screening
 
-[![CI](https://github.com/stuinfla/DrAgnes/actions/workflows/ci.yml/badge.svg)](https://github.com/stuinfla/DrAgnes/actions/workflows/ci.yml)
+[![CI](https://github.com/stuinfla/Mela/actions/workflows/ci.yml/badge.svg)](https://github.com/stuinfla/Mela/actions/workflows/ci.yml)
 
 An open-source AI skin cancer screening tool that runs on a phone.
 
@@ -19,7 +19,7 @@ Source: `scripts/combined-training-results.json`
 > measured evidence file. Those numbers have been corrected. Every number in this
 > README now cites its evidence source. See `docs/FDA-AUDIT-REPORT.md`.
 
-![How Dr. Agnes Compares](docs/diagrams/competitive-comparison.svg)
+![How Mela Compares](docs/diagrams/competitive-comparison.svg)
 
 ---
 
@@ -27,7 +27,7 @@ Source: `scripts/combined-training-results.json`
 
 ![Journey Progression](docs/diagrams/journey-progression.svg)
 
-This is the honest story of how Dr. Agnes went from junk to clinical-grade.
+This is the honest story of how Mela went from junk to clinical-grade.
 No number in this section is cherry-picked. Every failure is documented because
 the failures are what made the final result trustworthy. An internal FDA-style
 audit caught fabricated claims along the way, an overnight retraining produced
@@ -188,7 +188,7 @@ quantized binary that runs entirely in the browser via ONNX Runtime Web.
 
 ### Stage 10: Ensemble + Safety Gates -- The Full System
 
-The final Dr. Agnes system is not just the ViT model. It is a 4-layer ensemble
+The final Mela system is not just the ViT model. It is a 4-layer ensemble
 with clinical safety gates that catches what the neural network misses:
 
 - Custom ViT v2 (combined-dataset trained, 95.97% external melanoma sensitivity)
@@ -279,7 +279,7 @@ Source: `scripts/combined-training-results.json`
 
 ---
 
-## Why Dr. Agnes Is Different
+## Why Mela Is Different
 
 We tested the open-source alternatives ourselves -- every number in this
 table was measured by us on the same test images, not copied from model cards
@@ -291,15 +291,15 @@ or marketing materials.
 | SkinVision (CE marked) | ~80-85% (reported) | Proprietary, not independently verified | ~$50/year subscription |
 | Anwarkh1/ViT (HuggingFace, 44K downloads) | 73.3% (our test) | 210 HAM10000 images | Free |
 | skintaglabs SigLIP (HuggingFace) | 30.0% (our test) | 210 HAM10000 images | Free |
-| **Dr. Agnes (v2, combined training)** | **95.97%** | **ISIC 2019 external test (3,901 images)** | **Free, open source** |
+| **Mela (v2, combined training)** | **95.97%** | **ISIC 2019 external test (3,901 images)** | **Free, open source** |
 
-Dr. Agnes now matches DermaSensor-class melanoma sensitivity on genuinely
+Mela now matches DermaSensor-class melanoma sensitivity on genuinely
 external data. DermaSensor's 95.5% comes from a controlled FDA pivotal study
-with proprietary hardware. Dr. Agnes's 95.97% is measured on 3,901 ISIC 2019
+with proprietary hardware. Mela's 95.97% is measured on 3,901 ISIC 2019
 images from cameras, institutions, and patient populations not seen during
 training (source: `scripts/combined-training-results.json`). On same-distribution
-HAM10000 holdout, Dr. Agnes achieves 97.01%. See `docs/FDA-AUDIT-REPORT.md`
-for the full evidence chain. Dr. Agnes has not undergone prospective clinical
+HAM10000 holdout, Mela achieves 97.01%. See `docs/FDA-AUDIT-REPORT.md`
+for the full evidence chain. Mela has not undergone prospective clinical
 validation.
 
 ---
@@ -356,7 +356,7 @@ we combined images from multiple independent sources:
 - Combined training corpus after oversampling: 37,484 images
 
 Training used focal loss (gamma=2.0, melanoma alpha=6.0), 5 epochs, 3.3 hours
-on Apple M3 Max MPS. Model saved at `scripts/dragnes-classifier-v2/best/`.
+on Apple M3 Max MPS. Model saved at `scripts/mela-classifier-v2/best/`.
 
 **The fix worked.** On the ISIC 2019 external test set (3,901 held-out images),
 melanoma sensitivity jumped from 61.6% to **95.97%** (596/621 detected).
@@ -376,7 +376,7 @@ cameras it has never seen, at institutions it has never been to.
 ![Classification Pipeline](docs/diagrams/classification-pipeline.svg)
 
 A single neural network is not trustworthy enough for cancer screening.
-Dr. Agnes combines four independent classification layers with safety gates.
+Mela combines four independent classification layers with safety gates.
 
 ```
 Image --> Preprocessing --> Segmentation --> Feature Extraction --> 4-Layer Ensemble --> Clinical Recommendation
@@ -388,7 +388,7 @@ Image --> Preprocessing --> Segmentation --> Feature Extraction --> 4-Layer Ense
 
 ### Layer 1: Custom ViT Model v2 (50% of final score when online)
 
-stuartkerr/dragnes-classifier -- ViT-Base fine-tuned with focal loss.
+stuartkerr/mela-classifier -- ViT-Base fine-tuned with focal loss.
 85.8M parameters. Trained on 37,484 images from HAM10000 + ISIC 2019 combined
 with focal loss (gamma=2.0, melanoma alpha=6.0). 95.97% melanoma sensitivity
 on external ISIC 2019 test set (3,901 images), 97.01% on HAM10000 holdout
@@ -640,7 +640,7 @@ system does not need to be validated twice.
 ### 7. Privacy by Architecture
 
 Medical images are among the most sensitive data a person can generate.
-Dr. Agnes is designed so that privacy is structural, not policy-dependent.
+Mela is designed so that privacy is structural, not policy-dependent.
 
 - **Images never leave the device.** Classification runs via server-side
   HuggingFace API proxy (the image is sent to the server for inference and
@@ -764,8 +764,8 @@ practice-level performance monitoring.
 ## Quick Start
 
 ```bash
-git clone https://github.com/stuinfla/DrAgnes
-cd DrAgnes
+git clone https://github.com/stuinfla/Mela
+cd Mela
 npm install
 npm run dev
 ```
@@ -774,9 +774,9 @@ The app starts at `http://localhost:5173`.
 
 ### Deployment
 
-**Live:** https://dragnes.vercel.app
-**Vercel project:** https://vercel.com/stuart-kerrs-projects/dragnes
-**GitHub:** https://github.com/stuinfla/DrAgnes
+**Live:** https://mela.vercel.app
+**Vercel project:** https://vercel.com/stuart-kerrs-projects/mela
+**GitHub:** https://github.com/stuinfla/Mela
 
 The app uses ONNX Runtime Web for in-browser inference — the 85MB INT8 model
 runs at 155ms with zero network dependency. Images never leave the device.
@@ -791,7 +791,7 @@ Create a `.env` file:
 HF_TOKEN=hf_your_token_here
 
 # Optional: override default models
-HF_MODEL_1=stuartkerr/dragnes-classifier
+HF_MODEL_1=stuartkerr/mela-classifier
 ```
 
 Without `HF_TOKEN`, the system runs in ONNX offline mode using the v2
@@ -812,7 +812,7 @@ not overall accuracy. The trained model (327MB) is not included in the
 repository. Source: `scripts/combined-training-results.json`
 
 The pre-trained model is available on HuggingFace:
-[stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
+[stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
 
 ---
 
@@ -835,7 +835,7 @@ The pre-trained model is available on HuggingFace:
 ```
 src/
   lib/
-    dragnes/
+    mela/
       index.ts               Exports and types
       classifier.ts          4-layer ensemble orchestration
       image-analysis.ts      Real CV: segmentation, ABCDE, GLCM, LBP, k-means (1,890 lines)
@@ -849,7 +849,7 @@ src/
     components/
       DermCapture.svelte     Camera + body map + image upload
       ClassificationResult.svelte  Results display with risk indicators
-      DrAgnesPanel.svelte    Main panel with 5 tabs
+      MelaPanel.svelte    Main panel with 5 tabs
       ReferralLetter.svelte  Referral letter generator
       ExplainPanel.svelte    "Why this classification?" with citations
   routes/
@@ -882,7 +882,7 @@ static/                      PWA manifest, icons
 
 ## Comparison with FDA-Cleared Devices
 
-| Metric | DermaSensor | Nevisense | MelaFind | Dr. Agnes (v2, combined) |
+| Metric | DermaSensor | Nevisense | MelaFind | Mela (v2, combined) |
 |--------|-------------|-----------|----------|-----------|
 | Melanoma sensitivity | 95.5% | 97% | 98.3% | **95.97% (ISIC 2019 external)** / 97.01% (HAM10000) |
 | Melanoma AUROC | 0.758 | N/A | N/A | **0.960 (ISIC 2019 external)** / 0.930 (HAM10000) |
@@ -893,15 +893,15 @@ static/                      PWA manifest, icons
 | Cost | $7,000 device + per-test fee | Expensive | Withdrawn | Free |
 
 Sources: DermaSensor (FDA DEN230008, Tkaczyk et al. 2024), Nevisense (Scibase
-clinical data), MelaFind (withdrawn from market). Dr. Agnes numbers from
+clinical data), MelaFind (withdrawn from market). Mela numbers from
 `scripts/combined-training-results.json`.
 
 Note: DermaSensor's 95.5% comes from the DERM-ASSESS III melanoma-focused
 study (440 lesions). Its broader DERM-SUCCESS pivotal trial measured 90.2%
-melanoma sensitivity on 1,579 lesions. Dr. Agnes's 95.97% is on genuinely
+melanoma sensitivity on 1,579 lesions. Mela's 95.97% is on genuinely
 external data (ISIC 2019, 3,901 images from cameras and institutions not seen
 during training). On same-distribution HAM10000 holdout, sensitivity is 97.01%.
-Dr. Agnes has not undergone prospective clinical validation.
+Mela has not undergone prospective clinical validation.
 
 ---
 
@@ -909,7 +909,7 @@ Dr. Agnes has not undergone prospective clinical validation.
 
 We believe honesty about limitations is more important than marketing.
 
-1. **Not FDA-cleared.** Dr. Agnes is a research prototype. It must not be used
+1. **Not FDA-cleared.** Mela is a research prototype. It must not be used
    for clinical decision-making without appropriate regulatory authorization
    and professional medical oversight.
 
@@ -942,7 +942,7 @@ We believe honesty about limitations is more important than marketing.
 6. **Custom model requires local training or download.** The trained model
    weights (327MB) are not included in the repository. You must run
    `train-fast.py` locally or download from
-   [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
+   [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
    on HuggingFace.
 
 7. **Attention heatmaps are feature saliency, not Grad-CAM.** The
@@ -975,7 +975,7 @@ to well-funded dermatology practices in wealthy countries. A farmer in rural
 India, a nurse practitioner in Appalachia, a community health worker in
 sub-Saharan Africa -- they have smartphones, but they do not have DermaSensors.
 
-Dr. Agnes is an attempt to close that gap. With combined-dataset training,
+Mela is an attempt to close that gap. With combined-dataset training,
 melanoma sensitivity on genuinely external data is now 95.97% (source:
 `scripts/combined-training-results.json`) -- matching DermaSensor's 95.5% FDA
 benchmark. Fitzpatrick equity is not yet proven, and no regulator has cleared
@@ -987,7 +987,7 @@ The path forward:
 - **More diverse training data.** Fitzpatrick V-VI images from ISIC archive
   and the Diverse Dermatology Images dataset to close the skin tone gap.
 - **Prospective clinical validation.** Partner with dermatology clinics to
-  test Dr. Agnes alongside clinical judgment in real patient encounters.
+  test Mela alongside clinical judgment in real patient encounters.
 - **Regulatory pathway.** De Novo or 510(k) classification with FDA, using
   DermaSensor as the predicate device.
 - **Improve overall accuracy.** The aggressive melanoma weighting that achieves
@@ -1020,7 +1020,7 @@ Apache-2.0
 
 ---
 
-**RESEARCH USE ONLY.** Dr. Agnes is not FDA-cleared and must not be used for
+**RESEARCH USE ONLY.** Mela is not FDA-cleared and must not be used for
 clinical decision-making without appropriate regulatory authorization and
 professional medical oversight. All AI classifications require review by a
 qualified dermatologist.

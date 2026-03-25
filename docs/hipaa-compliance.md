@@ -1,17 +1,17 @@
-# DrAgnes HIPAA Compliance Strategy
+# Mela HIPAA Compliance Strategy
 
 **Status**: Research & Planning
 **Date**: 2026-03-21
 
 ## Overview
 
-DrAgnes operates at the intersection of medical imaging, AI classification, and collective intelligence. This document defines the comprehensive strategy for HIPAA compliance, FDA considerations, and privacy engineering that ensures patient data is protected at every layer while still enabling practice-adaptive and collective learning.
+Mela operates at the intersection of medical imaging, AI classification, and collective intelligence. This document defines the comprehensive strategy for HIPAA compliance, FDA considerations, and privacy engineering that ensures patient data is protected at every layer while still enabling practice-adaptive and collective learning.
 
 ## Regulatory Framework
 
 ### HIPAA (Health Insurance Portability and Accountability Act)
 
-DrAgnes must comply with:
+Mela must comply with:
 - **Privacy Rule** (45 CFR 164.500-534): Governs use and disclosure of PHI
 - **Security Rule** (45 CFR 164.302-318): Technical, administrative, and physical safeguards
 - **Breach Notification Rule** (45 CFR 164.400-414): Notification within 60 days
@@ -19,19 +19,19 @@ DrAgnes must comply with:
 
 ### FDA Considerations
 
-DrAgnes functions as a Clinical Decision Support (CDS) tool. Under FDA guidance on Clinical Decision Support Software (2022 final guidance):
+Mela functions as a Clinical Decision Support (CDS) tool. Under FDA guidance on Clinical Decision Support Software (2022 final guidance):
 
 **Criteria for Non-Device CDS (all four must be met)**:
-1. Not intended to acquire, process, or analyze a medical image -- **DrAgnes processes dermoscopic images, so this criterion is NOT met**
+1. Not intended to acquire, process, or analyze a medical image -- **Mela processes dermoscopic images, so this criterion is NOT met**
 2. Displays/analyzes but does not replace clinician judgment
 3. Intended for healthcare professionals
 4. Provides basis for understanding the recommendation
 
-**Conclusion**: DrAgnes likely falls under FDA regulation as a Software as a Medical Device (SaMD). The classification depends on the intended use:
+**Conclusion**: Mela likely falls under FDA regulation as a Software as a Medical Device (SaMD). The classification depends on the intended use:
 - **Class II (510(k))**: If positioned as an aid to dermatologists (not standalone diagnosis)
 - **Class III (PMA)**: If positioned as a screening/diagnostic tool for non-specialists
 
-**Recommended Regulatory Path**: Class II 510(k) with predicate device comparison to 3Derm (DEN200069, FDA-cleared AI for skin cancer detection). Position DrAgnes as a clinical decision support tool that assists qualified dermatologists.
+**Recommended Regulatory Path**: Class II 510(k) with predicate device comparison to 3Derm (DEN200069, FDA-cleared AI for skin cancer detection). Position Mela as a clinical decision support tool that assists qualified dermatologists.
 
 ### FDA 21 CFR 820 (Quality System Regulation)
 
@@ -44,12 +44,12 @@ If pursuing FDA clearance:
 
 ## PHI Handling Architecture
 
-### What Constitutes PHI in DrAgnes
+### What Constitutes PHI in Mela
 
 | Data Element | PHI? | Handling |
 |-------------|------|----------|
 | Dermoscopic image (raw) | Yes (biometric) | Never leaves device. Stored in IndexedDB, encrypted |
-| Patient name | Yes | Never stored in DrAgnes. Linked via EHR only |
+| Patient name | Yes | Never stored in Mela. Linked via EHR only |
 | Date of birth | Yes | Converted to age decade (30s, 40s, ...) before any processing |
 | MRN / Chart number | Yes | Never stored. External reference only via EHR integration |
 | Classification result | Potentially | De-identified before brain submission |
@@ -65,7 +65,7 @@ If pursuing FDA clearance:
 
 ### The "No Raw Image" Principle
 
-The foundational privacy guarantee of DrAgnes:
+The foundational privacy guarantee of Mela:
 
 ```
 RAW IMAGE ──▶ CNN ──▶ EMBEDDING ──▶ BRAIN
@@ -150,7 +150,7 @@ For embeddings (576-dim vector):
 
 ### Witness Chain Audit Trail
 
-Every DrAgnes classification carries a cryptographic provenance chain:
+Every Mela classification carries a cryptographic provenance chain:
 
 ```
 Witness Chain Structure:
@@ -225,15 +225,15 @@ Witness Chain Structure:
 |--------|------|-----------|
 | Google Cloud Platform | Infrastructure provider | Google Cloud BAA available (standard) |
 | DermLite / 3Gen Inc. | Hardware manufacturer | Not required (no PHI exchange) |
-| Practice using DrAgnes | Covered entity | BAA with DrAgnes operator required |
+| Practice using Mela | Covered entity | BAA with Mela operator required |
 | PubMed / NCBI | Literature source | Not required (public data) |
 
 **Google Cloud BAA Coverage**:
-Google Cloud's BAA covers Cloud Run, Firestore, GCS, Pub/Sub, Cloud Logging, Secret Manager, and Cloud KMS -- all services used by DrAgnes.
+Google Cloud's BAA covers Cloud Run, Firestore, GCS, Pub/Sub, Cloud Logging, Secret Manager, and Cloud KMS -- all services used by Mela.
 
 ### Workforce Training
 
-- All personnel with access to DrAgnes infrastructure must complete HIPAA training annually
+- All personnel with access to Mela infrastructure must complete HIPAA training annually
 - Security awareness training quarterly
 - Incident response drills semi-annually
 - Role-specific training for developers handling PHI-adjacent code
@@ -312,9 +312,9 @@ Remediation
 
 ## International Considerations
 
-While DrAgnes targets US deployment first, the architecture supports international compliance:
+While Mela targets US deployment first, the architecture supports international compliance:
 
-| Regulation | Region | Key Requirement | DrAgnes Approach |
+| Regulation | Region | Key Requirement | Mela Approach |
 |-----------|--------|-----------------|-----------------|
 | GDPR | EU | Data minimization, right to erasure | Embeddings are non-invertible; erasure of device data trivial |
 | PIPEDA | Canada | Consent, purpose limitation | Explicit consent workflow; purpose-bound data processing |
@@ -328,7 +328,7 @@ While DrAgnes targets US deployment first, the architecture supports internation
 ### Continuous Compliance Dashboard
 
 ```
-DrAgnes Compliance Dashboard
+Mela Compliance Dashboard
     │
     ├── Privacy Budget Status
     │       ├── Per-practice epsilon consumption

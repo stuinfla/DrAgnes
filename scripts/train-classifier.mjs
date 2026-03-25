@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * DrAgnes HAM10000 Training Pipeline
+ * Mela HAM10000 Training Pipeline
  *
  * Downloads the HAM10000 dataset from HuggingFace, extracts dermoscopic
  * features from each image using the same analysis pipeline as the browser
@@ -38,7 +38,7 @@ const OUTPUT_PATH = path.join(
 	PROJECT_ROOT,
 	"src",
 	"lib",
-	"dragnes",
+	"mela",
 	"trained-weights-empirical.json",
 );
 
@@ -1418,7 +1418,7 @@ function evaluate(W, b, testFeatures, testLabels) {
 	const accuracy = correct / testFeatures.length;
 
 	console.log("\n" + "=".repeat(70));
-	console.log("  DrAgnes Classifier Evaluation");
+	console.log("  Mela Classifier Evaluation");
 	console.log("=".repeat(70));
 	console.log(`\n  Test set: ${testFeatures.length} images (${(TEST_RATIO * 100).toFixed(0)}% holdout)`);
 	console.log(`  Overall accuracy: ${(accuracy * 100).toFixed(1)}%`);
@@ -1478,8 +1478,8 @@ function evaluate(W, b, testFeatures, testLabels) {
 	console.log("\n  DermaSensor comparison benchmarks:");
 	console.log("    DermaSensor melanoma sensitivity: 95.5% (FDA submission)");
 	console.log("    DermaSensor melanoma specificity: 20-40% (published estimates)");
-	console.log(`    DrAgnes melanoma sensitivity: ${(melSens * 100).toFixed(1)}%`);
-	console.log(`    DrAgnes melanoma specificity: ${((metrics.mel?.specificity || 0) * 100).toFixed(1)}%`);
+	console.log(`    Mela melanoma sensitivity: ${(melSens * 100).toFixed(1)}%`);
+	console.log(`    Mela melanoma specificity: ${((metrics.mel?.specificity || 0) * 100).toFixed(1)}%`);
 
 	// Confusion matrix
 	console.log("\n  Confusion Matrix (rows=actual, cols=predicted):");
@@ -1506,7 +1506,7 @@ async function main() {
 	const startTime = Date.now();
 
 	console.log("=".repeat(70));
-	console.log("  DrAgnes HAM10000 Training Pipeline");
+	console.log("  Mela HAM10000 Training Pipeline");
 	console.log("=".repeat(70));
 	console.log(`  Mode: ${MODE}`);
 	console.log(`  Test ratio: ${TEST_RATIO}`);

@@ -1,5 +1,5 @@
 /**
- * DrAgnes HuggingFace Classification Proxy -- V2 (secondary model)
+ * Mela HuggingFace Classification Proxy -- V2 (secondary model)
  *
  * POST /api/classify-v2
  *
@@ -61,7 +61,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		if (!response.ok) {
 			const text = await response.text();
-			console.error(`[dragnes/classify-v2] HF API v2 error: ${response.status} ${text}`);
+			console.error(`[mela/classify-v2] HF API v2 error: ${response.status} ${text}`);
 			throw error(response.status, `Classification service v2 error: ${text}`);
 		}
 
@@ -72,7 +72,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		if (err && typeof err === "object" && "status" in err) {
 			throw err;
 		}
-		console.error("[dragnes/classify-v2] Classification v2 failed:", err);
+		console.error("[mela/classify-v2] Classification v2 failed:", err);
 		throw error(500, "Classification service v2 unavailable");
 	}
 };

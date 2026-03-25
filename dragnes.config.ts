@@ -1,7 +1,7 @@
 /**
- * DrAgnes Configuration
+ * Mela Configuration
  *
- * Central configuration for the DrAgnes dermatology intelligence module.
+ * Central configuration for the Mela dermatology intelligence module.
  * Controls CNN backbone, embedding dimensions, class taxonomy,
  * privacy parameters, brain sync, and performance budgets.
  */
@@ -45,7 +45,7 @@ export interface DragnesConfig {
   performance: DragnesPerformance;
 }
 
-export const DRAGNES_CONFIG: DragnesConfig = {
+export const MELA_CONFIG: DragnesConfig = {
   modelVersion: '0.1.0',
   cnnBackbone: 'mobilenet-v3-small',
   embeddingDim: 576,
@@ -67,7 +67,7 @@ export const DRAGNES_CONFIG: DragnesConfig = {
   },
   brain: {
     url: 'https://pi.ruv.io',
-    namespace: 'dragnes',
+    namespace: 'mela',
     syncIntervalMs: 300_000,
   },
   performance: {

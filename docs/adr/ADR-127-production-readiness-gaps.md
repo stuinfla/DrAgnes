@@ -7,7 +7,7 @@ Created: 2026-03-24
 
 ## Context
 
-Dr. Agnes v0.8.0 scores 74/100 in an honest effectiveness evaluation. The architecture is sound and the science is real, but 7 specific gaps prevent production readiness. This ADR addresses every one.
+Mela v0.8.0 scores 74/100 in an honest effectiveness evaluation. The architecture is sound and the science is real, but 7 specific gaps prevent production readiness. This ADR addresses every one.
 
 The gaps are ordered by impact — fixing #1 alone moves the needle more than fixing #3-7 combined.
 
@@ -15,19 +15,19 @@ The gaps are ordered by impact — fixing #1 alone moves the needle more than fi
 
 ## Gap 1: V2 Model Not Serving in Production (CRITICAL)
 
-**Problem:** The deployed app at dragnes.vercel.app uses the v1 HuggingFace model (`stuartkerr/dragnes-classifier` — trained on HAM10000 only, 61.6% mel sensitivity on external data). The v2 combined model (95.97% on external data) exists only locally at `scripts/dragnes-classifier-v2/best/`.
+**Problem:** The deployed app at mela.vercel.app uses the v1 HuggingFace model (`stuartkerr/mela-classifier` — trained on HAM10000 only, 61.6% mel sensitivity on external data). The v2 combined model (95.97% on external data) exists only locally at `scripts/mela-classifier-v2/best/`.
 
 **Impact:** Every user today gets the WORSE model. This is the single most impactful gap.
 
 **Fix (2 options, choose one):**
 
 ### Option A: Upload v2 to HuggingFace (2 hours)
-1. Push v2 safetensors + config to `stuartkerr/dragnes-classifier` (overwrite v1)
-2. Or create `stuartkerr/dragnes-classifier-v2` and update the HF_MODEL_1 env var on Vercel
+1. Push v2 safetensors + config to `stuartkerr/mela-classifier` (overwrite v1)
+2. Or create `stuartkerr/mela-classifier-v2` and update the HF_MODEL_1 env var on Vercel
 3. Test the deployed endpoint returns v2 probabilities
 
 ### Option B: Deploy ONNX INT8 to Vercel (4 hours)
-1. Copy the 89MB INT8 ONNX to `static/models/dragnes-v2-int8.onnx`
+1. Copy the 89MB INT8 ONNX to `static/models/mela-v2-int8.onnx`
 2. Wire `inference-orchestrator.ts` as the primary classification path
 3. Register `sw-model-cache.js` Service Worker in app.html
 4. Vercel serves the ONNX file as a static asset (no serverless size limit)
@@ -93,7 +93,7 @@ The gaps are ordered by impact — fixing #1 alone moves the needle more than fi
 **Fix (1 week):**
 
 1. Recruit 10 people (mix of ages, tech comfort levels)
-2. Task: "Open Dr. Agnes on your phone, photograph a mole, see the result"
+2. Task: "Open Mela on your phone, photograph a mole, see the result"
 3. Observe: where they get stuck, what confuses them, what reassures them
 4. Record: time to first classification, number of retakes, quality gate rejections
 5. Ask: "Would you trust this result? Why or why not?"
@@ -176,7 +176,7 @@ The gaps are ordered by impact — fixing #1 alone moves the needle more than fi
 
 | Criterion | Target | How to Verify |
 |-----------|--------|--------------|
-| V2 model serving in production | dragnes.vercel.app returns v2 probabilities | Test with known image |
+| V2 model serving in production | mela.vercel.app returns v2 probabilities | Test with known image |
 | Phone-camera accuracy | >80% mel sensitivity on 50 phone photos | phone-camera-validation-results.json |
 | Truly external validation | >85% mel sensitivity on PH2/ISIC2020 | truly-external-validation-results.json |
 | CI/CD operational | Tests run on every push | GitHub Actions badge green |

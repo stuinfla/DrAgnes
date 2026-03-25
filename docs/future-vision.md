@@ -1,11 +1,11 @@
-# DrAgnes 25-Year Future Vision (2026-2051)
+# Mela 25-Year Future Vision (2026-2051)
 
 **Status**: Research & Planning
 **Date**: 2026-03-21
 
 ## Thesis
 
-Skin cancer is the most common cancer globally, yet it is also the most visible and therefore the most detectable. In 25 years, late-stage melanoma detection should be as rare as late-stage cervical cancer in screened populations. DrAgnes is the platform that makes this possible by creating a continuously learning, globally distributed, privacy-preserving dermatology intelligence that evolves with medical knowledge.
+Skin cancer is the most common cancer globally, yet it is also the most visible and therefore the most detectable. In 25 years, late-stage melanoma detection should be as rare as late-stage cervical cancer in screened populations. Mela is the platform that makes this possible by creating a continuously learning, globally distributed, privacy-preserving dermatology intelligence that evolves with medical knowledge.
 
 ## Phase 1: Foundation (2026-2028)
 
@@ -140,7 +140,7 @@ Teledermatology Workflow
     │
     ├── Primary Care Capture
     │       ├── PCP captures dermoscopic image with DermLite DL4
-    │       ├── DrAgnes provides preliminary classification
+    │       ├── Mela provides preliminary classification
     │       ├── Risk score determines urgency tier
     │       └── Automatic referral routing based on risk
     │
@@ -152,7 +152,7 @@ Teledermatology Workflow
     │
     └── Dermatologist Review
             ├── Brain-augmented case presentation (similar cases, literature)
-            ├── One-click confirm/correct DrAgnes classification
+            ├── One-click confirm/correct Mela classification
             ├── Feedback loop improves AI for future triage
             └── Billing integration (CPT 96931-96936 for teledermatology)
 ```
@@ -164,7 +164,7 @@ Deep integration with major EHR systems:
 - Epic FHIR R4 + CDS Hooks (real-time alerts in clinician workflow)
 - Cerner/Oracle Health FHIR integration
 - Modernizing Medicine EMA (dominant dermatology EHR) partnership
-- SMART on FHIR app for embedded DrAgnes within EHR
+- SMART on FHIR app for embedded Mela within EHR
 - HL7 FHIR DiagnosticReport for structured reporting
 - ICD-10 code suggestion based on classification
 
@@ -178,7 +178,7 @@ Reflectance Confocal Microscopy (RCM) provides cellular-level imaging in vivo:
 Multi-Modal Imaging Fusion
     │
     ├── Dermoscopy (10x, surface/subsurface patterns)
-    │       └── DrAgnes CNN: 576-dim embedding
+    │       └── Mela CNN: 576-dim embedding
     │
     ├── RCM (500x, cellular morphology)
     │       └── Dedicated RCM CNN: 576-dim embedding
@@ -199,7 +199,7 @@ Multi-Modal Imaging Fusion
 - Can distinguish melanoma from benign nevus at the cellular level
 - Reduces unnecessary biopsies by 50-70% in clinical studies
 - Currently limited to specialized centers (10-15 in US)
-- DrAgnes could democratize RCM interpretation via AI
+- Mela could democratize RCM interpretation via AI
 
 ### Optical Coherence Tomography (2033-2036)
 
@@ -410,7 +410,7 @@ Global Network Architecture
 
 ## Technology Roadmap
 
-| Year | Technology | DrAgnes Integration |
+| Year | Technology | Mela Integration |
 |------|-----------|-------------------|
 | 2026 | MobileNetV3 + WASM | Core CNN classifier |
 | 2027 | WebXR API | AR biopsy guidance prototype |

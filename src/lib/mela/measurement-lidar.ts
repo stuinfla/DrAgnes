@@ -79,7 +79,7 @@ export async function measureWithLidar(): Promise<LidarMeasurement> {
 
 	if (detectIPhonePro()) {
 		return { ...UNAVAILABLE, device: "iPhone Pro (LiDAR detected)",
-			hint: "Your iPhone has LiDAR. For best measurement accuracy, use the Dr. Agnes native app (coming soon)." };
+			hint: "Your iPhone has LiDAR. For best measurement accuracy, use the Mela native app (coming soon)." };
 	}
 	return { ...UNAVAILABLE };
 }

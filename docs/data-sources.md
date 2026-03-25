@@ -1,11 +1,11 @@
-# DrAgnes Data Sources
+# Mela Data Sources
 
 **Status**: Research & Planning
 **Date**: 2026-03-21
 
 ## Overview
 
-DrAgnes requires diverse, high-quality dermoscopic imaging data for training, validation, and ongoing enrichment. This document catalogs available datasets, medical literature sources, and real-world data streams that will feed the platform.
+Mela requires diverse, high-quality dermoscopic imaging data for training, validation, and ongoing enrichment. This document catalogs available datasets, medical literature sources, and real-world data streams that will feed the platform.
 
 ## Training Datasets
 
@@ -116,9 +116,9 @@ DrAgnes requires diverse, high-quality dermoscopic imaging data for training, va
 - **Content**: 114 skin conditions with Fitzpatrick skin type labels (I-VI)
 - **Key Feature**: Explicit skin tone diversity labeling
 - **License**: Research use
-- **Use Case**: Bias evaluation and mitigation. Ensuring DrAgnes performs equally across all skin types.
+- **Use Case**: Bias evaluation and mitigation. Ensuring Mela performs equally across all skin types.
 
-**Critical for Equity**: Most existing dermatology AI systems show degraded performance on darker skin tones (Fitzpatrick V-VI). The Fitzpatrick17k dataset enables stratified evaluation to ensure DrAgnes does not perpetuate this bias.
+**Critical for Equity**: Most existing dermatology AI systems show degraded performance on darker skin tones (Fitzpatrick V-VI). The Fitzpatrick17k dataset enables stratified evaluation to ensure Mela does not perpetuate this bias.
 
 ### 8. PAD-UFES-20
 
@@ -140,7 +140,7 @@ DrAgnes requires diverse, high-quality dermoscopic imaging data for training, va
   - Evidence enrichment for diagnostic suggestions
   - Treatment guideline updates
   - Epidemiological context for risk assessment
-- **Integration**: Brain `brain_page_evidence` API attaches PubMed references to DrAgnes findings
+- **Integration**: Brain `brain_page_evidence` API attaches PubMed references to Mela findings
 
 **Key Search Strategies**:
 ```
@@ -161,7 +161,7 @@ DrAgnes requires diverse, high-quality dermoscopic imaging data for training, va
   - Nonmelanoma skin cancer: Basal cell and squamous cell carcinoma
   - Skin cancer prevention and early detection
   - Dermoscopy standards and training
-- **Use Case**: Codifying clinical decision rules into DrAgnes recommendation engine
+- **Use Case**: Codifying clinical decision rules into Mela recommendation engine
 
 ### 11. British Association of Dermatologists (BAD) Guidelines
 
@@ -212,7 +212,7 @@ DrAgnes requires diverse, high-quality dermoscopic imaging data for training, va
 
 ### 16. Practice Contributions (via Brain)
 
-- **Source**: DrAgnes-participating practices
+- **Source**: Mela-participating practices
 - **Content**: De-identified embeddings, classification results, clinician feedback
 - **Volume Projection**: 100-1,000 contributions/day at scale
 - **Privacy**: All contributions go through the PII stripping and DP pipeline
@@ -291,7 +291,7 @@ Embedding Generation
 
 ### Commercial Licensing Considerations
 
-For commercial deployment of DrAgnes, only CC BY 4.0 and public domain datasets can be used without licensing negotiation. Commercial licensing or data use agreements must be obtained for:
+For commercial deployment of Mela, only CC BY 4.0 and public domain datasets can be used without licensing negotiation. Commercial licensing or data use agreements must be obtained for:
 - HAM10000 (CC BY-NC-SA -- non-commercial restriction)
 - ISIC Archive (CC BY-NC -- non-commercial restriction)
 - BCN20000 (institutional agreement required)

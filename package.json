@@ -1,8 +1,8 @@
 {
-  "name": "dragnes",
+  "name": "mela",
   "version": "0.9.4",
   "private": true,
-  "description": "DrAgnes -- AI-Powered Dermatology Intelligence Platform",
+  "description": "Mela — AI-powered skin cancer screening. Because catching it early changes everything.",
   "type": "module",
   "scripts": {
     "dev": "vite dev",

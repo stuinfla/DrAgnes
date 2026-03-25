@@ -1,11 +1,11 @@
 Updated: 2026-03-24 12:00:00 EST | Version 2.0.0
 Created: 2026-03-24
 
-# Dr. Agnes Quality Scorecard
+# Mela Quality Scorecard
 
 **Evaluator**: Quality Engineer (automated audit)
 **Date**: 2026-03-24
-**Scope**: Complete Dr. Agnes application in `examples/dragnes/`
+**Scope**: Complete Mela application in `examples/mela/`
 **Methodology**: Every score backed by specific file evidence. No rounding up. If uncertain, score lower.
 **Previous Score**: 70.2/100 (v1.0.0, 2026-03-24 10:30 EST)
 
@@ -86,13 +86,13 @@ Created: 2026-03-24
 - No error boundaries in Svelte components for classification failure rendering.
 
 **File organization:**
-- 28+ TypeScript files in `src/lib/dragnes/` -- well-organized by concern (types, preprocessing, classification, measurement, translation, privacy, witness, clinical-baselines, image-analysis).
+- 28+ TypeScript files in `src/lib/mela/` -- well-organized by concern (types, preprocessing, classification, measurement, translation, privacy, witness, clinical-baselines, image-analysis).
 - 16 Svelte components -- appropriate separation.
-- `DrAgnesPanel.svelte` at 1520 lines is extremely large -- should be decomposed.
+- `MelaPanel.svelte` at 1520 lines is extremely large -- should be decomposed.
 
 **Deductions:**
 - (-10) `image-analysis.ts` at 2059 lines violates the 500-line rule and is difficult to maintain.
-- (-8) `DrAgnesPanel.svelte` at 1520 lines is a monolithic component with scan, history, settings, learn views crammed together.
+- (-8) `MelaPanel.svelte` at 1520 lines is a monolithic component with scan, history, settings, learn views crammed together.
 - (-5) `classifier.ts` at 973 lines is borderline -- the ensemble logic, HF API logic, SigLIP label mapping, and dual-model logic are all in one file.
 - (-3) Only 2 dedicated test files exist (`classifier.test.ts`, `benchmark.test.ts`). Additional modules added since v1 (clinical-baselines.ts, image-analysis.ts) also lack tests.
 - (-3) `deployment-runbook.ts` contains hardcoded GCP deployment commands as TypeScript strings -- this is an odd choice vs. a shell script.
@@ -130,7 +130,7 @@ Created: 2026-03-24
 - (-3) No loading state documentation or accessibility audit.
 
 **What works well:**
-- (+) Fitzpatrick warning is prominently displayed in the UI (DrAgnesPanel, AboutPage, MethodologyPanel).
+- (+) Fitzpatrick warning is prominently displayed in the UI (MelaPanel, AboutPage, MethodologyPanel).
 - (+) Multi-image capture with quality-weighted consensus is genuinely useful for consumers.
 - (+) Clear visual hierarchy with risk level color coding.
 
@@ -267,7 +267,7 @@ Created: 2026-03-24
 **Limitations disclosed:**
 - ADR-118 corrections log documents every inflated or unsourced number that was fixed.
 - Fitzpatrick warning ("30pp melanoma sensitivity gap") is displayed in:
-  - `DrAgnesPanel.svelte`
+  - `MelaPanel.svelte`
   - `AboutPage.svelte`
   - `MethodologyPanel.svelte`
 - ADR-124 states "We do NOT claim works for all skin types without measured evidence."
@@ -296,7 +296,7 @@ Created: 2026-03-24
 ## 10. Deployment: 75/100 (Weight: 5%)
 
 **What is deployed:**
-- Vercel deployment exists at dragnes.vercel.app.
+- Vercel deployment exists at mela.vercel.app.
 - `@sveltejs/adapter-vercel` configured in package.json.
 - Build scripts: `vite build`.
 - Deploy script referenced: `scripts/deploy.sh`.
@@ -316,7 +316,7 @@ Created: 2026-03-24
 **What works well:**
 - (+) SvelteKit with Vercel adapter is a solid deployment choice.
 - (+) Both Vercel (serverless) and Cloud Run (container) deployment paths exist.
-- (+) Subtree workflow keeps DrAgnes isolated in `examples/dragnes/`.
+- (+) Subtree workflow keeps Mela isolated in `examples/mela/`.
 - (+) INT8 ONNX at 89MB is a practical size for browser-based inference once ConvInteger compat is resolved.
 
 ---
@@ -359,7 +359,7 @@ Created: 2026-03-24
 
 ## What This Score Means
 
-Dr. Agnes has moved from "impressive prototype with critical gaps" (70/100) to "functional medical AI tool with known limitations honestly documented" (77/100). The biggest single improvement is testing (+27 points), which was the highest-risk area in v1. The threshold classifier is the most impactful technical change -- it extracted real accuracy gains from the existing model without retraining.
+Mela has moved from "impressive prototype with critical gaps" (70/100) to "functional medical AI tool with known limitations honestly documented" (77/100). The biggest single improvement is testing (+27 points), which was the highest-risk area in v1. The threshold classifier is the most impactful technical change -- it extracted real accuracy gains from the existing model without retraining.
 
 Three areas still prevent confidence in production readiness:
 
@@ -379,7 +379,7 @@ Three areas still prevent confidence in production readiness:
 | 2 | Fix the 13 failing tests + add measurement pipeline tests | Testing 65 -> 78 | +1.3 overall |
 | 3 | Add CI/CD with GitHub Actions (build + test + deploy) | Testing 65 -> 72, Deployment 75 -> 82 | +1.1 overall |
 | 4 | Commit E2E Playwright tests to the repository | Testing 65 -> 72 | +0.7 overall |
-| 5 | Decompose image-analysis.ts (2059 lines) and DrAgnesPanel.svelte (1520 lines) | Code Quality 71 -> 80 | +0.9 overall |
+| 5 | Decompose image-analysis.ts (2059 lines) and MelaPanel.svelte (1520 lines) | Code Quality 71 -> 80 | +0.9 overall |
 
 ---
 
@@ -387,7 +387,7 @@ Three areas still prevent confidence in production readiness:
 
 - I did not run `npm run build` to verify the app compiles.
 - I did not run `npm test` to verify the 91/104 pass rate claim independently.
-- I did not access dragnes.vercel.app to verify the live deployment.
+- I did not access mela.vercel.app to verify the live deployment.
 - I did not verify that the Svelte components render correctly.
 - I did not test the classification pipeline end-to-end with a real image.
 - I did not verify the measurement pipeline produces accurate mm values.

@@ -1,10 +1,10 @@
 /**
- * DrAgnes - Dermoscopy CNN Classification Pipeline
+ * Mela - Dermoscopy CNN Classification Pipeline
  *
  * Browser-based skin lesion classification using MobileNetV3 WASM
  * with ABCDE dermoscopic scoring and privacy-preserving analytics.
  *
- * @module dragnes
+ * @module mela
  */
 
 // Core classifier
@@ -75,8 +75,8 @@ export type { AnonymizedCase } from "./anonymization";
 export { shareToBrain, searchSimilarCases, getBrainStatus } from "./brain-client";
 
 // Configuration
-export { DRAGNES_CONFIG } from "./config";
-export type { DrAgnesConfig } from "./config";
+export { MELA_CONFIG } from "./config";
+export type { MelaConfig } from "./config";
 
 // Consumer-friendly translation
 export { translateForConsumer } from "./consumer-translation";

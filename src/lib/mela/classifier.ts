@@ -1,5 +1,5 @@
 /**
- * DrAgnes CNN Classification Engine
+ * Mela CNN Classification Engine
  *
  * Loads MobileNetV3 Small WASM module from @ruvector/cnn for
  * browser-based skin lesion classification. Falls back to a
@@ -255,7 +255,7 @@ export class DermClassifier {
 		if (this.usesWasm) {
 			modelId = "mobilenetv3-small-wasm";
 		} else if (this.lastUsedCustomModel) {
-			modelId = "dragnes-custom-v1-98pct-mel";
+			modelId = "mela-custom-v1-98pct-mel";
 		} else if (this.lastUsedDualModel) {
 			modelId = "dual-ensemble-v2-siglip50-anwarkh50-trained30-rule20";
 		} else if (this.lastUsedHF) {

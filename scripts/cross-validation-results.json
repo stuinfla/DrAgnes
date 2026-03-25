@@ -1,6 +1,6 @@
 {
   "timestamp": "2026-03-22T17:49:50",
-  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
+  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier/best",
   "device": "mps",
   "class_names": [
     "akiec",

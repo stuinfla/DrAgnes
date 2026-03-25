@@ -1,7 +1,7 @@
 Updated: 2026-03-25 | Version 1.0.0
 Created: 2026-03-25
 
-# Dr. Agnes Image Processing Pipeline -- Complete Technical Explainer
+# Mela Image Processing Pipeline -- Complete Technical Explainer
 
 This document traces every step a photograph takes from the moment it is captured
 to the moment a consumer-friendly result is displayed. Every function, threshold,
@@ -104,7 +104,7 @@ find the code instantly.
        |
        v
  +---------------------+
- | Step 11: Display     |  DrAgnesPanel.svelte
+ | Step 11: Display     |  MelaPanel.svelte
  | Color, headline, act.|
  +---------------------+
 ```
@@ -175,7 +175,7 @@ Score >= 3 = "dermoscopy", otherwise "clinical".
 immediate feedback (good / acceptable / poor) before classification begins.
 This step does NOT block classification -- it is advisory only.
 
-**Where it lives**: `src/lib/dragnes/image-quality.ts`
+**Where it lives**: `src/lib/mela/image-quality.ts`
 
 **Input**: `ImageData` (raw RGBA pixels)
 
@@ -274,7 +274,7 @@ whether it actually contains a skin lesion. This is the most critical safety
 gate in the entire pipeline. Without it, the classifier would label normal
 skin as melanoma (because the model was trained exclusively on lesion images).
 
-**Where it lives**: `src/lib/dragnes/image-analysis.ts:detectLesionPresence` (line 1990)
+**Where it lives**: `src/lib/mela/image-analysis.ts:detectLesionPresence` (line 1990)
 
 **Input**: `ImageData`
 
@@ -380,7 +380,7 @@ If all gates pass, a composite confidence is computed:
 | Shadow on skin | 28 | 15 | 0.12 | 22 | 0.18 | GATE 4: reject |
 
 **What the UI shows on rejection**: When `classificationError` starts with
-`"healthy_skin:"`, `DrAgnesPanel.svelte` renders a reassuring "Healthy skin"
+`"healthy_skin:"`, `MelaPanel.svelte` renders a reassuring "Healthy skin"
 card instead of an error (line 659-662).
 
 **Known weaknesses**:
@@ -398,7 +398,7 @@ card instead of an error (line 659-662).
 **What happens**: The lesion is separated from surrounding skin using
 automatic thresholding in LAB color space, followed by morphological cleanup.
 
-**Where it lives**: `src/lib/dragnes/image-analysis.ts:segmentLesion` (line 275)
+**Where it lives**: `src/lib/mela/image-analysis.ts:segmentLesion` (line 275)
 
 **Input**: `ImageData`
 
@@ -628,7 +628,7 @@ LiDAR, connector detection, and texture analysis first.
 a multi-layer ensemble. The layers are tried in priority order; unavailable
 layers are skipped and weights redistributed.
 
-**Where it lives**: `src/lib/dragnes/classifier.ts:classify()` (line 171)
+**Where it lives**: `src/lib/mela/classifier.ts:classify()` (line 171)
 
 **Input**: `ImageData`
 
@@ -726,7 +726,7 @@ probability (argmax), per-class optimal thresholds are applied. A class only
 "wins" if it exceeds its own threshold. This compensates for class imbalance
 in HAM10000 (nv = 67% of training data).
 
-**Where it lives**: `src/lib/dragnes/threshold-classifier.ts`
+**Where it lives**: `src/lib/mela/threshold-classifier.ts`
 
 **Input**: `ClassProbability[]` + `ThresholdMode`
 
@@ -760,7 +760,7 @@ in HAM10000 (nv = 67% of training data).
 3. If NO class exceeds its threshold: fall back to argmax
 
 **When it runs**: The threshold mode is a user setting. Default is "triage"
-(DrAgnesPanel.svelte, line 145). Applied at line 681-691 of DrAgnesPanel.svelte.
+(MelaPanel.svelte, line 145). Applied at line 681-691 of MelaPanel.svelte.
 
 **Example**:
 ```
@@ -783,7 +783,7 @@ with clinical feature scores (from Step 5). When the AI says "melanoma" but
 the clinical features say "benign," the melanoma probability is reduced.
 This is the core PPV-improvement mechanism.
 
-**Where it lives**: `src/lib/dragnes/meta-classifier.ts:metaClassify()` (line 181)
+**Where it lives**: `src/lib/mela/meta-classifier.ts:metaClassify()` (line 181)
 
 **Inputs**:
 - `neuralProbs`: ClassProbability[] from the classifier
@@ -857,7 +857,7 @@ After renormalize: mel drops from #1 to potentially #2 or #3
 Reason: "Clinical features (low ABCDE score) suggest this may be benign despite AI flag"
 ```
 
-**Where it runs in the pipeline**: DrAgnesPanel.svelte lines 780-794 (single
+**Where it runs in the pipeline**: MelaPanel.svelte lines 780-794 (single
 image) and lines 489-503 (multi-image). The meta-classifier result OVERRIDES
 the displayed classification.
 
@@ -872,7 +872,7 @@ with 90% sensitivity and 90% specificity gives a PPV of only 8.9%.
 By computing an honest post-test probability, users get a calibrated
 risk assessment instead of a misleading binary "melanoma detected."
 
-**Where it lives**: `src/lib/dragnes/risk-stratification.ts:assessRisk()` (line 148)
+**Where it lives**: `src/lib/mela/risk-stratification.ts:assessRisk()` (line 148)
 
 **Inputs**:
 - `topClass`: Top predicted class
@@ -953,7 +953,7 @@ This dramatically reduces unnecessary anxiety and referrals.
 **What happens**: The final classification + risk assessment is translated
 into plain English that someone with zero medical training can understand.
 
-**Where it lives**: `src/lib/dragnes/consumer-translation.ts:translateForConsumer()` (line 159)
+**Where it lives**: `src/lib/mela/consumer-translation.ts:translateForConsumer()` (line 159)
 
 **Inputs**:
 - `topClass`: The winning class after meta-classifier adjustment
@@ -1025,7 +1025,7 @@ The mapping from Bayesian tier to consumer display (line 129-144):
 **What happens**: The consumer translation is rendered as a card with color
 coding, headline, explanation, action steps, and optional medical details.
 
-**Where it lives**: `src/lib/components/DrAgnesPanel.svelte`
+**Where it lives**: `src/lib/components/MelaPanel.svelte`
 
 **Key derived values** (line 326-384):
 
@@ -1056,7 +1056,7 @@ When `multiCapture` mode is enabled (default: ON, line 121), the user
 captures 2-3 images of the same lesion. Each is classified independently,
 then combined via quality-weighted averaging.
 
-**Where it lives**: `src/lib/dragnes/multi-image.ts:classifyMultiImage()` (line 134)
+**Where it lives**: `src/lib/mela/multi-image.ts:classifyMultiImage()` (line 134)
 
 **Algorithm**:
 
@@ -1084,7 +1084,7 @@ then combined via quality-weighted averaging.
    predictions. Low agreement suggests the lesion looks different from
    different angles.
 
-**Orchestration in DrAgnesPanel**: `analyzeMultiImage()` (line 403-529)
+**Orchestration in MelaPanel**: `analyzeMultiImage()` (line 403-529)
 - Runs the safety gate on the first image only (line 409-414)
 - After consensus classification, selects the BEST quality image
   for ABCDE scoring (line 450-451)
@@ -1094,7 +1094,7 @@ then combined via quality-weighted averaging.
 
 ## Lesion Measurement Subsystem
 
-**Where it lives**: `src/lib/dragnes/measurement.ts:measureLesion()` (line 117)
+**Where it lives**: `src/lib/mela/measurement.ts:measureLesion()` (line 117)
 
 Four calibration strategies in priority order:
 
@@ -1270,7 +1270,7 @@ used by the custom local model would give near-online accuracy offline.
 **Step affected**: Step 5 (ABCDE "E" for Evolution)
 
 **Problem**: The "E" score in ABCDE is always 0 (line 473 and 757 of
-DrAgnesPanel.svelte) because there is no baseline comparison. Evolution
+MelaPanel.svelte) because there is no baseline comparison. Evolution
 (change over time) is the most sensitive indicator of melanoma.
 
 **Solution**: Use the existing LesionTimeline component and pi-brain

@@ -3,8 +3,8 @@
  * Verifies assessImageQuality grades, brightness, and glare detection.
  */
 import { describe, it, expect } from "vitest";
-import { assessImageQuality } from "../src/lib/dragnes/image-quality";
-import type { ImageQualityResult } from "../src/lib/dragnes/image-quality";
+import { assessImageQuality } from "../src/lib/mela/image-quality";
+import type { ImageQualityResult } from "../src/lib/mela/image-quality";
 
 // Polyfill ImageData for Node.js
 if (typeof globalThis.ImageData === "undefined") {

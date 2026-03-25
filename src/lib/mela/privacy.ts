@@ -1,5 +1,5 @@
 /**
- * DrAgnes Privacy Pipeline
+ * Mela Privacy Pipeline
  *
  * Provides EXIF stripping, PII detection, differential privacy
  * noise addition, witness chain hashing, and k-anonymity checks

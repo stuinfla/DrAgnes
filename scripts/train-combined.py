@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DrAgnes Combined Training Pipeline — HAM10000 + ISIC 2019
+Mela Combined Training Pipeline — HAM10000 + ISIC 2019
 ==========================================================
 
 Trains ViT-Base on the COMBINED datasets:
@@ -13,7 +13,7 @@ Split strategy:
   - Additionally hold out 15% of HAM10000 for same-distribution validation
 
 Focal loss with per-class alpha weights matching the existing model recipe.
-Saves best model to scripts/dragnes-classifier-v2/best/.
+Saves best model to scripts/mela-classifier-v2/best/.
 
 Usage:
     pip install -r scripts/requirements-train.txt
@@ -65,7 +65,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-OUTPUT_DIR = SCRIPT_DIR / "dragnes-classifier-v2"
+OUTPUT_DIR = SCRIPT_DIR / "mela-classifier-v2"
 BEST_MODEL_DIR = OUTPUT_DIR / "best"
 LOG_FILE = OUTPUT_DIR / "training.log"
 RESULTS_PATH = SCRIPT_DIR / "combined-training-results.json"
@@ -170,7 +170,7 @@ OVERSAMPLE_FACTORS = {
 
 def setup_logging() -> logging.Logger:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    logger = logging.getLogger("dragnes-combined")
+    logger = logging.getLogger("mela-combined")
     logger.setLevel(logging.INFO)
     # Remove existing handlers to avoid duplicates
     logger.handlers.clear()
@@ -470,7 +470,7 @@ def main():
     start_time = time.time()
 
     log.info("=" * 70)
-    log.info("DrAgnes Combined Training Pipeline")
+    log.info("Mela Combined Training Pipeline")
     log.info("HAM10000 + ISIC 2019 Combined Dataset")
     log.info("=" * 70)
     log.info(f"Timestamp: {datetime.now().isoformat()}")

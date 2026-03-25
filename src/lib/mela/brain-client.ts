@@ -1,5 +1,5 @@
 /**
- * DrAgnes Brain Integration Client
+ * Mela Brain Integration Client
  *
  * Connects to the pi.ruv.io collective intelligence brain for:
  *   - Sharing de-identified lesion classifications
@@ -17,7 +17,7 @@ import { createWitnessChain } from "./witness";
 import { OfflineQueue } from "./offline-queue";
 
 const BRAIN_BASE_URL = "https://pi.ruv.io";
-const DRAGNES_TAG = "dragnes";
+const MELA_TAG = "mela";
 const DEFAULT_EPSILON = 1.0;
 const FETCH_TIMEOUT_MS = 10_000;
 
@@ -67,8 +67,8 @@ export interface LiteratureReference {
 	url?: string;
 }
 
-/** DrAgnes-specific brain statistics */
-export interface DrAgnesStats {
+/** Mela-specific brain statistics */
+export interface MelaStats {
 	/** Total number of cases in the collective */
 	totalCases: number;
 	/** Cases per lesion class */
@@ -171,7 +171,7 @@ function getOfflineQueue(): OfflineQueue {
  *   1. Strip all PHI from metadata
  *   2. Apply Laplace differential privacy noise (epsilon=1.0)
  *   3. Create witness chain hash
- *   4. POST to brain with dragnes tags
+ *   4. POST to brain with mela tags
  *   5. If offline, queue for later sync
  *
  * @param embedding - Raw embedding vector (will have DP noise added)
@@ -203,14 +203,14 @@ export async function shareDiagnosis(
 	// Step 4: Build brain memory payload
 	const category = metadata.confirmed ? "solution" : "pattern";
 	const tags = [
-		DRAGNES_TAG,
+		MELA_TAG,
 		`class:${metadata.lesionClass}`,
 		`location:${metadata.bodyLocation}`,
 		category,
 	];
 
 	const payload = {
-		title: `DrAgnes ${metadata.lesionClass} classification`,
+		title: `Mela ${metadata.lesionClass} classification`,
 		content: JSON.stringify({
 			...safeMetadata,
 			witnessHash,
@@ -263,7 +263,7 @@ export async function searchSimilar(embedding: number[], k = 5): Promise<Similar
 		const params = new URLSearchParams({
 			q: JSON.stringify(dpEmbedding.slice(0, 16)),
 			limit: String(k),
-			tag: DRAGNES_TAG,
+			tag: MELA_TAG,
 		});
 
 		const response = await fetchWithTimeout(`${BRAIN_BASE_URL}/v1/search?${params}`);
@@ -317,7 +317,7 @@ export async function searchLiterature(lesionClass: LesionClass): Promise<Litera
 	try {
 		const params = new URLSearchParams({
 			q: `${lesionClass} dermoscopy diagnosis treatment`,
-			tag: DRAGNES_TAG,
+			tag: MELA_TAG,
 		});
 
 		const response = await fetchWithTimeout(`${BRAIN_BASE_URL}/v1/search?${params}`);
@@ -384,16 +384,16 @@ export async function syncModel(): Promise<{
 }
 
 /**
- * Get DrAgnes-specific brain statistics.
+ * Get Mela-specific brain statistics.
  *
  * @returns Statistics about the collective, or null if offline
  */
-export async function getStats(): Promise<DrAgnesStats | null> {
+export async function getStats(): Promise<MelaStats | null> {
 	try {
 		const [statusRes, searchRes] = await Promise.all([
 			fetchWithTimeout(`${BRAIN_BASE_URL}/v1/status`),
 			fetchWithTimeout(
-				`${BRAIN_BASE_URL}/v1/search?${new URLSearchParams({ q: "*", tag: DRAGNES_TAG, limit: "0" })}`
+				`${BRAIN_BASE_URL}/v1/search?${new URLSearchParams({ q: "*", tag: MELA_TAG, limit: "0" })}`
 			),
 		]);
 
@@ -459,7 +459,7 @@ const BRAIN_API = `${BRAIN_BASE_URL}/v1`;
  *
  * Posts the de-identified case (probabilities with DP noise, demographics
  * reduced to decade/sex, no images or identifiers) under the
- * "dermatology_case" category with dragnes tags.
+ * "dermatology_case" category with mela tags.
  *
  * Fails gracefully -- brain connectivity is optional and should never
  * block classification workflow.
@@ -481,11 +481,11 @@ export async function shareToBrain(
 		}
 
 		const payload = {
-			title: `DrAgnes ${case_.topClass} classification`,
+			title: `Mela ${case_.topClass} classification`,
 			content: JSON.stringify(case_),
 			category: "dermatology_case",
 			tags: [
-				DRAGNES_TAG,
+				MELA_TAG,
 				`class:${case_.topClass}`,
 				`location:${case_.bodyLocation}`,
 				case_.outcome ?? "no_outcome",
@@ -538,7 +538,7 @@ export async function searchSimilarCases(
 		const params = new URLSearchParams({
 			q: `dermatology_case ${query}`,
 			limit: String(limit),
-			tag: DRAGNES_TAG,
+			tag: MELA_TAG,
 		});
 
 		const response = await fetchWithTimeout(

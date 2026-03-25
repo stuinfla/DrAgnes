@@ -4,7 +4,7 @@ Created: 2026-03-24
 # ADR-125: V1+V2 Dual Model Ensemble -- Best of Both Worlds
 
 ## Status: IMPLEMENTED -- Ensemble Classifier Built, Not Yet Wired to Production | Last Updated: 2026-03-24 12:00 EST
-**Implementation Note**: No ensemble.ts module exists. The current classifier.ts uses a single-model ensemble (HF API + trained-weights + rule-based) but does NOT implement the V1+V2 dual ViT model ensemble described in this ADR. The v2 combined model exists (scripts/dragnes-classifier-v2/) but is not wired into a dual-inference pipeline.
+**Implementation Note**: No ensemble.ts module exists. The current classifier.ts uses a single-model ensemble (HF API + trained-weights + rule-based) but does NOT implement the V1+V2 dual ViT model ensemble described in this ADR. The v2 combined model exists (scripts/mela-classifier-v2/) but is not wired into a dual-inference pipeline.
 
 ---
 
@@ -108,7 +108,7 @@ V1 Inference   V2 Inference      (parallel)
 
 | Step | Work | Time |
 |------|------|------|
-| 1 | Create `src/lib/dragnes/ensemble.ts` with ModelRegistry, InferenceRunner (Promise.all on both HF model IDs), EnsembleResult type | 2h |
+| 1 | Create `src/lib/mela/ensemble.ts` with ModelRegistry, InferenceRunner (Promise.all on both HF model IDs), EnsembleResult type | 2h |
 | 2 | Implement weighted aggregation + melanoma safety override + probability renormalization | 1h |
 | 3 | Implement DisagreementDetector using Jensen-Shannon divergence (JSD > 0.15 = flag) | 1h |
 | 4 | Wire into `DermClassifier.classify()` as additive layer; fall back to V1-only if V2 unavailable | 2h |
@@ -174,7 +174,7 @@ The ensemble pushes melanoma sensitivity above 97% on external data while mainta
 
 ## References
 
-1. ADR-118: DrAgnes Production Validation (V1 measured performance)
+1. ADR-118: Mela Production Validation (V1 measured performance)
 2. ADR-120: Make It Actually Work (deployment architecture)
 3. cross-validation-results.json (V1 HAM10000 metrics)
 4. isic2019-validation-results.json (V1 ISIC 2019 metrics)

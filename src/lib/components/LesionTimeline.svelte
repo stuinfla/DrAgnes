@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { DiagnosisRecord } from "$lib/dragnes/types";
-	import { LESION_LABELS } from "$lib/dragnes/types";
+	import type { DiagnosisRecord } from "$lib/mela/types";
+	import { LESION_LABELS } from "$lib/mela/types";
 	import CarbonCheckmarkFilled from "~icons/carbon/checkmark-filled";
 	import CarbonWarning from "~icons/carbon/warning";
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""DrAgnes v2 -- FDA-Grade Clinical Metrics (PPV/NPV/NNB/LR/F1/MCC/ECE/AUROC/failure modes).
+"""Mela v2 -- FDA-Grade Clinical Metrics (PPV/NPV/NNB/LR/F1/MCC/ECE/AUROC/failure modes).
 Evaluates on ISIC 2019 15% stratified holdout (akinsanyaayomide, seed=42).
 Usage: python scripts/clinical-metrics-analysis.py
 """
@@ -17,7 +17,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 
 warnings.filterwarnings("ignore"); os.environ["TOKENIZERS_PARALLELISM"] = "false"
 SD = Path(__file__).resolve().parent
-MD = SD / "dragnes-classifier-v2" / "best"
+MD = SD / "mela-classifier-v2" / "best"
 CLS = ["akiec","bcc","bkl","df","mel","nv","vasc"]
 FN = {"akiec":"Actinic Keratosis","bcc":"Basal Cell Carcinoma","bkl":"Benign Keratosis",
       "df":"Dermatofibroma","mel":"Melanoma","nv":"Melanocytic Nevus","vasc":"Vascular Lesion"}
@@ -117,7 +117,7 @@ def main():
     # ── Clinical Report ──────────────────────────────────────────────
     el = time.time()-t0
     P = lambda s: print(s)
-    P("\n"+"="*72); P("  DrAgnes v2 -- CLINICAL PERFORMANCE REPORT")
+    P("\n"+"="*72); P("  Mela v2 -- CLINICAL PERFORMANCE REPORT")
     P(f"  ISIC 2019 External Holdout  |  N = {len(items):,}"); P("="*72)
     P(f"\n{'Cls':<7} {'Name':<26} {'Sens':>6} {'Spec':>6} {'PPV':>6} {'NPV':>6} {'F1':>6} {'AUC':>6} {'N':>5}")
     P("-"*72)

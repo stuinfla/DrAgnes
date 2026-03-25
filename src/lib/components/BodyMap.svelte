@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { BodyLocation } from "$lib/dragnes/types";
+	import type { BodyLocation } from "$lib/mela/types";
 
 	interface Props {
 		selected: BodyLocation;

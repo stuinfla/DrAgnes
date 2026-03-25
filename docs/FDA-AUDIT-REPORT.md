@@ -1,11 +1,11 @@
 Updated: 2026-03-23 | Version 1.0.0
 Created: 2026-03-23
 
-# FDA CDRH Audit Report: Dr. Agnes AI Dermatoscopy Screening Platform
+# FDA CDRH Audit Report: Mela AI Dermatoscopy Screening Platform
 
 ## Audit Scope
 
-This audit cross-references every numerical performance claim found in Dr. Agnes documentation and user-facing UI components against the actual measured data stored in the project's JSON evidence files. The audit was conducted from the perspective of an FDA CDRH reviewer evaluating a pre-submission package for a Class II medical device.
+This audit cross-references every numerical performance claim found in Mela documentation and user-facing UI components against the actual measured data stored in the project's JSON evidence files. The audit was conducted from the perspective of an FDA CDRH reviewer evaluating a pre-submission package for a Class II medical device.
 
 ### Files Audited (Claims)
 
@@ -13,9 +13,9 @@ This audit cross-references every numerical performance claim found in Dr. Agnes
 |----|------|-------------|
 | C1 | `README.md` | Primary public-facing claims |
 | C2 | `docs/TECHNICAL-REPORT.md` | Detailed technical claims |
-| C3 | `docs/adr/ADR-118-dragnes-production-validation.md` | Roadmap and "current" metrics |
+| C3 | `docs/adr/ADR-118-mela-production-validation.md` | Roadmap and "current" metrics |
 | C4 | `src/lib/components/AboutPage.svelte` | UI-displayed numbers (user-facing) |
-| C5 | `src/lib/components/DrAgnesPanel.svelte` | Trust banner (user-facing) |
+| C5 | `src/lib/components/MelaPanel.svelte` | Trust banner (user-facing) |
 
 ### Files Audited (Evidence)
 
@@ -43,14 +43,14 @@ This audit cross-references every numerical performance claim found in Dr. Agnes
 
 **Audit Finding**: The single most prominent claim in the entire project -- "91.3% melanoma sensitivity, cross-dataset validated on 29,540 diverse images" -- has ZERO supporting evidence in any JSON results file. No script output, no validation run, no measured data produces this number. The string "91.3" and "0.913" do not appear in any evidence file in the `scripts/` directory. The number 29,540 does not appear in any evidence file either. This claim appears to be fabricated or aspirational and presented as measured.
 
-### 1.2 The "96.2%" Claim (ADR-118 / AboutPage / DrAgnesPanel)
+### 1.2 The "96.2%" Claim (ADR-118 / AboutPage / MelaPanel)
 
 | # | Claim | Source | Line(s) | Claimed Value | Evidence File | Measured Value | MATCH? |
 |---|-------|--------|---------|---------------|---------------|----------------|--------|
 | 6 | Melanoma sensitivity | C3 (ADR-118) | 14, 263 | **96.2%** | NONE | **NO EVIDENCE FILE EXISTS** | **RED - NO EVIDENCE** |
 | 7 | Melanoma sensitivity display | C4 (AboutPage) | 110, 115, 169 | 96.2% | NONE | No evidence file | **RED - NO EVIDENCE** |
 | 8 | Mel. Sensitivity in comparison table | C4 (AboutPage) | 209 | 96.2% | NONE | No evidence file | **RED - NO EVIDENCE** |
-| 9 | Mel. Sensitivity in trust banner | C5 (DrAgnesPanel) | 1182 | 96.2% | NONE | No evidence file | **RED - NO EVIDENCE** |
+| 9 | Mel. Sensitivity in trust banner | C5 (MelaPanel) | 1182 | 96.2% | NONE | No evidence file | **RED - NO EVIDENCE** |
 
 **Audit Finding**: The number 96.2% does not appear in any evidence file. The closest measured melanoma sensitivities are 98.22% (HAM10000 variants, E1) and 61.62% (ISIC 2019, E2). No measured value of 96.2% exists anywhere. This number appears to be invented.
 
@@ -138,7 +138,7 @@ These claims are presented as measured results but have no corresponding data in
 | Priority | Claim | Severity | Rationale |
 |----------|-------|----------|-----------|
 | **CRITICAL** | 91.3% melanoma sensitivity (headline claim, README, AboutPage) | **Patient Safety** | The single most prominent claim in the project is entirely unsupported by measured data. No evidence file produces this number. This is the claim most likely to influence clinical decisions. |
-| **CRITICAL** | 96.2% melanoma sensitivity (ADR-118, AboutPage, DrAgnesPanel trust banner) | **Patient Safety** | Displayed to users in the UI trust banner before they upload images. No evidence file produces this number. Actively misleading. |
+| **CRITICAL** | 96.2% melanoma sensitivity (ADR-118, AboutPage, MelaPanel trust banner) | **Patient Safety** | Displayed to users in the UI trust banner before they upload images. No evidence file produces this number. Actively misleading. |
 | **CRITICAL** | 0.936 AUROC (ADR-118, AboutPage) | **Scientific Fraud** | No ROC analysis was performed. No AUROC was computed. This metric was fabricated. |
 | **CRITICAL** | 97.3% all-cancer sensitivity (ADR-118) | **Patient Safety** | The only measured all-cancer sensitivity is 61.76% (ISIC 2019). Claiming 97.3% overstates actual performance by 35.5 percentage points. |
 | **HIGH** | 73.1% melanoma specificity (ADR-118, AboutPage) | **Misleading** | No evidence file produces this number. Closest values range from 67% to 88% depending on dataset. |
@@ -163,7 +163,7 @@ These claims are presented as measured results but have no corresponding data in
 
 ## Section 4: INCONSISTENCIES -- Same Metric Claimed Differently
 
-| Metric | README | TECHNICAL-REPORT | ADR-118 | AboutPage | DrAgnesPanel | Evidence |
+| Metric | README | TECHNICAL-REPORT | ADR-118 | AboutPage | MelaPanel | Evidence |
 |--------|--------|-----------------|---------|-----------|-------------|----------|
 | **Headline melanoma sensitivity** | 91.3% | 98.2% (HAM10000) | 96.2% | 91.3% and 96.2% | 96.2% | 98.22% (HAM10000), 61.62% (ISIC 2019), 99.4% (multi-image HAM10000) |
 | **Test set size** | 29,540 | 3,788 (Section 4.4) | 4,431 | 29,540 | 29,540 | See individual files; no set of 29,540 or 4,431 or 3,788 exists |
@@ -172,7 +172,7 @@ These claims are presented as measured results but have no corresponding data in
 
 **Critical Inconsistency**: Three different headline melanoma sensitivity numbers are used across the project:
 - **91.3%** in README and AboutPage
-- **96.2%** in ADR-118, AboutPage secondary stats, and DrAgnesPanel trust banner
+- **96.2%** in ADR-118, AboutPage secondary stats, and MelaPanel trust banner
 - **98.2%** in TECHNICAL-REPORT
 
 None of these three numbers (91.3%, 96.2%) has a supporting evidence file. The only one with evidence is 98.2% on HAM10000, but this is a same-dataset metric that has been shown to drop to 61.6% on external data.
@@ -229,7 +229,7 @@ The cross-validation-results.json (E1) contains three test strategies, all on HA
 
 The README describes a "Stage 5: Multi-Dataset Training" that supposedly combined HAM10000 and ISIC 2019 data to achieve 91.3% melanoma sensitivity. However:
 - No evidence file contains results from a model trained on combined data
-- The cross-validation-results.json (E1) tests the same `dragnes-classifier/best` model on HAM10000 variants only
+- The cross-validation-results.json (E1) tests the same `mela-classifier/best` model on HAM10000 variants only
 - The ISIC 2019 validation (E2) tests the same model on ISIC 2019 and shows 61.6% melanoma sensitivity
 - There is no JSON file showing results from a retrained multi-dataset model
 
@@ -247,15 +247,15 @@ But the ISIC 2019 result (61.6%) -- the only genuine external validation -- is p
 
 ### 6.4 Predicate Device Comparison Is Misleading (HIGH)
 
-The ADR-118 and AboutPage present a comparison table claiming Dr. Agnes EXCEEDS DermaSensor performance:
-- Dr. Agnes: 96.2% melanoma sensitivity (NO EVIDENCE)
+The ADR-118 and AboutPage present a comparison table claiming Mela EXCEEDS DermaSensor performance:
+- Mela: 96.2% melanoma sensitivity (NO EVIDENCE)
 - DermaSensor: 90.2-95.5% (from FDA pivotal trial)
 
-The actual measured external performance of Dr. Agnes (61.6% on ISIC 2019) is dramatically WORSE than DermaSensor's worst reported number (90.2%). Presenting an unsupported 96.2% claim alongside FDA-validated DermaSensor numbers is misleading and could constitute a violation of FDA advertising regulations for devices claiming substantial equivalence.
+The actual measured external performance of Mela (61.6% on ISIC 2019) is dramatically WORSE than DermaSensor's worst reported number (90.2%). Presenting an unsupported 96.2% claim alongside FDA-validated DermaSensor numbers is misleading and could constitute a violation of FDA advertising regulations for devices claiming substantial equivalence.
 
 ### 6.5 User-Facing Trust Banner Displays Unverified Claims (CRITICAL)
 
-The `DrAgnesPanel.svelte` trust banner (line 1182) displays:
+The `MelaPanel.svelte` trust banner (line 1182) displays:
 > "Validated on 29,540 images. 96.2% melanoma detection."
 
 This is shown to every user before they upload an image. Neither number is supported by evidence. A patient or clinician seeing "96.2% melanoma detection" may make clinical decisions based on this false claim.
@@ -301,7 +301,7 @@ The following claims ARE supported by evidence:
 7. **30.0% melanoma sensitivity for SigLIP model** (210 images, E5)
 8. **57.56% overall accuracy on ISIC 2019** (4,998 images, E2)
 
-### The Actual State of Dr. Agnes
+### The Actual State of Mela
 
 Based solely on evidence files:
 
@@ -320,7 +320,7 @@ The actual external validation performance (61.6% melanoma sensitivity) means ap
 
 1. **IMMEDIATELY** remove the 91.3%, 96.2%, 0.936 AUROC, and 97.3% claims from all documentation and UI components. Replace with actually measured values with confidence intervals.
 
-2. **IMMEDIATELY** update the DrAgnesPanel trust banner to reflect actual external validation performance (61.6% on ISIC 2019) or remove numerical claims entirely.
+2. **IMMEDIATELY** update the MelaPanel trust banner to reflect actual external validation performance (61.6% on ISIC 2019) or remove numerical claims entirely.
 
 3. **IMMEDIATELY** retitle the "cross-validation" results to accurately describe them as "same-distribution validation on HAM10000 variants" rather than "cross-dataset validation."
 
@@ -340,7 +340,7 @@ The actual external validation performance (61.6% melanoma sensitivity) means ap
 
 ## Auditor's Conclusion
 
-This audit found that the most prominent performance claims in the Dr. Agnes project are not supported by the project's own evidence files. The headline claim of "91.3% melanoma sensitivity, cross-dataset validated on 29,540 diverse images" has no corresponding measured result. The "96.2%" claim displayed in the user-facing trust banner has no corresponding measured result. The "0.936 AUROC" was never computed. The "97.3% all-cancer sensitivity" contradicts the actual measured value of 61.8% by 35.5 percentage points.
+This audit found that the most prominent performance claims in the Mela project are not supported by the project's own evidence files. The headline claim of "91.3% melanoma sensitivity, cross-dataset validated on 29,540 diverse images" has no corresponding measured result. The "96.2%" claim displayed in the user-facing trust banner has no corresponding measured result. The "0.936 AUROC" was never computed. The "97.3% all-cancer sensitivity" contradicts the actual measured value of 61.8% by 35.5 percentage points.
 
 The only genuine external validation shows 61.6% melanoma sensitivity -- meaning the system misses approximately 2 in 5 melanomas on data from different institutions than the training data. All other reported sensitivities (98-100%) are on variants of the same HAM10000 dataset used for training.
 

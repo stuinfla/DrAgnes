@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectSpots, type SpotDetection } from "../src/lib/dragnes/spot-detector";
+import { detectSpots, type SpotDetection } from "../src/lib/mela/spot-detector";
 
 // Polyfill ImageData for Node.js
 if (typeof globalThis.ImageData === "undefined") {

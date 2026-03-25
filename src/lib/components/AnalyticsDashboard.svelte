@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { computeMetrics, clearAnalytics, type PracticeMetrics } from "$lib/stores/analytics";
-	import { LESION_LABELS } from "$lib/dragnes/types";
-	import type { LesionClass } from "$lib/dragnes/types";
-	import { DERMASENSOR_BENCHMARKS, DRAGNES_TARGETS } from "$lib/dragnes/clinical-baselines";
+	import { LESION_LABELS } from "$lib/mela/types";
+	import type { LesionClass } from "$lib/mela/types";
+	import { DERMASENSOR_BENCHMARKS, MELA_TARGETS } from "$lib/mela/clinical-baselines";
 
 	import CalibrationChart from "./CalibrationChart.svelte";
 	import TrendChart from "./TrendChart.svelte";
@@ -283,22 +283,22 @@
 				</div>
 			</div>
 
-			<!-- DrAgnes targets -->
+			<!-- Mela targets -->
 			<div class="flex flex-col gap-2">
-				<h4 class="text-xs font-medium text-gray-500">DrAgnes Targets</h4>
+				<h4 class="text-xs font-medium text-gray-500">Mela Targets</h4>
 				<div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
 					<span class="text-gray-500">Melanoma Sens.</span>
-					<span class="text-teal-400 font-mono">{(DRAGNES_TARGETS.sensitivity.melanoma * 100).toFixed(0)}%</span>
+					<span class="text-teal-400 font-mono">{(MELA_TARGETS.sensitivity.melanoma * 100).toFixed(0)}%</span>
 					<span class="text-gray-500">BCC Sens.</span>
-					<span class="text-teal-400 font-mono">{(DRAGNES_TARGETS.sensitivity.bcc * 100).toFixed(0)}%</span>
+					<span class="text-teal-400 font-mono">{(MELA_TARGETS.sensitivity.bcc * 100).toFixed(0)}%</span>
 					<span class="text-gray-500">Spec. (target)</span>
-					<span class="text-teal-400 font-mono">{(DRAGNES_TARGETS.specificity.target * 100).toFixed(0)}%</span>
+					<span class="text-teal-400 font-mono">{(MELA_TARGETS.specificity.target * 100).toFixed(0)}%</span>
 					<span class="text-gray-500">NPV (min)</span>
-					<span class="text-teal-400 font-mono">{(DRAGNES_TARGETS.npv.minimum * 100).toFixed(0)}%</span>
+					<span class="text-teal-400 font-mono">{(MELA_TARGETS.npv.minimum * 100).toFixed(0)}%</span>
 					<span class="text-gray-500">FNR ceiling (mel)</span>
-					<span class="text-teal-400 font-mono">{(DRAGNES_TARGETS.falseNegativeRate.melanomaCeiling * 100).toFixed(0)}%</span>
+					<span class="text-teal-400 font-mono">{(MELA_TARGETS.falseNegativeRate.melanomaCeiling * 100).toFixed(0)}%</span>
 					<span class="text-gray-500">FST max gap</span>
-					<span class="text-teal-400 font-mono">{(DRAGNES_TARGETS.fitzpatrickDisparity.maxGap * 100).toFixed(0)}%</span>
+					<span class="text-teal-400 font-mono">{(MELA_TARGETS.fitzpatrickDisparity.maxGap * 100).toFixed(0)}%</span>
 				</div>
 			</div>
 		</div>

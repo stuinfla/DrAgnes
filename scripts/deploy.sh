@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DrAgnes Cloud Run Deployment Script
+# Mela Cloud Run Deployment Script
 PROJECT_ID="${GCP_PROJECT_ID:-ruv-dev}"
 REGION="${GCP_REGION:-us-central1}"
-IMAGE="gcr.io/${PROJECT_ID}/dragnes:latest"
+IMAGE="gcr.io/${PROJECT_ID}/mela:latest"
 
-echo "Building DrAgnes container..."
+echo "Building Mela container..."
 docker build -t "${IMAGE}" .
 
 echo "Pushing to GCR..."
@@ -18,7 +18,7 @@ gcloud run services replace cloud-run.yaml \
   --region="${REGION}"
 
 echo "Done. Service URL:"
-gcloud run services describe dragnes \
+gcloud run services describe mela \
   --project="${PROJECT_ID}" \
   --region="${REGION}" \
   --format='value(status.url)'

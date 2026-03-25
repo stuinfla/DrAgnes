@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ADR-123: Per-Class Threshold Optimization for DrAgnes v2 Combined Model
+ADR-123: Per-Class Threshold Optimization for Mela v2 Combined Model
 ========================================================================
 
 Loads the v2 ViT classifier, runs inference on the ISIC 2019 15% stratified
@@ -52,7 +52,7 @@ warnings.filterwarnings("ignore", message=".*tokenizer.*")
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier-v2" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier-v2" / "best"
 RESULTS_PATH = SCRIPT_DIR / "threshold-optimization-results.json"
 THRESHOLDS_PATH = SCRIPT_DIR / "optimal-thresholds.json"
 
@@ -490,7 +490,7 @@ def main():
 
     print("=" * 60)
     print("  ADR-123: Per-Class Threshold Optimization")
-    print("  Model: dragnes-classifier-v2")
+    print("  Model: mela-classifier-v2")
     print("  Dataset: ISIC 2019 (15% stratified holdout, seed=42)")
     print("=" * 60)
 
@@ -569,7 +569,7 @@ def main():
 
     full_results = {
         "adr": "ADR-123",
-        "description": "Per-class threshold optimization for DrAgnes v2 combined model",
+        "description": "Per-class threshold optimization for Mela v2 combined model",
         "model": str(MODEL_DIR),
         "dataset": "akinsanyaayomide/skin_cancer_dataset_balanced_labels_2",
         "test_set_size": len(test_images),

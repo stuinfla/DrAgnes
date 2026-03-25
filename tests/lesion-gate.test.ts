@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectLesionPresence } from "../src/lib/dragnes/image-analysis";
+import { detectLesionPresence } from "../src/lib/mela/image-analysis";
 
 // Polyfill ImageData for Node.js
 if (typeof globalThis.ImageData === "undefined") {

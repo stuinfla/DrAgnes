@@ -1,5 +1,5 @@
 /**
- * DrAgnes Federated Learning Module
+ * Mela Federated Learning Module
  *
  * SONA/LoRA-based federated learning with EWC++ regularization,
  * reputation-weighted aggregation, and Byzantine poisoning detection.
@@ -346,7 +346,7 @@ export function detectPoisoning(
 }
 
 /**
- * Federated learning coordinator for DrAgnes nodes.
+ * Federated learning coordinator for Mela nodes.
  *
  * Manages local model adaptation via LoRA, EWC++ regularization,
  * and secure aggregation with Byzantine fault detection.

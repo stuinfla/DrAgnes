@@ -3,8 +3,8 @@
  * Verifies all 7 HAM10000 classes have codes and location-specific lookup works.
  */
 import { describe, it, expect } from "vitest";
-import { getPrimaryICD10, getLocationSpecificICD10, ICD10_MAP } from "../src/lib/dragnes/icd10";
-import type { ICD10Code } from "../src/lib/dragnes/icd10";
+import { getPrimaryICD10, getLocationSpecificICD10, ICD10_MAP } from "../src/lib/mela/icd10";
+import type { ICD10Code } from "../src/lib/mela/icd10";
 
 const ALL_CLASSES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
 

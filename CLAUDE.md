@@ -1,7 +1,7 @@
 Updated: 2026-03-25 | Version 1.0.0
 Created: 2026-03-25
 
-# Dr. Agnes -- Claude Code Project Instructions
+# Mela -- Claude Code Project Instructions
 
 **Read `docs/PROJECT-HISTORY.md` first.** It contains the full project context, timeline, architecture, evidence chain, and known issues.
 
@@ -49,16 +49,16 @@ The `vite.config.ts` injects `__APP_VERSION__` from package.json, but the +page.
 
 This was a critical bug from v0.1 through v0.9.0. When a user photographs normal skin with no lesion, the system MUST show a green checkmark with "Your skin looks healthy!" -- NOT an amber warning triangle.
 
-The mechanism: classification errors with the `healthy_skin:` prefix are routed to the green healthy-skin UI in `DrAgnesPanel.svelte`. If you modify the lesion gate, spot detector, or error handling, verify this path still works.
+The mechanism: classification errors with the `healthy_skin:` prefix are routed to the green healthy-skin UI in `MelaPanel.svelte`. If you modify the lesion gate, spot detector, or error handling, verify this path still works.
 
 ### 4. Deployment Workflow
 
 ```bash
-# From examples/dragnes/ directory:
+# From examples/mela/ directory:
 # 1. Update version in package.json AND +page.svelte AND README.md
 # 2. Commit to the RuVector monorepo
-# 3. Subtree split and push to stuinfla/DrAgnes:
-git subtree split --prefix=examples/dragnes -b deploy
+# 3. Subtree split and push to stuinfla/Mela:
+git subtree split --prefix=examples/mela -b deploy
 git push fork deploy:main --force
 # 4. ALWAYS verify the build:
 vercel ls
@@ -139,7 +139,7 @@ Full details: `docs/PIPELINE-EXPLAINER.md`
 | `risk-stratification.ts` | Bayesian post-test probability |
 | `threshold-classifier.ts` | Per-class ROC-optimized thresholds |
 | `spot-detector.ts` | Two-pass lesion presence detection |
-| `DrAgnesPanel.svelte` | Main UI orchestrator |
+| `MelaPanel.svelte` | Main UI orchestrator |
 
 ---
 
@@ -149,7 +149,7 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 
 1. **`image-analysis.ts` is 2,059 lines.** Needs splitting into ~9 focused modules. See the diagnostic report for the recommended split.
 
-2. **`DrAgnesPanel.svelte` is ~2,000 lines.** Extract ScanResultHero, MedicalDetails, HistoryView, SettingsView, AnalysisProgress.
+2. **`MelaPanel.svelte` is ~2,000 lines.** Extract ScanResultHero, MedicalDetails, HistoryView, SettingsView, AnalysisProgress.
 
 3. **Duplicate implementations.** segmentLesion exists in both preprocessing.ts and image-analysis.ts. cosineSimilarity exists in both classifier.ts and multi-image.ts. Morphological ops duplicated.
 
@@ -170,7 +170,7 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 - **NEVER write a performance number without citing its JSON evidence file**
 - **NEVER lower the melanoma safety gate thresholds** without documenting the clinical rationale
 - **NEVER commit `.env` files** or HF_TOKEN values
-- **NEVER commit the model weight directories** (`scripts/dragnes-classifier/`, `scripts/dragnes-classifier-v2/`, `scripts/dragnes-onnx*/`)
+- **NEVER commit the model weight directories** (`scripts/mela-classifier/`, `scripts/mela-classifier-v2/`, `scripts/mela-onnx*/`)
 
 ---
 
@@ -178,14 +178,14 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 
 | System | URL / Identifier |
 |---|---|
-| Live app | https://dragnes.vercel.app |
-| GitHub repo | https://github.com/stuinfla/DrAgnes |
-| Vercel project | https://vercel.com/stuart-kerrs-projects/dragnes |
+| Live app | https://mela.vercel.app |
+| GitHub repo | https://github.com/stuinfla/Mela |
+| Vercel project | https://vercel.com/stuart-kerrs-projects/mela |
 | Vercel team | stuart-kerrs-projects |
 | Vercel user | sikerr-6092 |
-| HuggingFace model | https://huggingface.co/stuartkerr/dragnes-classifier |
-| Pi-brain | https://pi.ruv.io (namespace: dragnes) |
-| Monorepo location | examples/dragnes/ within RuVector |
+| HuggingFace model | https://huggingface.co/stuartkerr/mela-classifier |
+| Pi-brain | https://pi.ruv.io (namespace: mela) |
+| Monorepo location | examples/mela/ within RuVector |
 
 ---
 
@@ -194,7 +194,7 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 1. **Wire V2 model to production** -- ADR-127, Gap 1. Every user today gets the V1 model (61.6% external mel sens) instead of V2 (95.97%).
 2. **Fix failing tests** -- 13 of ~104 tests failing.
 3. **Add upload validation to API endpoints** -- file size, content type, image header checks.
-4. **Decompose large files** -- image-analysis.ts and DrAgnesPanel.svelte.
+4. **Decompose large files** -- image-analysis.ts and MelaPanel.svelte.
 5. **Wire V1+V2 ensemble to production** -- ensemble.ts exists but is not in the inference path.
 
 ---

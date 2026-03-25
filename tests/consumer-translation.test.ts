@@ -4,8 +4,8 @@
  * with correct risk levels and action recommendations.
  */
 import { describe, it, expect } from "vitest";
-import { translateForConsumer } from "../src/lib/dragnes/consumer-translation";
-import type { ConsumerRiskLevel } from "../src/lib/dragnes/consumer-translation";
+import { translateForConsumer } from "../src/lib/mela/consumer-translation";
+import type { ConsumerRiskLevel } from "../src/lib/mela/consumer-translation";
 
 const ALL_CLASSES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
 

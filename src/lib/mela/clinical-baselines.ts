@@ -24,8 +24,8 @@ export const DERMASENSOR_BENCHMARKS = {
 	},
 } as const;
 
-/** DrAgnes classification targets */
-export const DRAGNES_TARGETS = {
+/** Mela classification targets */
+export const MELA_TARGETS = {
 	sensitivity: { melanoma: 0.95, bcc: 0.95, scc: 0.92, overall: 0.95 },
 	specificity: { minimum: 0.35, target: 0.50 },
 	falseNegativeRate: { melanomaCeiling: 0.05 },

@@ -1,7 +1,7 @@
 Updated: 2026-03-24 16:00:00 EST | Version 1.6.0
 Created: 2026-03-22
 
-# DrAgnes AI Dermatoscopy Screening Platform -- Technical Report
+# Mela AI Dermatoscopy Screening Platform -- Technical Report
 
 **Classification Pipeline, Validation Status, and Regulatory Context**
 
@@ -39,9 +39,9 @@ Created: 2026-03-22
 
 ## 1. Executive Summary
 
-DrAgnes is a browser-based AI dermoscopy screening tool that classifies skin lesion images into 7 diagnostic categories from the HAM10000 taxonomy: melanoma (mel), basal cell carcinoma (bcc), actinic keratosis / intraepithelial carcinoma (akiec), benign keratosis (bkl), dermatofibroma (df), melanocytic nevus (nv), and vascular lesion (vasc).
+Mela is a browser-based AI dermoscopy screening tool that classifies skin lesion images into 7 diagnostic categories from the HAM10000 taxonomy: melanoma (mel), basal cell carcinoma (bcc), actinic keratosis / intraepithelial carcinoma (akiec), benign keratosis (bkl), dermatofibroma (df), melanocytic nevus (nv), and vascular lesion (vasc).
 
-### What DrAgnes does
+### What Mela does
 
 The system accepts a dermoscopic or clinical photograph, runs it through a multi-stage image analysis pipeline (preprocessing, segmentation, feature extraction), and produces:
 
@@ -77,17 +77,17 @@ Cross-dataset validation results (March 22-23, 2026):
 
 **CRITICAL CONTEXT**: The custom model achieves 98.2% melanoma sensitivity on HAM10000 holdout but **drops to 61.6% on the ISIC 2019 external dataset** -- a 36.6 percentage point decline. This demonstrates that HAM10000-family results do not generalize to external data. The three HAM10000-family test sets (holdout, Nagabu, marmal88) share the same source images and image acquisition conditions, so high performance across them confirms zero overfitting but does NOT confirm generalization.
 
-The custom model (`stuartkerr/dragnes-classifier`) achieves 98.2% melanoma sensitivity on the HAM10000 holdout set, exceeding the DermaSensor FDA pivotal study threshold of 95.5% (DERM-ASSESS III) on same-distribution data. This was achieved using focal loss (gamma=2.0, melanoma alpha=8.0) with 3-layer class balancing. External generalization to ISIC 2019 data remains significantly below this threshold.
+The custom model (`stuartkerr/mela-classifier`) achieves 98.2% melanoma sensitivity on the HAM10000 holdout set, exceeding the DermaSensor FDA pivotal study threshold of 95.5% (DERM-ASSESS III) on same-distribution data. This was achieved using focal loss (gamma=2.0, melanoma alpha=8.0) with 3-layer class balancing. External generalization to ISIC 2019 data remains significantly below this threshold.
 
 **Metrics not yet computed**: AUROC has not been calculated on any dataset. All-cancer sensitivity has not been measured on combined HAM10000 data (the only measured all-cancer sensitivity is 61.8% on ISIC 2019, from `scripts/isic2019-validation-results.json`, field `cancer_metrics.all_cancer_sensitivity`).
 
-**HuggingFace model:** [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
+**HuggingFace model:** [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
 
 For comparison, community models tested on the same data:
 
 | Component | Overall Accuracy | Melanoma Sensitivity |
 |-----------|-----------------|---------------------|
-| stuartkerr/dragnes-classifier (custom) | -- | 98.2% |
+| stuartkerr/mela-classifier (custom) | -- | 98.2% |
 | Anwarkh1 ViT-Base (community) | 55.7% | 73.3% |
 | skintaglabs SigLIP (community) | -- | 30.0% |
 | Hand-crafted features alone (full mode) | 36.9% | 0% |
@@ -96,11 +96,11 @@ For comparison, community models tested on the same data:
 
 ### Classification approach
 
-DrAgnes uses a 4-layer ensemble when both HuggingFace models are available:
+Mela uses a 4-layer ensemble when both HuggingFace models are available:
 
 | Path | Weight (HF model online) | Weight (offline) | Description |
 |------|------------------------|------------------|-------------|
-| Custom ViT model | 50% | -- | stuartkerr/dragnes-classifier (ViT-Base, focal loss, 98.2% mel sens) |
+| Custom ViT model | 50% | -- | stuartkerr/mela-classifier (ViT-Base, focal loss, 98.2% mel sens) |
 | Literature-derived logistic regression | 30% | 60% | 20 hand-crafted features with clinically-sourced weights |
 | Rule-based scoring | 20% | 40% | TDS, 7-point checklist, melanoma safety gate |
 
@@ -111,7 +111,7 @@ Bayesian demographic adjustment is always applied on top of the ensemble output.
 | Status | Component |
 |--------|-----------|
 | **Validated (by published literature)** | ABCD rule formulation (Stolz et al. 1994), 7-point checklist (Argenziano et al. 1998), GLCM texture features (Haralick et al. 1973), Shades-of-Gray normalization (Finlayson 2004), Otsu thresholding (Otsu 1979), DermaSensor clinical thresholds (Tkaczyk et al. 2024, FDA DEN230008) |
-| **Independently validated by us** | Custom ViT (stuartkerr/dragnes-classifier): 98.2% melanoma sensitivity on HAM10000 holdout (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), 100% on marmal88 test (1,285 images). -0.7% train/test gap (zero overfitting). **External validation: 61.6% melanoma sensitivity on ISIC 2019 (4,998 images).** Anwarkh1 ViT-Base: 73.3% melanoma sensitivity on 210 images. skintaglabs SigLIP: 30.0% melanoma sensitivity. Hand-crafted features alone: 0% melanoma sensitivity (proven insufficient). |
+| **Independently validated by us** | Custom ViT (stuartkerr/mela-classifier): 98.2% melanoma sensitivity on HAM10000 holdout (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), 100% on marmal88 test (1,285 images). -0.7% train/test gap (zero overfitting). **External validation: 61.6% melanoma sensitivity on ISIC 2019 (4,998 images).** Anwarkh1 ViT-Base: 73.3% melanoma sensitivity on 210 images. skintaglabs SigLIP: 30.0% melanoma sensitivity. Hand-crafted features alone: 0% melanoma sensitivity (proven insufficient). |
 | **Implemented and functioning** | Full preprocessing pipeline, lesion segmentation (Otsu + morphological cleanup in LAB), 20-feature extraction (ABCDE, GLCM, LBP, k-means color), custom ViT + ensemble, literature-derived logistic regression, rule-based scoring with safety gates, demographic adjustment, attention visualization, ICD-10 mapping, referral letters, explainability panel, analytics dashboard |
 | **Implemented but not validated** | Full 4-layer ensemble combined accuracy with custom model, optimal ensemble weights, clinical safety thresholds, per-Fitzpatrick-type performance, AUROC (not yet computed on any dataset), all-cancer sensitivity on HAM10000 (not yet measured) |
 | **Achieved on HAM10000** | 98.2% melanoma sensitivity (exceeds DermaSensor 95.5% benchmark on same-distribution data) |
@@ -122,7 +122,7 @@ Bayesian demographic adjustment is always applied on top of the ensemble output.
 
 ## 2. Design Philosophy
 
-This section explains the reasoning behind Dr. Agnes's architectural decisions. Every technical choice encodes a value judgment about what matters in cancer screening. These are ours, stated explicitly so they can be evaluated, challenged, and improved.
+This section explains the reasoning behind Mela's architectural decisions. Every technical choice encodes a value judgment about what matters in cancer screening. These are ours, stated explicitly so they can be evaluated, challenged, and improved.
 
 ### 2.1 Sensitivity Over Specificity -- The Fundamental Tradeoff
 
@@ -218,7 +218,7 @@ The key design decision was to build one engine with two presentation layers, no
 
 ### 2.7 Privacy by Architecture
 
-Medical images are among the most sensitive data a person can generate. Dr. Agnes is designed so that privacy is structural, not policy-dependent. The principle: if the data never exists on the server, it cannot be breached from the server.
+Medical images are among the most sensitive data a person can generate. Mela is designed so that privacy is structural, not policy-dependent. The principle: if the data never exists on the server, it cannot be breached from the server.
 
 | Privacy mechanism | Implementation | What it prevents |
 |-------------------|---------------|-----------------|
@@ -237,7 +237,7 @@ The differential privacy guarantee (epsilon=1.0) means that the presence or abse
 
 ### 3.1 Image Preprocessing
 
-**Source**: `src/lib/dragnes/preprocessing.ts`
+**Source**: `src/lib/mela/preprocessing.ts`
 
 The preprocessing pipeline runs four sequential operations on the raw RGBA `ImageData` input from the browser canvas:
 
@@ -309,7 +309,7 @@ These statistics come from the ImageNet-1K training set (Deng et al. 2009) and a
 
 ### 3.2 Lesion Segmentation
 
-**Source**: `src/lib/dragnes/image-analysis.ts`, function `segmentLesion()`
+**Source**: `src/lib/mela/image-analysis.ts`, function `segmentLesion()`
 
 The segmentation pipeline isolates the lesion from surrounding skin in five stages.
 
@@ -367,7 +367,7 @@ This fallback assumes dermoscopic images are typically centered on the lesion of
 
 The system extracts 20 numerical features from the segmented lesion, organized into 6 groups. Each feature maps to specific dermoscopic criteria from published literature.
 
-**Source**: `src/lib/dragnes/image-analysis.ts` (extraction), `src/lib/dragnes/trained-weights.ts` (feature vector assembly)
+**Source**: `src/lib/mela/image-analysis.ts` (extraction), `src/lib/mela/trained-weights.ts` (feature vector assembly)
 
 #### Feature 1: Asymmetry (0-2)
 
@@ -464,7 +464,7 @@ Structural patterns are detected using Local Binary Pattern (LBP) analysis, loca
 
 ### 3.4 Classification -- 4-Layer Ensemble
 
-**Source**: `src/lib/dragnes/classifier.ts`, class `DermClassifier`
+**Source**: `src/lib/mela/classifier.ts`, class `DermClassifier`
 
 #### Path 1: Dual-Model ViT Ensemble (50% weight when both models are online)
 
@@ -490,7 +490,7 @@ Both models use **equal weighting (50/50)** for all classes because neither mode
 
 #### Path 2: Literature-Derived Logistic Regression (30% weight online, 60% offline)
 
-**Source**: `src/lib/dragnes/trained-weights.ts`
+**Source**: `src/lib/mela/trained-weights.ts`
 
 **Architecture**: Multinomial logistic regression with a 20-feature x 7-class weight matrix plus bias terms.
 
@@ -576,7 +576,7 @@ The ensemble weights (50/30/20 when dual-model, 60/25/15 when single-model, and 
 
 ### 3.5 Clinical Decision Thresholds
 
-**Source**: `src/lib/dragnes/clinical-baselines.ts`, `src/lib/dragnes/ham10000-knowledge.ts`
+**Source**: `src/lib/mela/clinical-baselines.ts`, `src/lib/mela/ham10000-knowledge.ts`
 
 Malignant probability is defined as P(mel) + P(bcc) + P(akiec).
 
@@ -599,13 +599,13 @@ Malignant probability is defined as P(mel) + P(bcc) + P(akiec).
 
 **Citations**: Tkaczyk ER, Rao BK, Grin C, et al. Clinical validation of the DermaSensor for cutaneous malignancy detection. *JAMA Dermatol*. 2024 (DERM-SUCCESS pivotal study). Tschandl P, Rosendahl C, Kittler H. The HAM10000 dataset. *Sci Data*. 2018;5:180161.
 
-**Limitation**: These thresholds have not been validated against actual clinical outcomes in DrAgnes. They are design targets based on published device benchmarks, not measured operating points from our system.
+**Limitation**: These thresholds have not been validated against actual clinical outcomes in Mela. They are design targets based on published device benchmarks, not measured operating points from our system.
 
 ---
 
 ### 3.6 Total Dermoscopy Score (TDS)
 
-**Source**: `src/lib/dragnes/clinical-baselines.ts`
+**Source**: `src/lib/mela/clinical-baselines.ts`
 
 The TDS implements the weighted ABCD formula from Stolz et al. (1994):
 
@@ -638,7 +638,7 @@ where:
 
 ### 3.7 7-Point Checklist
 
-**Source**: `src/lib/dragnes/clinical-baselines.ts`, function `computeSevenPointScore()`
+**Source**: `src/lib/mela/clinical-baselines.ts`, function `computeSevenPointScore()`
 
 The 7-point dermoscopy checklist (Argenziano et al. 1998) assigns point values to specific dermoscopic structures:
 
@@ -663,7 +663,7 @@ The 7-point dermoscopy checklist (Argenziano et al. 1998) assigns point values t
 
 ### 3.8 Bayesian Demographic Adjustment
 
-**Source**: `src/lib/dragnes/ham10000-knowledge.ts`, function `adjustForDemographics()`
+**Source**: `src/lib/mela/ham10000-knowledge.ts`, function `adjustForDemographics()`
 
 When patient demographics (age, sex, body site) are provided, the raw classification probabilities are adjusted using Bayesian posterior updating:
 
@@ -763,19 +763,19 @@ During the March 22, 2026 model replacement research, we evaluated:
 | Anwarkh1/melanoma-skin-cancer-detection | ~85M | Evaluated | Binary melanoma/benign only |
 | MarwanOsama1/Skin_Cancer_Detection_DenseNet201 | ~20M | Evaluated | DenseNet201, smaller |
 | imfarzanansari/skintelligent-melanoma | Unknown | Evaluated | Melanoma-specific |
-| stuartkerr/dragnes-classifier | 85.8M | **Deployed (Primary)** | Custom ViT, focal loss, **98.2% mel sens (measured)** |
+| stuartkerr/mela-classifier | 85.8M | **Deployed (Primary)** | Custom ViT, focal loss, **98.2% mel sens (measured)** |
 | Literature logistic regression | 141 params | Active (Layer 2) | 20x7 weights, all cited |
 
 ### 4.4 Training Our Own Model
 
-Community ViT models do not meet the 90% melanoma sensitivity target. We trained `stuartkerr/dragnes-classifier` with the following configuration:
+Community ViT models do not meet the 90% melanoma sensitivity target. We trained `stuartkerr/mela-classifier` with the following configuration:
 
 - **Architecture:** ViT-Base (patch16, 224x224), 85.8M parameters
 - **Loss function:** Focal loss (gamma=2.0) with per-class alpha weighting (melanoma alpha=8.0)
 - **3-layer class balancing:** (1) focal loss alpha weights, (2) oversampling of minority classes, (3) gamma downweighting of easy examples
 - **Model selection criterion:** Melanoma sensitivity (not overall accuracy)
 - **Hardware:** Apple M3 Max with MPS backend (~1 hour training time)
-- **HuggingFace model:** [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
+- **HuggingFace model:** [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
 
 #### Cross-Dataset Validation Results
 
@@ -852,9 +852,9 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 - Melanoma sensitivity: **97%**
 - Specificity: **31.3%**
 
-### 5.4 DrAgnes vs. Benchmarks
+### 5.4 Mela vs. Benchmarks
 
-| Metric | DermaSensor (measured) | Nevisense (measured) | DrAgnes HAM10000 (measured) | DrAgnes ISIC 2019 (measured) |
+| Metric | DermaSensor (measured) | Nevisense (measured) | Mela HAM10000 (measured) | Mela ISIC 2019 (measured) |
 |--------|------------------------|----------------------|-----------------------------|------------------------------|
 | Melanoma sensitivity | 90.2% (pivotal), 95.5% (DERM-ASSESS III) | 97% | **98.2%** (holdout, N=1,503) | **61.6%** (external, N=4,998) |
 | Specificity | 20.7% (overall), 32.5% (derm setting) | 31.3% | ~80% (on nevi) | ~88% (on nevi) |
@@ -868,7 +868,7 @@ MelaFind was withdrawn from the market due to its extremely low specificity, whi
 
 *Evidence sources: HAM10000 column from `scripts/cross-validation-results.json`; ISIC 2019 column from `scripts/isic2019-validation-results.json` (cancer_metrics fields). All-cancer sensitivity on HAM10000 has not been computed. AUROC has not been computed on any dataset. NPV requires calibrated probability thresholds not yet established.*
 
-**Status**: The custom model (stuartkerr/dragnes-classifier) exceeds the DermaSensor melanoma sensitivity benchmark on HAM10000-family test sets but **falls significantly below it on external ISIC 2019 data** (61.6% vs. DermaSensor's 90.2%). The HAM10000 results demonstrate the model's capability on same-distribution data with zero overfitting, but the ISIC 2019 results reveal a generalization gap that must be closed before clinical deployment. The 28% false positive rate on nevi (HAM10000) is a deliberate design choice prioritizing sensitivity over specificity. Remaining gaps: external generalization, no prospective clinical validation, no Fitzpatrick V-VI equity measurement, no FDA clearance.
+**Status**: The custom model (stuartkerr/mela-classifier) exceeds the DermaSensor melanoma sensitivity benchmark on HAM10000-family test sets but **falls significantly below it on external ISIC 2019 data** (61.6% vs. DermaSensor's 90.2%). The HAM10000 results demonstrate the model's capability on same-distribution data with zero overfitting, but the ISIC 2019 results reveal a generalization gap that must be closed before clinical deployment. The 28% false positive rate on nevi (HAM10000) is a deliberate design choice prioritizing sensitivity over specificity. Remaining gaps: external generalization, no prospective clinical validation, no Fitzpatrick V-VI equity measurement, no FDA clearance.
 
 ---
 
@@ -938,15 +938,15 @@ methods, confirming the safety gate prevents any dilution of cancer detection.
 
 | File | Lines | Purpose |
 |------|-------|---------|
-| `src/lib/dragnes/multi-image.ts` | 200 | Quality scoring, consensus algorithm, safety gate |
+| `src/lib/mela/multi-image.ts` | 200 | Quality scoring, consensus algorithm, safety gate |
 | `src/lib/components/DermCapture.svelte` | ~510 | Multi-capture UI: thumbnail strip, counter, Done button |
-| `src/lib/components/DrAgnesPanel.svelte` | ~1350 | Multi-image handler, analysis steps, result badges |
+| `src/lib/components/MelaPanel.svelte` | ~1350 | Multi-image handler, analysis steps, result badges |
 
 ---
 
 ## 7. Lesion Measurement System (v0.7.0)
 
-Accurate lesion diameter is clinically essential: the ABCDE "D" criterion uses a 6mm threshold as a melanoma warning sign, and the TDS formula includes diameter as one of its four weighted components. Prior to v0.7.0, DrAgnes relied on a fixed assumption of 25mm dermoscope field-of-view, which produced unreliable measurements from smartphone cameras at varying distances.
+Accurate lesion diameter is clinically essential: the ABCDE "D" criterion uses a 6mm threshold as a melanoma warning sign, and the TDS formula includes diameter as one of its four weighted components. Prior to v0.7.0, Mela relied on a fixed assumption of 25mm dermoscope field-of-view, which produced unreliable measurements from smartphone cameras at varying distances.
 
 The v0.7.0 measurement system uses a **3-tier calibration approach** that selects the most accurate method available from the image:
 
@@ -962,7 +962,7 @@ If a USB-C, Lightning, or USB-A connector is visible in the image (placed next t
 
 The detected connector width in pixels establishes a pixels-per-mm calibration factor. Estimated accuracy: **+/-0.5mm**. This is the only tier with clinically useful precision near the 6mm threshold.
 
-Implementation: `src/lib/dragnes/measurement-connector.ts` -- pure TypeScript, Sobel edge detection, runs in-browser in <200ms.
+Implementation: `src/lib/mela/measurement-connector.ts` -- pure TypeScript, Sobel edge detection, runs in-browser in <200ms.
 
 ### 7.2 Tier 2: Skin Texture FFT Analysis (Medium Confidence)
 
@@ -979,7 +979,7 @@ When no connector is present, the system analyzes skin texture in the image marg
 
 The process: extract a grayscale margin patch, apply a Hann window to reduce spectral leakage, compute the 2D power spectrum, take a radial average, and find the dominant frequency peak. The ratio of detected spacing (pixels) to expected spacing (mm) gives pixels-per-mm. Estimated accuracy: **+/-2-3mm**.
 
-Implementation: `src/lib/dragnes/measurement-texture.ts` and `src/lib/dragnes/fft.ts` -- a **pure TypeScript FFT** implementation (no native dependencies, no WebAssembly). The FFT uses the Cooley-Tukey radix-2 algorithm on power-of-2 padded input.
+Implementation: `src/lib/mela/measurement-texture.ts` and `src/lib/mela/fft.ts` -- a **pure TypeScript FFT** implementation (no native dependencies, no WebAssembly). The FFT uses the Cooley-Tukey radix-2 algorithm on power-of-2 padded input.
 
 ### 7.3 Tier 3: Pixel Estimate Fallback (Low Confidence)
 
@@ -998,10 +998,10 @@ The measurement system feeds directly into two clinical scoring components:
 
 | File | Purpose |
 |------|---------|
-| `src/lib/dragnes/measurement.ts` | Orchestrator -- selects best calibration tier, exposes `measureLesion()` |
-| `src/lib/dragnes/measurement-connector.ts` | Tier 1: USB-C/Lightning/USB-A detection via Sobel edges |
-| `src/lib/dragnes/measurement-texture.ts` | Tier 2: Skin texture FFT analysis with body-location lookup |
-| `src/lib/dragnes/fft.ts` | Pure TypeScript Cooley-Tukey FFT (radix-2, 2D power spectrum) |
+| `src/lib/mela/measurement.ts` | Orchestrator -- selects best calibration tier, exposes `measureLesion()` |
+| `src/lib/mela/measurement-connector.ts` | Tier 1: USB-C/Lightning/USB-A detection via Sobel edges |
+| `src/lib/mela/measurement-texture.ts` | Tier 2: Skin texture FFT analysis with body-location lookup |
+| `src/lib/mela/fft.ts` | Pure TypeScript Cooley-Tukey FFT (radix-2, 2D power spectrum) |
 
 ---
 
@@ -1054,7 +1054,7 @@ The measurement system feeds directly into two clinical scoring components:
 
 ### What we now know (validated March 22-23, 2026)
 
-- **Custom model (stuartkerr/dragnes-classifier) achieves 98.2% melanoma sensitivity on HAM10000 holdout** (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), and 100% on marmal88 test (1,285 images). Zero overfitting (-0.7% train/test gap). *Evidence: `scripts/cross-validation-results.json`*
+- **Custom model (stuartkerr/mela-classifier) achieves 98.2% melanoma sensitivity on HAM10000 holdout** (1,503 images), 98.7% on Nagabu/HAM10000 (1,000 images), and 100% on marmal88 test (1,285 images). Zero overfitting (-0.7% train/test gap). *Evidence: `scripts/cross-validation-results.json`*
 - **Custom model drops to 61.6% melanoma sensitivity on ISIC 2019 external data** (4,998 images). Overall accuracy 57.6%. All-cancer sensitivity 61.8%. This is the only genuinely external validation and it shows the model does not yet generalize. *Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.melanoma_sensitivity = 0.6162)*
 - **AUROC has not been computed** on any dataset. No ROC curve analysis has been performed. *Evidence: no evidence file contains an AUROC metric.*
 - **All-cancer sensitivity on HAM10000 data has not been measured.** The only measured all-cancer sensitivity is 61.8% on ISIC 2019. *Evidence: `scripts/isic2019-validation-results.json` (cancer_metrics.all_cancer_sensitivity = 0.6176)*
@@ -1090,9 +1090,9 @@ The measurement system feeds directly into two clinical scoring components:
 
 12. **No prospective clinical validation.** All testing has been on HAM10000 and ad-hoc images. The system has not been tested in clinical workflow conditions.
 
-13. **Not FDA-cleared.** DrAgnes is a research prototype. It has not been submitted for 510(k) clearance and must not be used for clinical decision-making without appropriate regulatory authorization and professional medical oversight.
+13. **Not FDA-cleared.** Mela is a research prototype. It has not been submitted for 510(k) clearance and must not be used for clinical decision-making without appropriate regulatory authorization and professional medical oversight.
 
-14. **Custom model weights are not in the repository.** The trained model (327MB) must be downloaded from [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier) on HuggingFace or trained locally using `scripts/train-fast.py`.
+14. **Custom model weights are not in the repository.** The trained model (327MB) must be downloaded from [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier) on HuggingFace or trained locally using `scripts/train-fast.py`.
 
 ---
 
@@ -1117,7 +1117,7 @@ The measurement system feeds directly into two clinical scoring components:
    - *Landmark paper demonstrating that a single CNN (InceptionV3) trained end-to-end achieves dermatologist-level classification. Established the feasibility of deep learning for dermoscopy and motivated the field's shift away from hand-crafted features.*
 
 7. **Dosovitskiy A, Beyer L, Kolesnikov A, et al.** An image is worth 16x16 words: Transformers for image recognition at scale. *Proceedings of the International Conference on Learning Representations (ICLR)*. 2021.
-   - *Introduces the Vision Transformer (ViT). The model used by DrAgnes (ViT-base-patch16-224) processes 224x224 images as sequences of 16x16 patches through a standard Transformer encoder.*
+   - *Introduces the Vision Transformer (ViT). The model used by Mela (ViT-base-patch16-224) processes 224x224 images as sequences of 16x16 patches through a standard Transformer encoder.*
 
 8. **Tkaczyk ER, Rao BK, Grin C, et al.** Clinical validation of the DermaSensor for cutaneous malignancy detection: DERM-SUCCESS pivotal study. *JAMA Dermatology*. 2024.
    - *FDA pivotal study for DermaSensor (DEN230008). 1,579 lesions across 44 sites. Melanoma sensitivity 90.2%, overall malignancy sensitivity 95.5%, specificity 20.7%. Fitzpatrick I-III sensitivity 96%, IV-VI sensitivity 92%. Used as our regulatory and performance benchmark.*
@@ -1149,7 +1149,7 @@ The measurement system feeds directly into two clinical scoring components:
 
 ### 11.1 Current Model Configuration
 
-As of v1.2, DrAgnes uses a dual-model ensemble with the following configuration:
+As of v1.2, Mela uses a dual-model ensemble with the following configuration:
 
 | Property | Model A (Anwarkh1) | Model B (skintaglabs) |
 |----------|--------------------|-----------------------|
@@ -1189,7 +1189,7 @@ P(class) = 0.60 * P_single_HF + 0.25 * P_trained + 0.15 * P_rules
 
 The skintaglabs SigLIP model outputs its own label taxonomy. Labels are mapped to our canonical 7-class HAM10000 taxonomy via `SIGLIP_LABEL_MAP`:
 
-| SigLIP Output Label | DrAgnes Class | Rationale |
+| SigLIP Output Label | Mela Class | Rationale |
 |---------------------|---------------|-----------|
 | Melanoma / melanoma | mel | Direct match |
 | Basal Cell Carcinoma | bcc | Direct match |
@@ -1201,7 +1201,7 @@ The skintaglabs SigLIP model outputs its own label taxonomy. Labels are mapped t
 | Melanocytic Nevi / Melanocytic Nevus | nv | Direct match |
 | Vascular Lesion / Vascular Lesions | vasc | Direct match |
 
-When multiple SigLIP labels map to the same DrAgnes class, their probabilities are summed.
+When multiple SigLIP labels map to the same Mela class, their probabilities are summed.
 
 ### 11.4 Model Disagreement Detection
 
@@ -1216,7 +1216,7 @@ When the two ViT models disagree on the top predicted class, the system:
 ### 11.5 Validation Status
 
 **What we have validated (March 22-23, 2026):**
-- Custom model (stuartkerr/dragnes-classifier) on HAM10000-family data: 98.2% melanoma sensitivity on holdout (1,503), 98.7% on Nagabu/HAM10000 (1,000), 100% on marmal88 test (1,285). -0.7% train/test gap. *Evidence: `scripts/cross-validation-results.json`*
+- Custom model (stuartkerr/mela-classifier) on HAM10000-family data: 98.2% melanoma sensitivity on holdout (1,503), 98.7% on Nagabu/HAM10000 (1,000), 100% on marmal88 test (1,285). -0.7% train/test gap. *Evidence: `scripts/cross-validation-results.json`*
 - Custom model on ISIC 2019 external data: **61.6% melanoma sensitivity**, 61.8% all-cancer sensitivity, 57.6% overall accuracy (4,998 images). *Evidence: `scripts/isic2019-validation-results.json`*
 - Custom model multi-image consensus: 99.4% melanoma sensitivity on HAM10000 holdout (1,499 images, 3 views). *Evidence: `scripts/multi-image-validation-results.json`*
 - Anwarkh1 ViT-Base on 210 HAM10000 test images: 73.3% melanoma sensitivity, 55.7% overall accuracy. *Evidence: `scripts/siglip-test-results.json`*
@@ -1293,4 +1293,4 @@ SVG-based clickable body map replacing the previous dropdown selector for body l
 
 ---
 
-*This document was prepared for technical review by dermatology professionals evaluating the DrAgnes classification system. All claims of system performance are qualified with their validation status and cite the specific evidence file from which each number is derived. Where independent validation has not been performed, this is stated explicitly. External validation on ISIC 2019 data (61.6% melanoma sensitivity) demonstrates that HAM10000-family results (98.2%) do not yet generalize; both figures are reported throughout this document. AUROC has not been computed on any dataset. All-cancer sensitivity has only been measured on ISIC 2019 external data (61.8%). DrAgnes is a research prototype and is not FDA-cleared for clinical use.*
+*This document was prepared for technical review by dermatology professionals evaluating the Mela classification system. All claims of system performance are qualified with their validation status and cite the specific evidence file from which each number is derived. Where independent validation has not been performed, this is stated explicitly. External validation on ISIC 2019 data (61.6% melanoma sensitivity) demonstrates that HAM10000-family results (98.2%) do not yet generalize; both figures are reported throughout this document. AUROC has not been computed on any dataset. All-cancer sensitivity has only been measured on ISIC 2019 external data (61.8%). Mela is a research prototype and is not FDA-cleared for clinical use.*

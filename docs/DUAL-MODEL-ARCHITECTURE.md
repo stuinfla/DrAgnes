@@ -1,13 +1,13 @@
 Updated: 2026-03-22 22:00:00 EST | Version 1.2.0
 Created: 2026-03-22
 
-# Dr. Agnes Dual-Model AI Classification Architecture
+# Mela Dual-Model AI Classification Architecture
 
 ## 1. Why Two Models?
 
 No single AI model is trustworthy enough for cancer detection. The same principle applies in medicine: a second opinion from an independent source catches errors the first opinion misses.
 
-DrAgnes uses **two independently-trained Vision Transformer (ViT) models** that analyze the same image and produce independent classifications. When they agree, confidence is high. When they disagree, the system flags the case for clinical review.
+Mela uses **two independently-trained Vision Transformer (ViT) models** that analyze the same image and produce independent classifications. When they agree, confidence is high. When they disagree, the system flags the case for clinical review.
 
 This is not ensemble averaging for marginal accuracy gains — it is a **safety architecture** where model disagreement is a diagnostic signal.
 
@@ -85,7 +85,7 @@ Neither model has independently verified melanoma recall, so we cannot justify a
 
 The skintaglabs SigLIP model outputs skin lesion class labels. We map them to our canonical 7-class HAM10000 taxonomy via `SIGLIP_LABEL_MAP` in `classifier.ts`:
 
-| SigLIP label | DrAgnes class | Rationale |
+| SigLIP label | Mela class | Rationale |
 |--------------|--------------|-----------|
 | Melanoma / melanoma | mel | Direct match |
 | Basal Cell Carcinoma | bcc | Direct match |
@@ -97,7 +97,7 @@ The skintaglabs SigLIP model outputs skin lesion class labels. We map them to ou
 | Melanocytic Nevi / Melanocytic Nevus | nv | Direct match |
 | Vascular Lesion / Vascular Lesions | vasc | Direct match |
 
-The label map handles title case, lower case, singular/plural, and short-form abbreviations. When multiple labels map to the same DrAgnes class, their probabilities are **summed**.
+The label map handles title case, lower case, singular/plural, and short-form abbreviations. When multiple labels map to the same Mela class, their probabilities are **summed**.
 
 ### 3.4 Disagreement Detection
 
@@ -190,9 +190,9 @@ No single layer is sufficient. Together, they provide redundancy.
 
 Melanoma is the most dangerous diagnosis. Missing it (false negative) has far worse consequences than overcalling it (false positive). We previously weighted the actavkid model at 70% for melanoma based on its published 89% recall claim.
 
-**Current state (March 22, 2026):** The custom-trained model (`stuartkerr/dragnes-classifier`) has been validated with 98.2% melanoma sensitivity across 3 independent test sets. This replaces the need for the previous dual-model approach with community models.
+**Current state (March 22, 2026):** The custom-trained model (`stuartkerr/mela-classifier`) has been validated with 98.2% melanoma sensitivity across 3 independent test sets. This replaces the need for the previous dual-model approach with community models.
 
-- **Primary model:** [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier) -- custom ViT-Base, focal loss, 98.2% melanoma sensitivity
+- **Primary model:** [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier) -- custom ViT-Base, focal loss, 98.2% melanoma sensitivity
 - **Secondary model (fallback):** Anwarkh1/Skin_Cancer-Image_Classification -- community ViT-Base, 73.3% melanoma sensitivity
 - **Retired:** skintaglabs SigLIP (validated at 30.0% melanoma sensitivity -- insufficient for clinical use)
 - **Retired:** actavkid model (removed from HuggingFace, HTTP 410)
@@ -280,8 +280,8 @@ Browser                    SvelteKit Server               HuggingFace
 ```
 ┌─────────────────────────────────────────────────────┐
 │ Tier 1: Custom ViT Model (best accuracy)             │
-│   stuartkerr/dragnes-classifier (85.8M, 98.2% mel)  │
-│   Model ID: dragnes-custom-v1                        │
+│   stuartkerr/mela-classifier (85.8M, 98.2% mel)  │
+│   Model ID: mela-custom-v1                        │
 │   Requires: Internet + HuggingFace API               │
 ├─────────────────────────────────────────────────────┤
 │ Tier 2: Fallback Community ViT                       │
@@ -307,7 +307,7 @@ Browser                    SvelteKit Server               HuggingFace
 
 ### Custom Model Training Success
 
-The custom-trained model (`stuartkerr/dragnes-classifier`) achieves 98.2% melanoma sensitivity, exceeding the DermaSensor FDA benchmark of 95.5%.
+The custom-trained model (`stuartkerr/mela-classifier`) achieves 98.2% melanoma sensitivity, exceeding the DermaSensor FDA benchmark of 95.5%.
 
 | Dataset | N | Melanoma Sensitivity | Source |
 |---------|---|---------------------|--------|
@@ -316,7 +316,7 @@ The custom-trained model (`stuartkerr/dragnes-classifier`) achieves 98.2% melano
 | marmal88 test split | 1,285 | 100.0% | Author's curated test split |
 | Train/test gap | -- | -0.7% | Zero overfitting |
 
-HuggingFace model: [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
+HuggingFace model: [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
 
 ### Community Model Validation
 
@@ -328,7 +328,7 @@ HuggingFace model: [stuartkerr/dragnes-classifier](https://huggingface.co/stuart
 
 ### Actions Taken
 
-1. **Trained custom model** (`stuartkerr/dragnes-classifier`) with focal loss (gamma=2.0, melanoma alpha=8.0) achieving 98.2% melanoma sensitivity
+1. **Trained custom model** (`stuartkerr/mela-classifier`) with focal loss (gamma=2.0, melanoma alpha=8.0) achieving 98.2% melanoma sensitivity
 2. **Validated on 3 independent test sets** totaling 3,788 images with zero overfitting
 3. **Retired skintaglabs SigLIP** after validation showed 30.0% melanoma sensitivity
 4. **Updated all API URLs** to the new `router.huggingface.co/hf-inference` format

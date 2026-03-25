@@ -1,5 +1,5 @@
 /**
- * DrAgnes ONNX Model Cache Service Worker
+ * Mela ONNX Model Cache Service Worker
  *
  * Intercepts fetch requests for /models/*.onnx files and caches them
  * using the Cache API for offline-capable inference.
@@ -7,7 +7,7 @@
  * ADR-122 Phase 4
  */
 
-const CACHE_NAME = "dragnes-models-v1";
+const CACHE_NAME = "mela-models-v1";
 
 self.addEventListener("install", () => {
 	self.skipWaiting();
@@ -19,7 +19,7 @@ self.addEventListener("activate", (event) => {
 		caches.keys().then((keys) =>
 			Promise.all(
 				keys
-					.filter((k) => k.startsWith("dragnes-models-") && k !== CACHE_NAME)
+					.filter((k) => k.startsWith("mela-models-") && k !== CACHE_NAME)
 					.map((k) => caches.delete(k))
 			)
 		).then(() => self.clients.claim())

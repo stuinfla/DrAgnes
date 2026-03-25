@@ -3,9 +3,9 @@
  * Verifies per-class threshold filtering, mode selection, and melanoma safety.
  */
 import { describe, it, expect } from "vitest";
-import { applyThresholds, getThresholds } from "../src/lib/dragnes/threshold-classifier";
-import type { ClassProbability, LesionClass } from "../src/lib/dragnes/types";
-import { LESION_LABELS } from "../src/lib/dragnes/types";
+import { applyThresholds, getThresholds } from "../src/lib/mela/threshold-classifier";
+import type { ClassProbability, LesionClass } from "../src/lib/mela/types";
+import { LESION_LABELS } from "../src/lib/mela/types";
 
 const CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
 

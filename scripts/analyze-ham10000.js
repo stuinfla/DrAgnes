@@ -9,7 +9,7 @@
  * encodes the verified published statistics and generates a comprehensive
  * clinical analysis report.
  *
- * Output: stdout + docs/research/DrAgnes/HAM10000_analysis.md
+ * Output: stdout + docs/research/Mela/HAM10000_analysis.md
  */
 
 const fs = require("fs");
@@ -419,7 +419,7 @@ function generateThresholds() {
 function generateSummary() {
   const lines = ["## 7. Summary of Key Findings\n"];
 
-  lines.push("### Critical Takeaways for DrAgnes Classifier\n");
+  lines.push("### Critical Takeaways for Mela Classifier\n");
   lines.push("1. **Severe class imbalance** (58.3:1 ratio) -- must use Bayesian calibration");
   lines.push("2. **Melanoma prevalence is 11.1%** -- not rare enough to ignore, not common enough to over-predict");
   lines.push("3. **Demographics matter**: age, sex, and body site significantly shift class probabilities");
@@ -460,7 +460,7 @@ function main() {
   console.log(report);
 
   // Write to file
-  const outDir = path.join(__dirname, "..", "docs", "research", "DrAgnes");
+  const outDir = path.join(__dirname, "..", "docs", "research", "Mela");
   fs.mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, "HAM10000_analysis.md");
   fs.writeFileSync(outPath, report, "utf-8");

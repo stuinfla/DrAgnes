@@ -1,5 +1,5 @@
 /**
- * DrAgnes Dataset Metadata and Device Specifications
+ * Mela Dataset Metadata and Device Specifications
  *
  * Reference data for training datasets, class distributions,
  * bias warnings, and DermLite dermoscope specifications.

@@ -4,7 +4,7 @@
  * The melanoma safety gate test uses the scoreImageQuality function directly.
  */
 import { describe, it, expect } from "vitest";
-import { scoreImageQuality } from "../src/lib/dragnes/multi-image";
+import { scoreImageQuality } from "../src/lib/mela/multi-image";
 
 // Polyfill ImageData for Node.js
 if (typeof globalThis.ImageData === "undefined") {
@@ -64,7 +64,7 @@ describe("scoreImageQuality", () => {
 describe("classifyMultiImage", () => {
 	it("throws on empty image array", async () => {
 		// Import dynamically to test the throw without needing a real classifier
-		const { classifyMultiImage } = await import("../src/lib/dragnes/multi-image");
+		const { classifyMultiImage } = await import("../src/lib/mela/multi-image");
 		const fakeClassifier = {} as any;
 		await expect(classifyMultiImage(fakeClassifier, [])).rejects.toThrow(
 			"classifyMultiImage requires at least one image",

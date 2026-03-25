@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { DiscordanceBreakdown, DiscordantCase } from "$lib/stores/analytics";
-	import { LESION_LABELS } from "$lib/dragnes/types";
-	import type { LesionClass } from "$lib/dragnes/types";
+	import { LESION_LABELS } from "$lib/mela/types";
+	import type { LesionClass } from "$lib/mela/types";
 
 	interface Props {
 		breakdown: DiscordanceBreakdown;

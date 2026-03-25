@@ -1,22 +1,22 @@
 /**
- * DrAgnes Classification Pipeline Tests
+ * Mela Classification Pipeline Tests
  *
  * Tests for preprocessing, ABCDE scoring, privacy pipeline,
  * and CNN classification with demo fallback.
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { DermClassifier } from "../src/lib/dragnes/classifier";
-import { computeABCDE } from "../src/lib/dragnes/abcde";
-import { PrivacyPipeline } from "../src/lib/dragnes/privacy";
+import { DermClassifier } from "../src/lib/mela/classifier";
+import { computeABCDE } from "../src/lib/mela/abcde";
+import { PrivacyPipeline } from "../src/lib/mela/privacy";
 import {
 	colorNormalize,
 	removeHair,
 	segmentLesion,
 	resizeBilinear,
 	toNCHWTensor,
-} from "../src/lib/dragnes/preprocessing";
-import type { ClassificationResult, ABCDEScores, SegmentationMask } from "../src/lib/dragnes/types";
+} from "../src/lib/mela/preprocessing";
+import type { ClassificationResult, ABCDEScores, SegmentationMask } from "../src/lib/mela/types";
 
 // ---- Polyfill ImageData for Node.js ----
 

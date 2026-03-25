@@ -4,36 +4,36 @@
 		ABCDEScores,
 		DiagnosisRecord,
 		LesionClass,
-	} from "$lib/dragnes/types";
-	import { LESION_LABELS } from "$lib/dragnes/types";
-	import { DermClassifier } from "$lib/dragnes/classifier";
-	import { estimateDiameterMm, detectLesionPresence } from "$lib/dragnes/image-analysis";
+	} from "$lib/mela/types";
+	import { LESION_LABELS } from "$lib/mela/types";
+	import { DermClassifier } from "$lib/mela/classifier";
+	import { estimateDiameterMm, detectLesionPresence } from "$lib/mela/image-analysis";
 	import type {
 		ColorAnalysisResult,
 		TextureResult,
 		StructureResult,
-	} from "$lib/dragnes/image-analysis";
-	import { computeTDS, tdsRiskLevel, computeSevenPointScore } from "$lib/dragnes/clinical-baselines";
-	import { getPrimaryICD10, getLocationSpecificICD10 } from "$lib/dragnes/icd10";
-	import { translateForConsumer } from "$lib/dragnes/consumer-translation";
-	import type { ConsumerResult } from "$lib/dragnes/consumer-translation";
-	import { classifyMultiImage } from "$lib/dragnes/multi-image";
-	import type { MultiImageResult } from "$lib/dragnes/multi-image";
-	import { measureLesion } from "$lib/dragnes/measurement";
-	import type { LesionMeasurement } from "$lib/dragnes/measurement";
-	import { applyThresholds } from "$lib/dragnes/threshold-classifier";
-	import type { ThresholdMode } from "$lib/dragnes/threshold-classifier";
-	import { anonymizeCase } from "$lib/dragnes/anonymization";
-	import type { AnonymizedCase } from "$lib/dragnes/anonymization";
-	import { shareToBrain, searchSimilarCases } from "$lib/dragnes/brain-client";
-	import { isOfflineModelLoaded } from "$lib/dragnes/inference-offline";
-	import { warmOfflineModel } from "$lib/dragnes/inference-orchestrator";
-	import type { InferenceStrategy } from "$lib/dragnes/inference-orchestrator";
-	import { ensembleClassify } from "$lib/dragnes/ensemble";
-	import type { EnsembleResult } from "$lib/dragnes/ensemble";
-	import { imageDataToBlob, mapHFResultsToClasses } from "$lib/dragnes/hf-classifier";
-	import { metaClassify } from "$lib/dragnes/meta-classifier";
-	import type { MetaClassification } from "$lib/dragnes/meta-classifier";
+	} from "$lib/mela/image-analysis";
+	import { computeTDS, tdsRiskLevel, computeSevenPointScore } from "$lib/mela/clinical-baselines";
+	import { getPrimaryICD10, getLocationSpecificICD10 } from "$lib/mela/icd10";
+	import { translateForConsumer } from "$lib/mela/consumer-translation";
+	import type { ConsumerResult } from "$lib/mela/consumer-translation";
+	import { classifyMultiImage } from "$lib/mela/multi-image";
+	import type { MultiImageResult } from "$lib/mela/multi-image";
+	import { measureLesion } from "$lib/mela/measurement";
+	import type { LesionMeasurement } from "$lib/mela/measurement";
+	import { applyThresholds } from "$lib/mela/threshold-classifier";
+	import type { ThresholdMode } from "$lib/mela/threshold-classifier";
+	import { anonymizeCase } from "$lib/mela/anonymization";
+	import type { AnonymizedCase } from "$lib/mela/anonymization";
+	import { shareToBrain, searchSimilarCases } from "$lib/mela/brain-client";
+	import { isOfflineModelLoaded } from "$lib/mela/inference-offline";
+	import { warmOfflineModel } from "$lib/mela/inference-orchestrator";
+	import type { InferenceStrategy } from "$lib/mela/inference-orchestrator";
+	import { ensembleClassify } from "$lib/mela/ensemble";
+	import type { EnsembleResult } from "$lib/mela/ensemble";
+	import { imageDataToBlob, mapHFResultsToClasses } from "$lib/mela/hf-classifier";
+	import { metaClassify } from "$lib/mela/meta-classifier";
+	import type { MetaClassification } from "$lib/mela/meta-classifier";
 
 	import DermCapture from "./DermCapture.svelte";
 	import GradCamOverlay from "./GradCamOverlay.svelte";
@@ -625,7 +625,7 @@
 	async function fetchHFProbabilities(
 		endpoint: string,
 		blob: Blob,
-	): Promise<import("$lib/dragnes/types").ClassProbability[] | null> {
+	): Promise<import("$lib/mela/types").ClassProbability[] | null> {
 		try {
 			const formData = new FormData();
 			formData.append("image", blob, "lesion.jpg");
@@ -834,7 +834,7 @@
 			showReferralLetter = true;
 			return;
 		}
-		console.log("DrAgnes action:", action, payload);
+		console.log("Mela action:", action, payload);
 	}
 
 	function handleNewScan() {

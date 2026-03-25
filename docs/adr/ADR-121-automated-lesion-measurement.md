@@ -8,7 +8,7 @@ Created: 2026-03-24
 
 ## Context
 
-The "D" in the ABCDE melanoma screening rule stands for **Diameter** -- lesions larger than 6mm are clinically suspicious. This is a hard numerical threshold used by dermatologists worldwide and is a key input to the Total Dermoscopy Score (TDS) formula that drives Dr. Agnes risk classification.
+The "D" in the ABCDE melanoma screening rule stands for **Diameter** -- lesions larger than 6mm are clinically suspicious. This is a hard numerical threshold used by dermatologists worldwide and is a key input to the Total Dermoscopy Score (TDS) formula that drives Mela risk classification.
 
 **The current implementation is unreliable.** There are two diameter estimation functions, and both depend on assumptions that do not hold for consumer phone cameras:
 
@@ -156,7 +156,7 @@ Reference: Korotkov & Garcia 2012 (dermatoglyphic frequency analysis); Hashimoto
 
 ### Approach 3: Multi-Photo Parallax (Uses Existing Multi-Capture)
 
-**Rationale:** Dr. Agnes already supports multi-image capture (`classifyMultiImage` in `multi-image.ts`). Two photos from slightly different angles contain parallax information that enables depth estimation, and modern phones have gyroscope/accelerometer data that can quantify the camera motion between shots.
+**Rationale:** Mela already supports multi-image capture (`classifyMultiImage` in `multi-image.ts`). Two photos from slightly different angles contain parallax information that enables depth estimation, and modern phones have gyroscope/accelerometer data that can quantify the camera motion between shots.
 
 **How it works:**
 1. During multi-capture mode, the user takes 2-3 photos while slightly shifting their angle (the UI already encourages this for consensus classification).
@@ -318,7 +318,7 @@ interface ABCDEScores {
 | `consumer-translation.ts` | Add diameter-uncertainty messaging. |
 | `DermCapture.svelte` | Add UI prompt for USB-C reference. Show measurement confidence. |
 | `ClassificationResult.svelte` | Display confidence interval instead of bare number. |
-| `DrAgnesPanel.svelte` | Pass measurement data through pipeline. |
+| `MelaPanel.svelte` | Pass measurement data through pipeline. |
 
 ### New Files
 
@@ -337,7 +337,7 @@ The measurement subsystem is a new bounded context that sits between Capture and
 
 ```
 +===========================================================================+
-|  DrAgnes Bounded Contexts                                                 |
+|  Mela Bounded Contexts                                                 |
 +===========================================================================+
 
 +-----------------------+
@@ -450,7 +450,7 @@ The measurement subsystem is a new bounded context that sits between Capture and
 |  (Svelte components)      |
 |                           |
 |  - ClassificationResult   |
-|  - DrAgnesPanel           |
+|  - MelaPanel           |
 |  - BodyMap                |
 |  - Quality indicators     |
 |    (green/yellow/red)     |

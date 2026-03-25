@@ -1,13 +1,13 @@
 # Changelog
 
-All notable changes to DrAgnes are documented in this file.
+All notable changes to Mela are documented in this file.
 
 ## [0.3.0] - 2026-03-22
 
 ### Added
-- Custom-trained ViT model (`stuartkerr/dragnes-classifier`) achieving 98.2% melanoma sensitivity
+- Custom-trained ViT model (`stuartkerr/mela-classifier`) achieving 98.2% melanoma sensitivity
 - Cross-dataset validation on 3 independent test sets (HAM10000 holdout 1,503 images, Nagabu/HAM10000 1,000 images, marmal88 test 1,285 images)
-- HuggingFace model deployment at [stuartkerr/dragnes-classifier](https://huggingface.co/stuartkerr/dragnes-classifier)
+- HuggingFace model deployment at [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
 
 ### Changed
 - Primary model switched from community Anwarkh1 ViT-Base (73.3% mel sens) to custom-trained model (98.2% mel sens)

@@ -1,5 +1,5 @@
 /**
- * DrAgnes Type Definitions
+ * Mela Type Definitions
  *
  * All TypeScript interfaces for the dermoscopy CNN classification pipeline.
  * Follows ADR-117 type specifications.

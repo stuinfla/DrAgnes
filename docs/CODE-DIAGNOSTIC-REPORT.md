@@ -1,7 +1,7 @@
 Updated: 2026-03-24 | Version 1.0.0
 Created: 2026-03-24
 
-# Dr. Agnes Code Diagnostic Report
+# Mela Code Diagnostic Report
 
 **Overall Code Quality Score: 72 / 100**
 
@@ -21,7 +21,7 @@ What was NOT tested: runtime behavior, actual HF API responses, WASM module load
 
 ### CRITICAL: `image-analysis.ts` is 2,059 lines -- must be split
 
-**File:** `src/lib/dragnes/image-analysis.ts:1-2059`
+**File:** `src/lib/mela/image-analysis.ts:1-2059`
 **Severity:** HIGH
 **Details:** This file contains 8 distinct subsystems (segmentation, asymmetry, border analysis, color analysis, texture/GLCM, structure detection, attention heatmap, and combined classification) plus utility functions. At 2,059 lines it is 4x the 500-line limit specified in the project's CLAUDE.md.
 **Recommended fix:** Split into separate modules:
@@ -36,9 +36,9 @@ What was NOT tested: runtime behavior, actual HF API responses, WASM module load
 - `lesion-detection.ts` (lines 1964-2059) -- safety gate
 Keep `image-analysis.ts` as a barrel re-export for backward compatibility.
 
-### HIGH: `DrAgnesPanel.svelte` is 1,420 lines -- must be split
+### HIGH: `MelaPanel.svelte` is 1,420 lines -- must be split
 
-**File:** `src/lib/components/DrAgnesPanel.svelte:1-1420`
+**File:** `src/lib/components/MelaPanel.svelte:1-1420`
 **Severity:** HIGH
 **Details:** This component contains the entire application flow: capture handling, multi-image analysis, single-image analysis, ABCDE scoring, 7-point checklist computation, consumer translation display, medical details view, history tab, settings tab, and all 4 navigation tabs. It is nearly 3x the 500-line limit.
 **Recommended fix:** Extract sub-components:
@@ -47,7 +47,7 @@ Keep `image-analysis.ts` as a barrel re-export for backward compatibility.
 - `HistoryView.svelte` -- the history tab
 - `SettingsView.svelte` -- the settings tab
 - `AnalysisProgress.svelte` -- the loading/analysis step indicator
-Keep `DrAgnesPanel.svelte` as the orchestrator, delegating rendering to child components.
+Keep `MelaPanel.svelte` as the orchestrator, delegating rendering to child components.
 
 ### MEDIUM: `any` type in `classify-local/+server.ts`
 
@@ -63,7 +63,7 @@ Note: `onnxruntime-node` is dynamically imported, so the type import should be a
 
 ### MEDIUM: Duplicate `segmentLesion` implementations
 
-**File:** `src/lib/dragnes/preprocessing.ts:168` and `src/lib/dragnes/image-analysis.ts:275`
+**File:** `src/lib/mela/preprocessing.ts:168` and `src/lib/mela/image-analysis.ts:275`
 **Severity:** MEDIUM
 **Details:** There are two independent `segmentLesion` functions:
 1. `preprocessing.ts:168` -- simpler version using grayscale Otsu + morphological closing. Returns `SegmentationMask` type.
@@ -74,37 +74,37 @@ The `abcde.ts` imports from `preprocessing.ts` (the simpler one), while `classif
 
 ### MEDIUM: Duplicate `cosineSimilarity` implementations
 
-**File:** `src/lib/dragnes/classifier.ts:893` and `src/lib/dragnes/multi-image.ts:39`
+**File:** `src/lib/mela/classifier.ts:893` and `src/lib/mela/multi-image.ts:39`
 **Severity:** MEDIUM
 **Details:** Two `cosineSimilarity` functions exist:
 1. `classifier.ts:893` -- operates on `number[]`
 2. `multi-image.ts:39` -- operates on `Float32Array`
 
 Both compute the same formula. The only difference is the input type.
-**Recommended fix:** Create a shared utility (e.g., `src/lib/dragnes/math-utils.ts`) with a single generic implementation. Use `ArrayLike<number>` as the parameter type to cover both `number[]` and `Float32Array`.
+**Recommended fix:** Create a shared utility (e.g., `src/lib/mela/math-utils.ts`) with a single generic implementation. Use `ArrayLike<number>` as the parameter type to cover both `number[]` and `Float32Array`.
 
 ### MEDIUM: Duplicate `morphDilate` / `morphErode` / `morphClose` implementations
 
-**File:** `src/lib/dragnes/preprocessing.ts:264-306` and `src/lib/dragnes/image-analysis.ts:214-260`
+**File:** `src/lib/mela/preprocessing.ts:264-306` and `src/lib/mela/image-analysis.ts:214-260`
 **Severity:** MEDIUM
 **Details:** Identical morphological operation implementations exist in both files.
 **Recommended fix:** Extract to a shared `morphology.ts` utility module.
 
 ### LOW: Unused exports from `index.ts`
 
-**File:** `src/lib/dragnes/index.ts`
+**File:** `src/lib/mela/index.ts`
 **Severity:** LOW
 **Details:** The barrel file exports many symbols that are not imported anywhere in the component or route code:
 - `PrivacyPipeline` (from `privacy.ts`) -- not used in any component or route
 - `preprocessImage`, `colorNormalize`, `removeHair`, `toNCHWTensor` -- only used internally by `classifier.ts`, not imported via `index.ts`
-- `DRAGNES_CONFIG` -- only imported directly in `health/+server.ts`
+- `MELA_CONFIG` -- only imported directly in `health/+server.ts`
 
 These are not harmful but bloat the public API surface. The `PrivacyPipeline`, `datasets.ts`, `federated.ts`, `deployment-runbook.ts`, `benchmark.ts`, `witness.ts`, and `offline-queue.ts` modules appear to be scaffolding that is not wired into the application.
 **Recommended fix:** Mark unused modules as `@internal` or move them to a `_future/` directory. Document which exports are part of the stable public API.
 
 ### LOW: `recordClassification` called with different signatures
 
-**File:** `src/lib/components/DrAgnesPanel.svelte:578` vs `src/lib/components/DrAgnesPanel.svelte:370`
+**File:** `src/lib/components/MelaPanel.svelte:578` vs `src/lib/components/MelaPanel.svelte:370`
 **Severity:** LOW
 **Details:** The single-image path calls `recordClassification({ predictedClass, confidence, allProbabilities, modelId, demographics, bodyLocation })` while the multi-image path calls `recordClassification({ eventId, topClass, confidence, probabilities, bodyLocation, modelId })`. The `ClassificationEvent` interface uses `predictedClass` as the field name, but the multi-image path passes `topClass` instead. The `allProbabilities` field expects `Record<string, number>` but the multi-image path passes the `ClassProbability[]` array directly. Additionally, the multi-image path pre-generates `eventId` with `crypto.randomUUID()` and passes it, but `recordClassification` also generates its own id internally -- the passed `eventId` will be silently ignored since it is not in the `Omit<ClassificationEvent, "id" | "timestamp">` type.
 **Recommended fix:** Standardize the call sites. The multi-image path should use `predictedClass` (not `topClass`) and convert probabilities to `Record<string, number>` format. Remove the pre-generated `eventId` since it is overwritten anyway. This may be causing the `lastEventId` in the multi-image path to be out of sync with the actual stored event id.
@@ -115,7 +115,7 @@ These are not harmful but bloat the public API surface. The `PrivacyPipeline`, `
 
 ### The 4-layer ensemble is properly implemented
 
-**File:** `src/lib/dragnes/classifier.ts:153-240`
+**File:** `src/lib/mela/classifier.ts:153-240`
 **Severity:** N/A (positive finding)
 **Details:** The classification strategy is well-designed with clear priority ordering:
 1. Custom-trained local ViT (70% custom + 15% trained-weights + 15% rule-based)
@@ -127,7 +127,7 @@ Each tier falls back gracefully. The dual-model ensemble uses `Promise.allSettle
 
 ### Multi-image consensus integrates cleanly
 
-**File:** `src/lib/dragnes/multi-image.ts`
+**File:** `src/lib/mela/multi-image.ts`
 **Severity:** N/A (positive finding)
 **Details:** The quality-weighted consensus with melanoma safety gate is well-implemented. Quality scoring uses Laplacian variance (sharpness), RMS contrast, and segmentation quality. The safety gate ensures that if ANY image flags melanoma > 60%, that signal is preserved in the consensus -- this is the correct approach for a safety-critical system (prioritize sensitivity over specificity for melanoma).
 
@@ -145,13 +145,13 @@ The HF proxy endpoints return the raw HF API response (array of `{ label, score 
 
 ### Consumer translation is properly wired as primary display
 
-**File:** `src/lib/components/DrAgnesPanel.svelte:252-256`, `src/lib/dragnes/consumer-translation.ts`
+**File:** `src/lib/components/MelaPanel.svelte:252-256`, `src/lib/mela/consumer-translation.ts`
 **Severity:** N/A (positive finding)
 **Details:** The `consumerResult` derived state is computed from `translateForConsumer(r.topClass, r.confidence, r.probabilities)` and is rendered as the primary "hero" result display. Medical details are hidden behind a "Show Medical Details" toggle. The consumer translation includes an upgrade mechanism: if combined cancer probability > 30%, a "green" result gets bumped to "yellow". This is correct safety behavior.
 
 ### LOW: `consumer-translation.ts` does not update urgency when risk is upgraded
 
-**File:** `src/lib/dragnes/consumer-translation.ts:151-156`
+**File:** `src/lib/mela/consumer-translation.ts:151-156`
 **Severity:** LOW
 **Details:** When the cancer probability check upgrades `effectiveRisk` from "green" to "yellow", only `effectiveRisk` and `effectiveAction` are updated. The `shouldSeeDoctor` and `urgency` fields still come from the original translation (which would be `false` and `"none"` for a green class). A user seeing risk level "yellow" with `shouldSeeDoctor: false` would receive contradictory information.
 **Recommended fix:** When upgrading to yellow, also set `shouldSeeDoctor = true` and `urgency = "routine"`.
@@ -247,7 +247,7 @@ However, the `hf-classifier.ts` module exports `HF_API_URL` and `HF_MODEL` const
 
 ### HIGH: `image-analysis.ts` performs blocking synchronous computation
 
-**File:** `src/lib/dragnes/image-analysis.ts` (multiple functions)
+**File:** `src/lib/mela/image-analysis.ts` (multiple functions)
 **Severity:** HIGH
 **Details:** All image analysis functions (`segmentLesion`, `measureAsymmetry`, `analyzeBorder`, `analyzeColors`, `analyzeTexture`, `detectStructures`, `generateAttentionMap`) are synchronous and perform O(n) to O(n^2) operations on every pixel. For a 1920x1080 image (2M pixels):
 
@@ -269,12 +269,12 @@ Total: approximately 20+ full-image passes, all synchronous on the main thread. 
 
 **File:** `src/lib/components/DermCapture.svelte:302-306`
 **Severity:** MEDIUM
-**Details:** The `onDestroy` callback correctly stops camera tracks: `stream.getTracks().forEach((t) => t.stop())`. However, if the component is hidden/shown via the tab navigation in `DrAgnesPanel.svelte` using `{#if activeView === "scan"}`, Svelte will destroy and recreate the component each time the user switches away from and back to the Scan tab. Each recreation could start a new camera stream without the old one being fully released, especially on iOS where `getUserMedia` has known issues with rapid acquire/release cycles.
+**Details:** The `onDestroy` callback correctly stops camera tracks: `stream.getTracks().forEach((t) => t.stop())`. However, if the component is hidden/shown via the tab navigation in `MelaPanel.svelte` using `{#if activeView === "scan"}`, Svelte will destroy and recreate the component each time the user switches away from and back to the Scan tab. Each recreation could start a new camera stream without the old one being fully released, especially on iOS where `getUserMedia` has known issues with rapid acquire/release cycles.
 **Recommended fix:** Use `{#if}` blocks that keep the component alive but hidden (via CSS `display: none`) instead of destroying it, OR manage the camera stream in the parent component. Alternatively, add a guard in `startCamera()` to ensure the previous stream is fully stopped before requesting a new one.
 
 ### MEDIUM: Multi-image classification runs images sequentially
 
-**File:** `src/lib/dragnes/multi-image.ts:145-149`
+**File:** `src/lib/mela/multi-image.ts:145-149`
 **Severity:** MEDIUM
 **Details:** In `classifyMultiImage`, images are classified in a sequential `for...of` loop:
 ```typescript
@@ -294,7 +294,7 @@ Note: this assumes the HF API proxy can handle concurrent requests, which it can
 
 ### LOW: `DermCapture.svelte` creates temporary canvases without cleanup
 
-**File:** `src/lib/dragnes/classifier.ts:519-530`, `src/lib/dragnes/classifier.ts:597-608`
+**File:** `src/lib/mela/classifier.ts:519-530`, `src/lib/mela/classifier.ts:597-608`
 **Severity:** LOW
 **Details:** Both `classifyCustomLocal()` and `classifyHFDual()` create `document.createElement("canvas")` instances to convert ImageData to JPEG blobs. These canvases are never appended to the DOM but they do consume memory until garbage collected. On repeated classifications, this could lead to memory pressure on low-end devices.
 **Recommended fix:** Reuse a single off-screen canvas instance across calls, stored as a class property on `DermClassifier`.
@@ -305,7 +305,7 @@ Note: this assumes the HF API proxy can handle concurrent requests, which it can
 
 ### The full flow works: capture -> classify -> result -> new scan
 
-**File:** `src/lib/components/DrAgnesPanel.svelte`
+**File:** `src/lib/components/MelaPanel.svelte`
 **Severity:** N/A (positive finding)
 **Details:** The flow is:
 1. `DermCapture` fires `oncapture` or `onmulticapture` event
@@ -317,7 +317,7 @@ This flow is complete and correctly wired.
 
 ### Error states are properly handled at each step
 
-**File:** `src/lib/components/DrAgnesPanel.svelte:491-495`, `src/lib/components/DrAgnesPanel.svelte:593-596`
+**File:** `src/lib/components/MelaPanel.svelte:491-495`, `src/lib/components/MelaPanel.svelte:593-596`
 **Severity:** N/A (positive finding)
 **Details:**
 - Lesion presence safety gate catches non-lesion images before classification
@@ -339,7 +339,7 @@ This flow is complete and correctly wired.
 
 ### LOW: Navigation tabs (History, Learn, Settings) are stub implementations
 
-**File:** `src/lib/components/DrAgnesPanel.svelte` (beyond line 750)
+**File:** `src/lib/components/MelaPanel.svelte` (beyond line 750)
 **Severity:** LOW
 **Details:** Based on the component structure, the History tab shows `records` (which starts empty and is never populated from `localStorage` analytics data), the Learn tab shows the `MethodologyPanel` and `AboutPage`, and the Settings tab shows basic toggles. The History tab does not load persisted `ClassificationEvent` data from the analytics store, so it always appears empty even after scans have been performed.
 **Recommended fix:** On mount or tab switch, call `getEvents()` from the analytics store to populate the records array.
@@ -352,14 +352,14 @@ This flow is complete and correctly wired.
 
 **File:** `scripts/auroc-results.json`
 **Severity:** HIGH
-**Details:** The AUROC computation results exist as a JSON file in `scripts/` but are not imported or referenced anywhere in the source code. The `AboutPage.svelte` mentions AUROC in text ("AUROC not yet computed") and the `AnalyticsDashboard.svelte` displays the DermaSensor benchmark AUROC (0.758) from `clinical-baselines.ts`, but neither references the actual computed AUROC results for the DrAgnes models.
+**Details:** The AUROC computation results exist as a JSON file in `scripts/` but are not imported or referenced anywhere in the source code. The `AboutPage.svelte` mentions AUROC in text ("AUROC not yet computed") and the `AnalyticsDashboard.svelte` displays the DermaSensor benchmark AUROC (0.758) from `clinical-baselines.ts`, but neither references the actual computed AUROC results for the Mela models.
 
 Similarly, `combined-training-results.json` in `scripts/` is not referenced by any source file.
 **Recommended fix:** Import the AUROC results into `clinical-baselines.ts` or a new `model-benchmarks.ts` file, and display them alongside the DermaSensor comparison in the About and Analytics pages. Update the "AUROC not yet computed" text in `AboutPage.svelte`.
 
 ### MEDIUM: `trained-weights-empirical.json` is present but not imported
 
-**File:** `src/lib/dragnes/trained-weights-empirical.json`
+**File:** `src/lib/mela/trained-weights-empirical.json`
 **Severity:** MEDIUM
 **Details:** This JSON file exists alongside `trained-weights.ts` but is not imported by any TypeScript module. The `trained-weights.ts` file contains hardcoded literature-derived weights. The empirical JSON likely represents data-derived weights from actual training, which could provide better accuracy. It is unclear whether this file is a newer version intended to replace the hardcoded weights, or supplementary data.
 **Recommended fix:** Determine the relationship between the two files. If the empirical weights are validated, import them and use them. If they are experimental, document their status.
@@ -385,7 +385,7 @@ Similarly, `combined-training-results.json` in `scripts/` is not referenced by a
 | Severity | Count | Key Issues |
 |----------|-------|------------|
 | CRITICAL | 2 | No file upload validation; `image-analysis.ts` at 2,059 lines |
-| HIGH     | 5 | No CORS/CSP headers; `DrAgnesPanel.svelte` at 1,420 lines; synchronous blocking computation; no rate limiting on classify endpoints; AUROC data unused |
+| HIGH     | 5 | No CORS/CSP headers; `MelaPanel.svelte` at 1,420 lines; synchronous blocking computation; no rate limiting on classify endpoints; AUROC data unused |
 | MEDIUM   | 12 | `any` type; duplicate segmentation; duplicate cosine similarity; duplicate morphology; API response inconsistency; consumer-translation urgency bug; HF_TOKEN footgun; no rate limiting; camera stream lifecycle; sequential multi-image; AboutPage misleading metrics; empirical weights unused |
 | LOW      | 6 | Unused exports; recordClassification signature mismatch; execSync usage; temp canvas cleanup; multi-capture UX confusion; history tab unpopulated |
 
@@ -395,7 +395,7 @@ Similarly, `combined-training-results.json` in `scripts/` is not referenced by a
 
 1. **Immediate (security):** Add file upload validation (size, type, magic bytes) to all classify endpoints. Add security headers via `hooks.server.ts`. Add rate limiting to classify endpoints.
 
-2. **This sprint (quality):** Split `image-analysis.ts` into 8+ modules. Split `DrAgnesPanel.svelte` into sub-components. Fix the duplicate `segmentLesion` -- have `abcde.ts` use the better `image-analysis.ts` version. Fix the `recordClassification` call signature mismatch in multi-image path.
+2. **This sprint (quality):** Split `image-analysis.ts` into 8+ modules. Split `MelaPanel.svelte` into sub-components. Fix the duplicate `segmentLesion` -- have `abcde.ts` use the better `image-analysis.ts` version. Fix the `recordClassification` call signature mismatch in multi-image path.
 
 3. **Next sprint (performance):** Downsample images before analysis. Move heavy computation to a Web Worker. Parallelize multi-image classification. Reuse off-screen canvas.
 

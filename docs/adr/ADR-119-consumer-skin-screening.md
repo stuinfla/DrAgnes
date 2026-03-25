@@ -8,7 +8,7 @@ Created: 2026-03-23
 
 ## Context
 
-Dr. Agnes was designed for dermatologists analyzing dermoscopy images. But the real opportunity — and the real impact — is **5 billion people who will never see a dermatologist** being able to point their phone at their skin and get a trustworthy answer.
+Mela was designed for dermatologists analyzing dermoscopy images. But the real opportunity — and the real impact — is **5 billion people who will never see a dermatologist** being able to point their phone at their skin and get a trustworthy answer.
 
 **The fundamental user question is:** "I found something on my skin. Should I worry?"
 
@@ -23,7 +23,7 @@ The current system fails this use case spectacularly. When a user shows a normal
 
 ## Decision
 
-Redesign Dr. Agnes for consumer self-screening with a "worry gate" architecture that handles the full spectrum of inputs a regular person would provide.
+Redesign Mela for consumer self-screening with a "worry gate" architecture that handles the full spectrum of inputs a regular person would provide.
 
 ---
 
@@ -230,7 +230,7 @@ LesionHistory → LesionTracker → {
 
 ## References
 
-- ADR-117: Original DrAgnes architecture
+- ADR-117: Original Mela architecture
 - ADR-118: Production validation roadmap
 - DermaSensor consumer use data (DERM-SUCCESS)
 - AAD public screening guidelines 2024-2026

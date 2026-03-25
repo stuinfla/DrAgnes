@@ -1,4 +1,4 @@
-# DrAgnes Competitive Analysis
+# Mela Competitive Analysis
 
 **Status**: Research & Planning
 **Date**: 2026-03-21
@@ -34,7 +34,7 @@ The market is currently fragmented across consumer apps (SkinVision, Google), cl
 - No EHR integration
 - Privacy model unclear (images uploaded to cloud)
 - No collective learning across users
-- Sensitivity for melanoma: approximately 80-85% (vs. >95% target for DrAgnes with dermoscopy)
+- Sensitivity for melanoma: approximately 80-85% (vs. >95% target for Mela with dermoscopy)
 
 ### 2. MoleMap
 
@@ -182,11 +182,11 @@ The market is currently fragmented across consumer apps (SkinVision, Google), cl
 - No learning capability
 - Per-use consumable cost ($150) unsustainable
 
-**Lesson for DrAgnes**: MelaFind proves that accuracy alone is insufficient. Workflow integration, cost, and usability are equally critical. DrAgnes must be easy, affordable, and mobile.
+**Lesson for Mela**: MelaFind proves that accuracy alone is insufficient. Workflow integration, cost, and usability are equally critical. Mela must be easy, affordable, and mobile.
 
 ## Competitive Matrix
 
-| Feature | DrAgnes | SkinVision | MoleMap | MetaOptima | Canfield | Google Health | 3Derm |
+| Feature | Mela | SkinVision | MoleMap | MetaOptima | Canfield | Google Health | 3Derm |
 |---------|---------|-----------|---------|-----------|---------|--------------|-------|
 | Dermoscopy support | Native | No | Clinic only | Yes | Yes | No | No |
 | Mobile/phone-based | Yes | Yes | No | Partial | No | Yes | Yes |
@@ -205,9 +205,9 @@ The market is currently fragmented across consumer apps (SkinVision, Google), cl
 | Cost to practice | Low (SaaS) | N/A (consumer) | High (per visit) | Medium (SaaS) | Very High | Free | Enterprise |
 | Melanoma sensitivity | >95% target | ~80-85% | Expert-dependent | ~87-92% | N/A | ~80% | Not public |
 
-## DrAgnes Unique Value Proposition
+## Mela Unique Value Proposition
 
-### What DrAgnes Does That Nobody Else Does
+### What Mela Does That Nobody Else Does
 
 1. **Learns From Your Practice**: SONA MicroLoRA adapts the base model to your patient population. A practice in equatorial Nigeria seeing high rates of acral melanoma gets a model tuned for that distribution. A Scandinavian practice seeing mostly fair-skinned patients with superficial spreading melanoma gets a different adaptation. No competitor offers this.
 
@@ -223,13 +223,13 @@ The market is currently fragmented across consumer apps (SkinVision, Google), cl
 
 ### Positioning Statement
 
-**For dermatologists and primary care physicians** who need accurate, trustworthy skin lesion classification at the point of care, **DrAgnes is an AI-powered dermatology intelligence platform** that continuously learns from every participating practice while keeping patient data private. **Unlike** SkinVision (consumer app, no dermoscopy), MetaOptima (cloud-dependent, static model), and Canfield (expensive hardware), **DrAgnes** combines DermLite-native dermoscopic analysis with collective brain intelligence, offline WASM inference, and cryptographic provenance to deliver a system that gets smarter with every use and can be trusted in clinical settings.
+**For dermatologists and primary care physicians** who need accurate, trustworthy skin lesion classification at the point of care, **Mela is an AI-powered dermatology intelligence platform** that continuously learns from every participating practice while keeping patient data private. **Unlike** SkinVision (consumer app, no dermoscopy), MetaOptima (cloud-dependent, static model), and Canfield (expensive hardware), **Mela** combines DermLite-native dermoscopic analysis with collective brain intelligence, offline WASM inference, and cryptographic provenance to deliver a system that gets smarter with every use and can be trusted in clinical settings.
 
 ## Market Entry Strategy
 
 ### Phase 1: Academic Pilot (2026-2027)
 - Partner with 3-5 academic dermatology departments
-- Publish validation studies comparing DrAgnes to existing tools
+- Publish validation studies comparing Mela to existing tools
 - Establish clinical evidence for FDA submission
 - Target: JAMA Dermatology, British Journal of Dermatology publications
 

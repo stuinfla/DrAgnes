@@ -1,6 +1,6 @@
 {
   "timestamp": "2026-03-23T19:12:26.678306",
-  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
+  "model": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier/best",
   "device": "mps",
   "dataset": "kuchikihater/HAM10000",
   "test_set_size": 1499,

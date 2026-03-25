@@ -1,8 +1,8 @@
 /**
- * DrAgnes Deployment Runbook
+ * Mela Deployment Runbook
  *
  * Structured deployment procedures, cost model, monitoring configuration,
- * and rollback strategies for the DrAgnes classification service.
+ * and rollback strategies for the Mela classification service.
  */
 
 /** Deployment step definition */
@@ -60,7 +60,7 @@ export interface RevenueTier {
 	underserved: number;
 }
 
-/** Cost model for DrAgnes deployment */
+/** Cost model for Mela deployment */
 export interface CostModel {
 	/** Per-practice cost at various scales (USD/month) */
 	perPractice: PracticeScaleCost;
@@ -87,7 +87,7 @@ export interface DeploymentRunbook {
 }
 
 /**
- * DrAgnes production deployment runbook.
+ * Mela production deployment runbook.
  *
  * Covers build, containerization, deployment to Cloud Run,
  * health checks, smoke tests, rollback, and cost modeling.
@@ -109,33 +109,33 @@ export const DEPLOYMENT_RUNBOOK: DeploymentRunbook = {
 			name: "Build",
 			command: "npm run build",
 			timeout: "5m",
-			description: "Build the SvelteKit application with DrAgnes modules",
+			description: "Build the SvelteKit application with Mela modules",
 		},
 		{
 			name: "Run Tests",
 			command: "npm test -- --run",
 			timeout: "3m",
-			description: "Execute full test suite including DrAgnes classifier and benchmark tests",
+			description: "Execute full test suite including Mela classifier and benchmark tests",
 		},
 		{
 			name: "Docker Build",
 			command:
-				"docker build -f Dockerfile.dragnes -t gcr.io/ruv-dev/dragnes:$VERSION .",
+				"docker build -f Dockerfile.mela -t gcr.io/ruv-dev/mela:$VERSION .",
 			timeout: "10m",
 			description: "Build production Docker image with WASM CNN module",
-			rollbackCommand: "docker rmi gcr.io/ruv-dev/dragnes:$VERSION",
+			rollbackCommand: "docker rmi gcr.io/ruv-dev/mela:$VERSION",
 		},
 		{
 			name: "Push Image",
-			command: "docker push gcr.io/ruv-dev/dragnes:$VERSION",
+			command: "docker push gcr.io/ruv-dev/mela:$VERSION",
 			timeout: "5m",
 			description: "Push container image to Google Container Registry",
 		},
 		{
 			name: "Deploy to Staging",
 			command: [
-				"gcloud run deploy dragnes-staging",
-				"--image gcr.io/ruv-dev/dragnes:$VERSION",
+				"gcloud run deploy mela-staging",
+				"--image gcr.io/ruv-dev/mela:$VERSION",
 				"--region us-central1",
 				"--memory 2Gi",
 				"--cpu 2",
@@ -147,18 +147,18 @@ export const DEPLOYMENT_RUNBOOK: DeploymentRunbook = {
 			timeout: "3m",
 			description: "Deploy to staging Cloud Run service for validation",
 			rollbackCommand:
-				"gcloud run services update-traffic dragnes-staging --to-revisions LATEST=0",
+				"gcloud run services update-traffic mela-staging --to-revisions LATEST=0",
 		},
 		{
 			name: "Staging Health Check",
-			command: "curl -f https://dragnes-staging.ruv.io/health",
+			command: "curl -f https://mela-staging.ruv.io/health",
 			timeout: "30s",
 			description: "Verify staging service is responsive and healthy",
 		},
 		{
 			name: "Staging Smoke Test",
 			command: [
-				"curl -sf -X POST https://dragnes-staging.ruv.io/api/v1/analyze",
+				"curl -sf -X POST https://mela-staging.ruv.io/api/v1/analyze",
 				'-H "Content-Type: application/json"',
 				'-d \'{"image":"data:image/png;base64,iVBOR...","magnification":10}\'',
 			].join(" "),
@@ -168,8 +168,8 @@ export const DEPLOYMENT_RUNBOOK: DeploymentRunbook = {
 		{
 			name: "Deploy to Production",
 			command: [
-				"gcloud run deploy dragnes",
-				"--image gcr.io/ruv-dev/dragnes:$VERSION",
+				"gcloud run deploy mela",
+				"--image gcr.io/ruv-dev/mela:$VERSION",
 				"--region us-central1",
 				"--memory 2Gi",
 				"--cpu 2",
@@ -182,18 +182,18 @@ export const DEPLOYMENT_RUNBOOK: DeploymentRunbook = {
 			description: "Deploy to production Cloud Run service",
 			requiresApproval: true,
 			rollbackCommand:
-				"gcloud run services update-traffic dragnes --to-revisions LATEST=0",
+				"gcloud run services update-traffic mela --to-revisions LATEST=0",
 		},
 		{
 			name: "Production Health Check",
-			command: "curl -f https://dragnes.ruv.io/health",
+			command: "curl -f https://mela.ruv.io/health",
 			timeout: "30s",
 			description: "Verify production service health endpoint",
 		},
 		{
 			name: "Production Smoke Test",
 			command: [
-				"curl -sf -X POST https://dragnes.ruv.io/api/v1/analyze",
+				"curl -sf -X POST https://mela.ruv.io/api/v1/analyze",
 				'-H "Content-Type: application/json"',
 				'-d \'{"image":"data:image/png;base64,iVBOR...","magnification":10}\'',
 			].join(" "),
@@ -209,20 +209,20 @@ export const DEPLOYMENT_RUNBOOK: DeploymentRunbook = {
 			{
 				name: "Revert Traffic",
 				command:
-					"gcloud run services update-traffic dragnes --to-revisions PREVIOUS=100",
+					"gcloud run services update-traffic mela --to-revisions PREVIOUS=100",
 				timeout: "1m",
 				description: "Route 100% traffic back to the previous stable revision",
 			},
 			{
 				name: "Verify Rollback",
-				command: "curl -f https://dragnes.ruv.io/health",
+				command: "curl -f https://mela.ruv.io/health",
 				timeout: "30s",
 				description: "Confirm the previous revision is healthy",
 			},
 			{
 				name: "Notify On-Call",
 				command:
-					'curl -X POST $SLACK_WEBHOOK -d \'{"text":"DrAgnes rollback triggered for $VERSION"}\'',
+					'curl -X POST $SLACK_WEBHOOK -d \'{"text":"Mela rollback triggered for $VERSION"}\'',
 				timeout: "10s",
 				description: "Alert the on-call team about the rollback",
 			},
@@ -243,31 +243,31 @@ export const DEPLOYMENT_RUNBOOK: DeploymentRunbook = {
 		endpoints: [
 			{
 				name: "Health",
-				url: "https://dragnes.ruv.io/health",
+				url: "https://mela.ruv.io/health",
 				interval: "30s",
 				alertThreshold: "2 consecutive failures",
 			},
 			{
 				name: "Classification Latency",
-				url: "https://dragnes.ruv.io/metrics/latency",
+				url: "https://mela.ruv.io/metrics/latency",
 				interval: "1m",
 				alertThreshold: "p99 > 5000ms",
 			},
 			{
 				name: "Error Rate",
-				url: "https://dragnes.ruv.io/metrics/errors",
+				url: "https://mela.ruv.io/metrics/errors",
 				interval: "1m",
 				alertThreshold: "> 5% of requests",
 			},
 			{
 				name: "Model Accuracy",
-				url: "https://dragnes.ruv.io/metrics/accuracy",
+				url: "https://mela.ruv.io/metrics/accuracy",
 				interval: "1h",
 				alertThreshold: "< 75% on validation set",
 			},
 		],
-		dashboardUrl: "https://console.cloud.google.com/monitoring/dashboards/dragnes",
-		oncallChannel: "#dragnes-oncall",
+		dashboardUrl: "https://console.cloud.google.com/monitoring/dashboards/mela",
+		oncallChannel: "#mela-oncall",
 	},
 
 	costModel: {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Bootstrap 95% confidence intervals for DrAgnes v2 on ISIC 2019 external holdout."""
+"""Bootstrap 95% confidence intervals for Mela v2 on ISIC 2019 external holdout."""
 import json, time, warnings, os
 from pathlib import Path
 import numpy as np, torch
@@ -12,7 +12,7 @@ warnings.filterwarnings("ignore")
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier-v2" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier-v2" / "best"
 OUT = SCRIPT_DIR / "confidence-intervals.json"
 CLS = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
 MEL, BS, CANCER = 4, 32, {0, 1, 4}
@@ -69,7 +69,7 @@ def bootstrap_ci(metric_fn, n_samples, n_boot=1000, seed=42):
 
 def main():
     print("=" * 60)
-    print("DrAgnes v2 — Bootstrap 95% Confidence Intervals")
+    print("Mela v2 — Bootstrap 95% Confidence Intervals")
     print("=" * 60)
 
     model, proc, dev = load_model()

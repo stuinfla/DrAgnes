@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compute AUROC for the DrAgnes ViT classifier on HAM10000 + ISIC 2019."""
+"""Compute AUROC for the Mela ViT classifier on HAM10000 + ISIC 2019."""
 import json, time
 from pathlib import Path
 import numpy as np, torch
@@ -9,7 +9,7 @@ from sklearn.preprocessing import label_binarize
 from transformers import ViTForImageClassification, ViTImageProcessor
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier" / "best"
 OUT = SCRIPT_DIR / "auroc-results.json"
 CLS = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
 NC, MEL, BS = 7, 4, 32
@@ -105,7 +105,7 @@ def run_isic(model, proc, dev):
     return aurocs(labels, probs)
 
 def main():
-    print("="*60+"\nDrAgnes AUROC Computation\n"+"="*60, flush=True)
+    print("="*60+"\nMela AUROC Computation\n"+"="*60, flush=True)
     model, proc, dev = load_model()
     print(f"Device: {dev}", flush=True)
     res = {"ham10000": run_ham(model, proc, dev), "isic2019": run_isic(model, proc, dev)}

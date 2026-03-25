@@ -1,5 +1,5 @@
 /**
- * Offline ONNX Runtime Web inference for DrAgnes.
+ * Offline ONNX Runtime Web inference for Mela.
  *
  * Loads a quantized (int8) ONNX model in the browser via onnxruntime-web
  * and runs ViT classification without any server round-trip.
@@ -16,7 +16,7 @@ import { resizeBilinear } from "./preprocessing";
 const CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
 
 /** Path served from static/models/ via the Service Worker cache. */
-const MODEL_URL = "/models/dragnes-v2-int8.onnx";
+const MODEL_URL = "/models/mela-v2-int8.onnx";
 
 /** ImageNet channel means (RGB). */
 const MEAN: [number, number, number] = [0.485, 0.456, 0.406];

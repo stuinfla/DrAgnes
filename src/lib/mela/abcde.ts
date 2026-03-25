@@ -1,5 +1,5 @@
 /**
- * DrAgnes ABCDE Dermoscopic Scoring
+ * Mela ABCDE Dermoscopic Scoring
  *
  * Implements the ABCDE rule for dermoscopic evaluation:
  * - Asymmetry (0-2): Bilateral symmetry analysis

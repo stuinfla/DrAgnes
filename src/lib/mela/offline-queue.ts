@@ -1,5 +1,5 @@
 /**
- * Offline Sync Queue for DrAgnes Brain Contributions
+ * Offline Sync Queue for Mela Brain Contributions
  *
  * Uses IndexedDB to persist brain contributions when the device is offline.
  * Automatically syncs when connectivity returns, with exponential backoff
@@ -36,7 +36,7 @@ export interface QueueStatus {
 	failedCount: number;
 }
 
-const DB_NAME = "dragnes-offline-queue";
+const DB_NAME = "mela-offline-queue";
 const DB_VERSION = 1;
 const STORE_NAME = "contributions";
 const MAX_ATTEMPTS = 8;

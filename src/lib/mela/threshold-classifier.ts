@@ -1,5 +1,5 @@
 /**
- * Threshold-based classification for DrAgnes (ADR-123).
+ * Threshold-based classification for Mela (ADR-123).
  *
  * Instead of plain argmax (highest probability wins), this applies
  * per-class optimal thresholds derived from ROC analysis on HAM10000

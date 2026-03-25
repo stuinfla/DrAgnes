@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from "svelte";
 	import CarbonCamera from "~icons/carbon/camera";
-	import type { BodyLocation } from "$lib/dragnes/types";
-	import { assessImageQuality } from "$lib/dragnes/image-quality";
-	import type { ImageQualityResult } from "$lib/dragnes/image-quality";
+	import type { BodyLocation } from "$lib/mela/types";
+	import { assessImageQuality } from "$lib/mela/image-quality";
+	import type { ImageQualityResult } from "$lib/mela/image-quality";
 	import BodyMap from "./BodyMap.svelte";
 
 	type ImageType = "dermoscopy" | "clinical" | "auto";

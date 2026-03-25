@@ -10,7 +10,7 @@
 
 <div class="space-y-4 p-4 max-h-[calc(100vh-200px)] overflow-y-auto">
 	<div class="mb-2">
-		<h2 class="text-sm font-bold text-gray-200">How DrAgnes Works</h2>
+		<h2 class="text-sm font-bold text-gray-200">How Mela Works</h2>
 		<p class="text-[10px] text-gray-500 mt-1">
 			Full transparency into the classification pipeline, datasets, and clinical scoring logic.
 		</p>
@@ -38,7 +38,7 @@
 		{#if pipelineOpen}
 			<div class="px-4 pb-4">
 				<p class="text-xs text-gray-400 mb-3">
-					DrAgnes uses a 4-layer ensemble classification system. Each layer catches different failure modes:
+					Mela uses a 4-layer ensemble classification system. Each layer catches different failure modes:
 				</p>
 				<div class="space-y-2">
 					<div class="flex items-start gap-2 rounded-lg bg-gray-800/50 p-3">
@@ -247,7 +247,7 @@
 					<p class="text-gray-500">Score of 3 or more: 95% sensitivity, 75% specificity (retrospective). Major criteria = 2 pts, minor = 1 pt.</p>
 				</div>
 				<div class="rounded-lg bg-gray-800/50 p-2">
-					<p class="font-medium text-gray-300">DrAgnes Targets</p>
+					<p class="font-medium text-gray-300">Mela Targets</p>
 					<p class="text-gray-500">
 						Melanoma sensitivity target: 95%. Overall sensitivity: 95%.
 						Specificity target: 50%. Melanoma FNR ceiling: 5%. NPV minimum: 96%.

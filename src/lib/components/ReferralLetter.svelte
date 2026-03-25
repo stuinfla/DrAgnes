@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Modal from "$lib/components/Modal.svelte";
-	import { getPrimaryICD10 } from "$lib/dragnes/icd10";
-	import type { ClassificationResult, ABCDEScores } from "$lib/dragnes/types";
+	import { getPrimaryICD10 } from "$lib/mela/icd10";
+	import type { ClassificationResult, ABCDEScores } from "$lib/mela/types";
 
 	interface Props {
 		onclose: () => void;
@@ -50,7 +50,7 @@ ABCDE ASSESSMENT:
 RECOMMENDATION:
 ${riskLevel === "high" ? "Urgent evaluation and possible biopsy recommended." : riskLevel === "moderate" ? "Evaluation recommended within 2-4 weeks." : "Routine evaluation at next available appointment."}
 
-NOTE: This referral was generated with AI-assisted screening (Dr. Agnes v0.1.0). AI findings are supplementary and do not replace clinical judgment. The screening tool has not been FDA-cleared for diagnostic use.
+NOTE: This referral was generated with AI-assisted screening (Mela v0.1.0). AI findings are supplementary and do not replace clinical judgment. The screening tool has not been FDA-cleared for diagnostic use.
 
 Referring Provider: ___________________________
 Signature: ___________________________

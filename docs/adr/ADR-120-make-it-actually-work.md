@@ -4,7 +4,7 @@ Created: 2026-03-23
 # ADR-120: Make It Actually Work — No Bullshit Deployment Checklist
 
 ## Status: IMPLEMENTED -- All Phases Complete | Last Updated: 2026-03-24 12:00 EST
-**Implementation Note**: Phase 0 (verify) done -- cross-validation and ISIC 2019 results confirmed. Phase 1 (custom model) partial -- HuggingFace API proxy works as fallback; ONNX browser inference blocked by ConvInteger compat. Phase 2 (consumer output) done -- consumer-translation.ts. Phase 3 (quality gate) done -- image-quality.ts + detectLesionPresence(). Phase 4 (E2E testing) done -- Playwright E2E on desktop + mobile. Phase 5 (deploy) partial -- Vercel live at dragnes.vercel.app; auth protection requires manual disable.
+**Implementation Note**: Phase 0 (verify) done -- cross-validation and ISIC 2019 results confirmed. Phase 1 (custom model) partial -- HuggingFace API proxy works as fallback; ONNX browser inference blocked by ConvInteger compat. Phase 2 (consumer output) done -- consumer-translation.ts. Phase 3 (quality gate) done -- image-quality.ts + detectLesionPresence(). Phase 4 (E2E testing) done -- Playwright E2E on desktop + mobile. Phase 5 (deploy) partial -- Vercel live at mela.vercel.app; auth protection requires manual disable.
 
 ## Context
 
@@ -35,7 +35,7 @@ This ADR is the brutally honest list of what's broken and what must be fixed.
 | 6 | **No consumer-friendly risk levels** | Shows probability percentages instead of "Green/Yellow/Orange/Red" with clear actions. | Implement 4-level risk translation (ADR-119). |
 | 7 | **No "what should I do next" guidance** | After classification, user is left staring at numbers. | Add clear CTA: "Monitor" / "See doctor in 1 month" / "See doctor in 2 weeks". |
 | 8 | **Camera capture unreliable** | Camera permission denied errors, no guidance on framing the lesion. | Add camera guidance overlay: "Center the spot in the circle." |
-| 9 | **Multiple agents modified the same files** | DrAgnesPanel.svelte was edited by 10+ agents. Likely has conflicts or missing imports. | Full build test. Fix any compilation errors. |
+| 9 | **Multiple agents modified the same files** | MelaPanel.svelte was edited by 10+ agents. Likely has conflicts or missing imports. | Full build test. Fix any compilation errors. |
 | 10 | **ABCDE scores may not render correctly** | The UI was redesigned multiple times. Score display may be broken. | End-to-end test with a real lesion image. |
 
 ### MEDIUM (Polish items)
@@ -58,7 +58,7 @@ This ADR is the brutally honest list of what's broken and what must be fixed.
 
 ```bash
 # 1. Does the app compile?
-cd examples/dragnes && npm run build
+cd examples/mela && npm run build
 
 # 2. Does it start?
 npm run dev
@@ -105,7 +105,7 @@ npm install onnxruntime-web
 // In the browser:
 import * as ort from 'onnxruntime-web';
 ort.env.wasm.wasmPaths = '/wasm/';
-const session = await ort.InferenceSession.create('/models/dragnes.onnx');
+const session = await ort.InferenceSession.create('/models/mela.onnx');
 ```
 
 The FP32 ONNX (327MB) is too large for browser download. We MUST get INT8 working. Upgrade onnxruntime:

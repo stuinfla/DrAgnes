@@ -4,11 +4,11 @@ Created: 2026-03-24
 # ADR-126: Pi-Brain Collective Intelligence -- Every Practice Makes Every Other Practice Better
 
 ## Status: IMPLEMENTED -- Anonymization + Brain Client Built, Not Yet Connected | Last Updated: 2026-03-24 12:00 EST
-**Implementation Note**: brain-client.ts (450 lines) exists with API wrappers for pi-brain, but no production integration is active. No feedback capture UI, no anonymization pipeline, no live brain_share() calls from the classification flow. Pi-brain infrastructure exists at pi.ruv.io but is not connected to DrAgnes in production.
+**Implementation Note**: brain-client.ts (450 lines) exists with API wrappers for pi-brain, but no production integration is active. No feedback capture UI, no anonymization pipeline, no live brain_share() calls from the classification flow. Pi-brain infrastructure exists at pi.ruv.io but is not connected to Mela in production.
 
 ## Context
 
-Dr. Agnes currently learns nothing from its own classifications. Every deployment is an island. A dermatologist in Miami who biopsies a lesion that Dr. Agnes flagged as suspicious never feeds the outcome back into the system. A GP in rural India using Dr. Agnes gains nothing from the Miami dermatologist's clinical experience. Every practice starts from scratch, limited to the frozen training set.
+Mela currently learns nothing from its own classifications. Every deployment is an island. A dermatologist in Miami who biopsies a lesion that Mela flagged as suspicious never feeds the outcome back into the system. A GP in rural India using Mela gains nothing from the Miami dermatologist's clinical experience. Every practice starts from scratch, limited to the frozen training set.
 
 This is a solved problem architecturally. Pi-brain (pi.ruv.io) is RuVector's collective intelligence layer and it already exists:
 
@@ -18,13 +18,13 @@ This is a solved problem architecturally. Pi-brain (pi.ruv.io) is RuVector's col
 - **350K+ graph edges** enabling similarity traversal and knowledge clustering
 - **HNSW vector search** for sub-millisecond nearest-neighbor retrieval on feature embeddings
 
-The infrastructure is designed but NOT connected in production. Dr. Agnes writes classifications to local state and discards them. Pi-brain sits idle with respect to dermatology. Connecting them means that when a clinician records a biopsy outcome ("that lesion Dr. Agnes scored 5.2 TDS turned out to be a Spitz nevus"), that outcome -- anonymized, noise-added, stripped of all patient identifiers -- flows into the collective graph. Every other Dr. Agnes instance in the world benefits the next time it encounters a similar lesion.
+The infrastructure is designed but NOT connected in production. Mela writes classifications to local state and discards them. Pi-brain sits idle with respect to dermatology. Connecting them means that when a clinician records a biopsy outcome ("that lesion Mela scored 5.2 TDS turned out to be a Spitz nevus"), that outcome -- anonymized, noise-added, stripped of all patient identifiers -- flows into the collective graph. Every other Mela instance in the world benefits the next time it encounters a similar lesion.
 
 **The core insight: dermatology is a pattern-matching discipline.** The more patterns the system has seen with confirmed outcomes, the better it gets. No single practice sees enough volume to build this corpus alone. Collective intelligence is the only way to build it without centralized data collection that violates patient privacy.
 
 ## Decision
 
-Connect Dr. Agnes to pi-brain for anonymized, differentially private case sharing. Every classification with a confirmed clinical outcome becomes a collective learning event.
+Connect Mela to pi-brain for anonymized, differentially private case sharing. Every classification with a confirmed clinical outcome becomes a collective learning event.
 
 ### Data Flow Architecture
 
@@ -96,9 +96,9 @@ Connect Dr. Agnes to pi-brain for anonymized, differentially private case sharin
 │  └──────────────────────┘                                       │
 │                                                                 │
 │  Anti-Corruption Layer:                                         │
-│  - Maps between DrAgnes domain (TDS, ABCDE, HAM10000 taxonomy) │
+│  - Maps between Mela domain (TDS, ABCDE, HAM10000 taxonomy) │
 │    and pi-brain domain (memories, graph edges, embeddings)      │
-│  - Ensures pi-brain schema changes do not break DrAgnes         │
+│  - Ensures pi-brain schema changes do not break Mela         │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -122,7 +122,7 @@ Connect Dr. Agnes to pi-brain for anonymized, differentially private case sharin
 ### Implementation Plan
 
 **Phase 1: Feedback Capture (Week 1-2)**
-- Add outcome recording UI in DrAgnesPanel: "What was the clinical outcome?"
+- Add outcome recording UI in MelaPanel: "What was the clinical outcome?"
 - Options: biopsy-confirmed diagnosis (HAM10000 labels), clinical follow-up (stable/changed), lost to follow-up
 - Store outcome locally in IndexedDB alongside the original classification
 - No data leaves the device in this phase
@@ -225,7 +225,7 @@ interface SimilarCaseResult {
 ## Consequences
 
 **Positive:**
-- Every confirmed clinical outcome improves every Dr. Agnes deployment worldwide
+- Every confirmed clinical outcome improves every Mela deployment worldwide
 - Rural practices with low case volume benefit from urban specialist feedback
 - Creates a dermoscopy knowledge graph that grows with use, unlike static training sets
 - Witness chains enable regulatory-grade audit trails
@@ -240,8 +240,8 @@ interface SimilarCaseResult {
 
 ## References
 
-- ADR-117: DrAgnes Dermatology Intelligence Platform (foundational architecture)
-- ADR-118: DrAgnes Production Validation (clinical accuracy targets)
+- ADR-117: Mela Dermatology Intelligence Platform (foundational architecture)
+- ADR-118: Mela Production Validation (clinical accuracy targets)
 - ADR-119: Consumer Skin Screening (non-clinical use case)
 - HIPAA Safe Harbor Method: 45 CFR 164.514(b)(2)
 - Dwork, C. "Differential Privacy" (ICALP 2006) -- epsilon-differential privacy framework

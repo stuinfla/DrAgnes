@@ -1,5 +1,5 @@
 /**
- * DrAgnes Dermoscopic Image Analysis Engine
+ * Mela Dermoscopic Image Analysis Engine
  *
  * Performs real computer vision analysis on skin lesion images
  * for classification and ABCDE scoring. All processing uses pure

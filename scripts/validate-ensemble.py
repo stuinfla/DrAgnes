@@ -29,8 +29,8 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 # ── Constants ──────────────────────────────────────────────────────────
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-V1_DIR = SCRIPT_DIR / "dragnes-classifier" / "best"
-V2_DIR = SCRIPT_DIR / "dragnes-classifier-v2" / "best"
+V1_DIR = SCRIPT_DIR / "mela-classifier" / "best"
+V2_DIR = SCRIPT_DIR / "mela-classifier-v2" / "best"
 OUTPUT_PATH = SCRIPT_DIR / "ensemble-validation-results.json"
 
 CLASS_NAMES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]

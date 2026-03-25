@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ISIC 2019 Cross-Dataset Validation for DrAgnes Classifier
+ISIC 2019 Cross-Dataset Validation for Mela Classifier
 =========================================================
-Validates the DrAgnes ViT model (trained on HAM10000) against a large
+Validates the Mela ViT model (trained on HAM10000) against a large
 independent dermoscopy dataset with ISIC 2019-style 8-class labels
 (MEL, NV, BCC, AK, BKL, DF, VASC, SCC) mapped to the HAM10000 7-class
 scheme used by the model.
@@ -34,7 +34,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier" / "best"
 RESULTS_PATH = SCRIPT_DIR / "isic2019-validation-results.json"
 
 # Primary dataset (confirmed working: 26K images, 8 ISIC classes)
@@ -151,7 +151,7 @@ def apply_random_augmentation(image):
 
 def main():
     log("=" * 70)
-    log("DrAgnes ISIC 2019 Cross-Dataset Validation")
+    log("Mela ISIC 2019 Cross-Dataset Validation")
     log("=" * 70)
     log(f"Timestamp: {datetime.now().isoformat()}")
     log(f"Model: {MODEL_DIR}")

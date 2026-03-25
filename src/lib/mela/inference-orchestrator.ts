@@ -1,5 +1,5 @@
 /**
- * Inference Orchestrator for DrAgnes
+ * Inference Orchestrator for Mela
  *
  * Routes classification requests between:
  *  - offline: ONNX Runtime Web in-browser inference (no network)

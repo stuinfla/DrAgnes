@@ -1,5 +1,5 @@
 /**
- * DrAgnes Feedback API Endpoint
+ * Mela Feedback API Endpoint
  *
  * POST /api/feedback
  *
@@ -11,8 +11,8 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { shareDiagnosis } from "$lib/dragnes/brain-client";
-import type { LesionClass, BodyLocation } from "$lib/dragnes/types";
+import { shareDiagnosis } from "$lib/mela/brain-client";
+import type { LesionClass, BodyLocation } from "$lib/mela/types";
 
 type FeedbackAction = "confirm" | "correct" | "biopsy";
 
@@ -122,7 +122,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			throw err;
 		}
 
-		console.error("[dragnes/feedback] Error:", err);
+		console.error("[mela/feedback] Error:", err);
 		throw error(500, "Failed to process feedback");
 	}
 };

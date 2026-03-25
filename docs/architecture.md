@@ -1,4 +1,4 @@
-# DrAgnes System Architecture
+# Mela System Architecture
 
 Updated: 2026-03-22 18:30:00 EST | Version 1.1.0
 Created: 2026-03-21
@@ -7,13 +7,13 @@ Created: 2026-03-21
 
 ## Overview
 
-DrAgnes is a layered architecture that connects dermoscopic imaging hardware through a mobile-first web application to a 4-layer classification ensemble and collective intelligence brain. The design prioritizes offline capability, privacy preservation, clinical safety, and honest accuracy reporting.
+Mela is a layered architecture that connects dermoscopic imaging hardware through a mobile-first web application to a 4-layer classification ensemble and collective intelligence brain. The design prioritizes offline capability, privacy preservation, clinical safety, and honest accuracy reporting.
 
 ## High-Level Architecture
 
 ```
                     ┌──────────────────────────────────────────────────────────────┐
-                    │                      DrAgnes Platform (v0.2.0)               │
+                    │                      Mela Platform (v0.2.0)               │
                     │                                                              │
   ┌──────────┐     │  ┌──────────────┐    ┌─────────────────────────────────────┐ │
   │ DermLite │────>│  │  SvelteKit   │───>│  4-Layer Classification Ensemble    │ │
@@ -239,11 +239,11 @@ Cross-Practice Learning
 
 ### 4. SvelteKit UI (5-Tab Interface)
 
-DrAgnes is a standalone SvelteKit application with 5 tabs. The main panel is `DrAgnesPanel.svelte`.
+Mela is a standalone SvelteKit application with 5 tabs. The main panel is `MelaPanel.svelte`.
 
 **UI Components**:
 ```
-DrAgnes Panel (DrAgnesPanel.svelte)
+Mela Panel (MelaPanel.svelte)
     │
     ├── Tab 1: Capture (DermCapture.svelte)
     │       ├── Camera viewfinder with DermLite device selection
@@ -344,7 +344,7 @@ ViT-Base Fine-Tuning
     └── Model selection: by melanoma sensitivity (not overall accuracy)
     │
     ▼
-stuinfla/dragnes-classifier (HuggingFace Hub)
+stuinfla/mela-classifier (HuggingFace Hub)
 ```
 
 **Validation Harness** (`scripts/validate-models.mjs`):

@@ -10,8 +10,8 @@
     },
     "mel_safety_threshold": 0.15,
     "device": "mps",
-    "v1_model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier/best",
-    "v2_model": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best"
+    "v1_model": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier/best",
+    "v2_model": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier-v2/best"
   },
   "v1_only": {
     "overall_accuracy": 0.65,

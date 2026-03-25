@@ -154,16 +154,16 @@
 
 		<!-- SECTION 0: CONSUMER INTRODUCTION -->
 		<section class="mt-6">
-			<!-- What is Dr. Agnes -->
+			<!-- What is Mela -->
 			<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-				<h3 class="text-lg font-semibold text-white tracking-tight">What is Dr. Agnes?</h3>
+				<h3 class="text-lg font-semibold text-white tracking-tight">What is Mela?</h3>
 				<p class="mt-3 text-[13px] text-gray-300 leading-relaxed">
-					Dr. Agnes is a free AI skin screening tool. It helps you decide if a spot on your skin
+					Mela is a free AI skin screening tool. It helps you decide if a spot on your skin
 					is worth seeing a doctor about.
 				</p>
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
 					It is not a diagnosis. Think of it like a thermometer for your skin. A thermometer tells
-					you if you might have a fever. Dr. Agnes tells you if a spot might need professional attention.
+					you if you might have a fever. Mela tells you if a spot might need professional attention.
 					Always see a doctor for a definitive answer.
 				</p>
 			</div>
@@ -194,11 +194,11 @@
 
 			<!-- How to use it -->
 			<div class="mt-3 rounded-2xl border border-teal-500/15 bg-teal-500/[0.03] p-5">
-				<h3 class="text-sm font-semibold text-teal-300">How to use Dr. Agnes</h3>
+				<h3 class="text-sm font-semibold text-teal-300">How to use Mela</h3>
 				<ol class="mt-3 space-y-3 text-[13px] text-gray-400 leading-relaxed">
 					<li class="flex gap-3">
 						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">1</span>
-						<span>Open Dr. Agnes on your phone.</span>
+						<span>Open Mela on your phone.</span>
 					</li>
 					<li class="flex gap-3">
 						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">2</span>
@@ -206,7 +206,7 @@
 					</li>
 					<li class="flex gap-3">
 						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">3</span>
-						<span>Dr. Agnes analyzes the image using AI trained on 37,484 dermoscopy images from multiple hospitals.</span>
+						<span>Mela analyzes the image using AI trained on 37,484 dermoscopy images from multiple hospitals.</span>
 					</li>
 					<li class="flex gap-3">
 						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">4</span>
@@ -252,9 +252,9 @@
 
 			<!-- What it's NOT + Honesty -->
 			<div class="mt-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-5">
-				<h3 class="text-sm font-semibold text-amber-300">What Dr. Agnes is NOT</h3>
+				<h3 class="text-sm font-semibold text-amber-300">What Mela is NOT</h3>
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
-					Dr. Agnes is not a medical diagnosis. It is a screening aid. It tells you if a spot
+					Mela is not a medical diagnosis. It is a screening aid. It tells you if a spot
 					<em>might</em> be worth professional evaluation. It does not replace a dermatologist.
 					If a result says "See a dermatologist," please do.
 				</p>
@@ -269,7 +269,7 @@
 			<div class="mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
 				<h3 class="text-sm font-semibold text-gray-200">The technology in plain English</h3>
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
-					Dr. Agnes uses a Vision Transformer — an AI that learned to recognize skin conditions
+					Mela uses a Vision Transformer — an AI that learned to recognize skin conditions
 					by studying 37,484 images from multiple hospitals. Every result goes through Bayesian
 					risk calibration and multi-layer safety gates so you get honest, actionable information.
 					Not false alarms. Not false reassurance.
@@ -328,7 +328,7 @@
 			<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
 				<div class="grid grid-cols-3 gap-px border-b border-white/[0.04]">
 					<div class="px-3 py-2.5 text-[10px] font-medium text-gray-500">Metric</div>
-					<div class="px-3 py-2.5 text-center text-[10px] font-medium text-teal-400">Dr. Agnes</div>
+					<div class="px-3 py-2.5 text-center text-[10px] font-medium text-teal-400">Mela</div>
 					<div class="px-3 py-2.5 text-center text-[10px] font-medium text-gray-500">DermaSensor ($7K)</div>
 				</div>
 				<div class="divide-y divide-white/[0.04]">
@@ -569,7 +569,7 @@
 			<!-- Links -->
 			<div class="mt-4 flex flex-wrap gap-2">
 				<a
-					href="https://github.com/stuinfla/DrAgnes"
+					href="https://github.com/stuinfla/Mela"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[11px] font-medium text-gray-300 hover:bg-white/[0.06] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/40"
@@ -578,7 +578,7 @@
 					GitHub
 				</a>
 				<a
-					href="https://huggingface.co/stuartkerr/dragnes-classifier"
+					href="https://huggingface.co/stuartkerr/mela-classifier"
 					target="_blank"
 					rel="noopener noreferrer"
 					class="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[11px] font-medium text-gray-300 hover:bg-white/[0.06] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/40"
@@ -592,7 +592,7 @@
 		<!-- Research disclaimer -->
 		<div class="mt-6 mb-4 rounded-2xl border border-red-500/15 bg-red-500/5 p-5 text-center">
 			<p class="text-[11px] text-red-400/80 leading-relaxed">
-				<strong>RESEARCH USE ONLY.</strong> Dr. Agnes is not FDA-cleared and must not be used
+				<strong>RESEARCH USE ONLY.</strong> Mela is not FDA-cleared and must not be used
 				for clinical decision-making without appropriate regulatory authorization and professional medical oversight.
 			</p>
 		</div>

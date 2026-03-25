@@ -3,7 +3,7 @@
  * feedback; computes concordance, per-class accuracy, calibration, equity,
  * and trends.  Persists to localStorage.
  */
-import type { LesionClass } from "$lib/dragnes/types";
+import type { LesionClass } from "$lib/mela/types";
 
 export interface ClassificationEvent {
 	id: string;
@@ -91,8 +91,8 @@ export interface PracticeMetrics {
 	rolling30Day: RollingConcordance[];
 }
 
-const STORAGE_KEY_EVENTS = "dragnes_analytics_events";
-const STORAGE_KEY_FEEDBACK = "dragnes_analytics_feedback";
+const STORAGE_KEY_EVENTS = "mela_analytics_events";
+const STORAGE_KEY_FEEDBACK = "mela_analytics_feedback";
 
 function loadFromStorage<T>(key: string): T[] {
 	if (typeof window === "undefined") return [];

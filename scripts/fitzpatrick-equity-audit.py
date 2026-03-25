@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fitzpatrick skin tone equity analysis for DrAgnes 7-class classifier."""
+"""Fitzpatrick skin tone equity analysis for Mela 7-class classifier."""
 
 import csv, io, json, sys, urllib.request
 from collections import Counter, defaultdict
@@ -28,7 +28,7 @@ rows = list(reader)
 print(f"  Total rows: {len(rows)}")
 
 # Filter to our 7 classes and build cross-tabulation
-cross = defaultdict(Counter)  # cross[dragnes_class][skin_type] = count
+cross = defaultdict(Counter)  # cross[mela_class][skin_type] = count
 total_by_skin = Counter()
 mapped_rows = []
 for row in rows:
@@ -89,7 +89,7 @@ if not critical:
 
 # Build report
 report = {
-    "dataset": "Fitzpatrick17k (filtered to DrAgnes 7 classes)",
+    "dataset": "Fitzpatrick17k (filtered to Mela 7 classes)",
     "total_mapped": len(mapped_rows),
     "cross_tabulation": {cls: {str(s): cross[cls][s] for s in [-1]+SKIN_TYPES} for cls in sorted(cross)},
     "totals_by_skin_type": {SKIN_LABELS[s]: total_by_skin[s] for s in [-1]+SKIN_TYPES},

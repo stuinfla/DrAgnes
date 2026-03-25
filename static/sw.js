@@ -1,5 +1,5 @@
 /**
- * DrAgnes Service Worker
+ * Mela Service Worker
  * Provides offline capability for dermoscopy analysis.
  *
  * Strategies:
@@ -8,7 +8,7 @@
  *  - Background sync for queued brain contributions
  */
 
-const CACHE_VERSION = 'dragnes-v1';
+const CACHE_VERSION = 'mela-v1';
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const MODEL_CACHE = `${CACHE_VERSION}-model`;
 const API_CACHE = `${CACHE_VERSION}-api`;
@@ -16,8 +16,8 @@ const API_CACHE = `${CACHE_VERSION}-api`;
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/dragnes-icon-192.svg',
-  '/dragnes-icon-512.svg',
+  '/mela-icon-192.svg',
+  '/mela-icon-512.svg',
 ];
 
 const MODEL_ASSETS = [
@@ -43,7 +43,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key.startsWith('dragnes-') && key !== STATIC_CACHE && key !== MODEL_CACHE && key !== API_CACHE)
+          .filter((key) => key.startsWith('mela-') && key !== STATIC_CACHE && key !== MODEL_CACHE && key !== API_CACHE)
           .map((key) => caches.delete(key))
       )
     ).then(() => self.clients.claim())
@@ -81,7 +81,7 @@ self.addEventListener('fetch', (event) => {
 // ---- Background Sync --------------------------------------------------------
 
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'dragnes-brain-sync') {
+  if (event.tag === 'mela-brain-sync') {
     event.waitUntil(syncBrainContributions());
   }
 });
@@ -103,7 +103,7 @@ async function syncBrainContributions() {
       }
     }
   } catch (error) {
-    console.error('[DrAgnes SW] Background sync failed:', error);
+    console.error('[Mela SW] Background sync failed:', error);
   }
 }
 
@@ -117,10 +117,10 @@ self.addEventListener('push', (event) => {
   if (data.type === 'model-update') {
     event.waitUntil(
       Promise.all([
-        self.registration.showNotification('DrAgnes Model Updated', {
+        self.registration.showNotification('Mela Model Updated', {
           body: `Model ${data.version} is available with improved accuracy.`,
-          icon: '/dragnes-icon-192.svg',
-          badge: '/dragnes-icon-192.svg',
+          icon: '/mela-icon-192.svg',
+          badge: '/mela-icon-192.svg',
           tag: 'model-update',
         }),
         // Refresh cached model assets
@@ -134,9 +134,9 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   event.waitUntil(
     self.clients.matchAll({ type: 'window' }).then((clients) => {
-      const dragnesClient = clients.find((c) => c.url.includes('/'));
-      if (dragnesClient) {
-        return dragnesClient.focus();
+      const melaClient = clients.find((c) => c.url.includes('/'));
+      if (melaClient) {
+        return melaClient.focus();
       }
       return self.clients.openWindow('/');
     })

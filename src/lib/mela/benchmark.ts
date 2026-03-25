@@ -1,5 +1,5 @@
 /**
- * DrAgnes Classification Benchmark Module
+ * Mela Classification Benchmark Module
  *
  * Generates synthetic dermoscopic test images and runs classification
  * benchmarks to measure inference latency and per-class accuracy.

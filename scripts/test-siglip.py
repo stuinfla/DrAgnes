@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-DrAgnes Model Benchmark: SigLIP / SwinV2 / ViT-Melanoma
+Mela Model Benchmark: SigLIP / SwinV2 / ViT-Melanoma
 
 Tests three dermatology models against HAM10000 test images (last 15%, 30/class):
   1. skintaglabs/siglip-skin-lesion-classifier  (SigLIP 400M + XGBoost head, binary)
@@ -663,7 +663,7 @@ def print_vit_melanoma_report(results):
 # ==================================================================
 def main():
     print("=" * 70)
-    print("  DrAgnes Model Benchmark: SigLIP / SwinV2 / ViT-Melanoma")
+    print("  Mela Model Benchmark: SigLIP / SwinV2 / ViT-Melanoma")
     print("  Running LOCALLY with transformers (not via HF Inference API)")
     print("=" * 70)
 

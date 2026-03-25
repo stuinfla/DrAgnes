@@ -1,7 +1,7 @@
-# ADR-117: DrAgnes Dermatology Intelligence Platform
+# ADR-117: Mela Dermatology Intelligence Platform
 
 **Status**: IMPLEMENTED | Last Updated: 2026-03-24 12:00 EST
-**Implementation Note**: Core platform built -- classifier.ts (973 lines, 4-layer ensemble), image-analysis.ts (2059 lines, full CV pipeline), consumer-translation.ts, DermCapture.svelte, DrAgnesPanel.svelte, trained ViT model on HAM10000 + ISIC 2019. Phase 1 foundation complete. Phases 2-4 (clinical integration, advanced imaging, autonomous intelligence) remain future roadmap.
+**Implementation Note**: Core platform built -- classifier.ts (973 lines, 4-layer ensemble), image-analysis.ts (2059 lines, full CV pipeline), consumer-translation.ts, DermCapture.svelte, MelaPanel.svelte, trained ViT model on HAM10000 + ISIC 2019. Phase 1 foundation complete. Phases 2-4 (clinical integration, advanced imaging, autonomous intelligence) remain future roadmap.
 **Date**: 2026-03-21
 **Author**: Claude (ruvnet)
 **Crates**: `ruvector-cnn`, `ruvector-cnn-wasm`, `mcp-brain-server`, `ruvector-sparsifier`, `ruvector-mincut`, `ruvector-solver`
@@ -27,13 +27,13 @@ RuVector already provides the technical substrate for a superior platform:
 
 ## Decision
 
-Build DrAgnes as an AI-powered dermatology intelligence platform on the RuVector stack that integrates DermLite dermoscopic imaging, CNN-based classification, pi.ruv.io brain collective learning, and the RuVocal chat interface for clinical decision support.
+Build Mela as an AI-powered dermatology intelligence platform on the RuVector stack that integrates DermLite dermoscopic imaging, CNN-based classification, pi.ruv.io brain collective learning, and the RuVocal chat interface for clinical decision support.
 
 ### Architecture
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│                      DrAgnes Platform                            │
+│                      Mela Platform                            │
 │                                                                  │
 │  ┌─────────────────┐   ┌──────────────┐   ┌──────────────────┐  │
 │  │   RuVocal PWA   │──▶│ ruvector-cnn │──▶│  pi.ruv.io Brain │  │
@@ -101,7 +101,7 @@ Build DrAgnes as an AI-powered dermatology intelligence platform on the RuVector
 ### Data Model
 
 ```typescript
-// Core entities for DrAgnes
+// Core entities for Mela
 
 interface DermImage {
   id: string;                          // UUID v7

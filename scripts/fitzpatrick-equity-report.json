@@ -1,5 +1,5 @@
 {
-  "dataset": "Fitzpatrick17k (filtered to DrAgnes 7 classes)",
+  "dataset": "Fitzpatrick17k (filtered to Mela 7 classes)",
   "total_mapped": 3413,
   "cross_tabulation": {
     "akiec": {

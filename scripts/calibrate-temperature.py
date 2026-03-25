@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Temperature scaling calibration for DrAgnes v2.
+"""Temperature scaling calibration for Mela v2.
 
 Finds optimal temperature T that minimises NLL on the ISIC 2019 holdout,
 producing well-calibrated probabilities: calibrated = softmax(logits / T).
@@ -18,7 +18,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 
 warnings.filterwarnings("ignore"); os.environ["TOKENIZERS_PARALLELISM"] = "false"
 SD = Path(__file__).resolve().parent
-MD = SD / "dragnes-classifier-v2" / "best"
+MD = SD / "mela-classifier-v2" / "best"
 NC, BS = 7, 32
 I2H = {0:0, 1:1, 2:2, 3:3, 4:4, 5:5, 6:0, 7:6}
 

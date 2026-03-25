@@ -1,11 +1,11 @@
-# DrAgnes DermLite Integration Research
+# Mela DermLite Integration Research
 
 **Status**: Research & Planning
 **Date**: 2026-03-21
 
 ## Overview
 
-DermLite (manufactured by 3Gen Inc., San Juan Capistrano, CA) is the world's most widely used line of dermatoscopes. DrAgnes is designed as a DermLite-native platform, providing purpose-built integration with their device ecosystem for standardized dermoscopic imaging and analysis.
+DermLite (manufactured by 3Gen Inc., San Juan Capistrano, CA) is the world's most widely used line of dermatoscopes. Mela is designed as a DermLite-native platform, providing purpose-built integration with their device ecosystem for standardized dermoscopic imaging and analysis.
 
 ## DermLite Device Lineup
 
@@ -21,7 +21,7 @@ DermLite (manufactured by 3Gen Inc., San Juan Capistrano, CA) is the world's mos
   - Built-in display shows magnified real-time view
   - Dual-mode: polarized and non-polarized switching
   - Internal storage for batch capture
-- **DrAgnes Integration**: Wi-Fi direct for image transfer; Bluetooth for device control and metadata. Best suited for high-volume clinical environments.
+- **Mela Integration**: Wi-Fi direct for image transfer; Bluetooth for device control and metadata. Best suited for high-volume clinical environments.
 
 ### DermLite DL5
 
@@ -35,7 +35,7 @@ DermLite (manufactured by 3Gen Inc., San Juan Capistrano, CA) is the world's mos
   - Hybrid mode allows instant switching without contact loss
   - Crystal-clear optics with minimal distortion
   - Compact enough for pocket carry
-- **DrAgnes Integration**: Phone camera passthrough via adapter. Camera API captures at phone's native resolution. DL5's PigmentBoost mode is flagged in metadata for preprocessing calibration.
+- **Mela Integration**: Phone camera passthrough via adapter. Camera API captures at phone's native resolution. DL5's PigmentBoost mode is flagged in metadata for preprocessing calibration.
 
 ### DermLite DL4
 
@@ -48,7 +48,7 @@ DermLite (manufactured by 3Gen Inc., San Juan Capistrano, CA) is the world's mos
   - Most affordable DermLite model
   - Widely adopted in primary care
   - Lightweight (50g)
-- **DrAgnes Integration**: Same phone camera passthrough as DL5. Lower-tier device but adequate for DrAgnes classification. Ideal for primary care adoption.
+- **Mela Integration**: Same phone camera passthrough as DL5. Lower-tier device but adequate for Mela classification. Ideal for primary care adoption.
 
 ### DermLite DL200 Hybrid
 
@@ -62,14 +62,14 @@ DermLite (manufactured by 3Gen Inc., San Juan Capistrano, CA) is the world's mos
   - Contact mode reveals subsurface structures (vessels, deeper pigment)
   - Non-contact mode for mucosal surfaces, painful areas
   - Dual-mode in single device
-- **DrAgnes Integration**: Contact mode detection via metadata or image analysis (presence of glass plate reflection). Different preprocessing paths for contact vs. non-contact images.
+- **Mela Integration**: Contact mode detection via metadata or image analysis (presence of glass plate reflection). Different preprocessing paths for contact vs. non-contact images.
 
 ## Image Capture Integration
 
 ### MediaStream API (Browser-Based)
 
 ```
-DrAgnes Camera Module
+Mela Camera Module
     │
     ├── navigator.mediaDevices.getUserMedia({
     │       video: {
@@ -101,7 +101,7 @@ DrAgnes Camera Module
 
 ### DermLite Device Detection
 
-DrAgnes auto-detects DermLite attachment through multiple signals:
+Mela auto-detects DermLite attachment through multiple signals:
 
 1. **Image analysis**: DermLite images have characteristic features:
    - Circular field of view (dark corners from circular optics)
@@ -115,7 +115,7 @@ DrAgnes auto-detects DermLite attachment through multiple signals:
 
 ### Image Quality Assessment
 
-Before classification, DrAgnes assesses image quality:
+Before classification, Mela assesses image quality:
 
 ```
 Quality Assessment Pipeline
@@ -238,7 +238,7 @@ A structured scoring system for dermoscopic evaluation:
 
 **Interpretation**: Total score >= 3 suggests melanoma. Sensitivity ~95%, specificity ~75% in clinical studies.
 
-**DrAgnes Implementation**: Each criterion has a dedicated CNN sub-head trained on the Derm7pt dataset which provides expert annotations for all 7 criteria. The sub-heads share the MobileNetV3 backbone but have independent classification layers.
+**Mela Implementation**: Each criterion has a dedicated CNN sub-head trained on the Derm7pt dataset which provides expert annotations for all 7 criteria. The sub-heads share the MobileNetV3 backbone but have independent classification layers.
 
 ### Menzies Method
 
@@ -259,11 +259,11 @@ A simplified 2-step approach used in clinical practice:
 8. Multiple blue-gray dots
 9. Broadened network
 
-**DrAgnes Implementation**: Binary classifiers for each positive and negative feature. If both negative features are absent AND at least one positive feature is present, flag for melanoma consideration.
+**Mela Implementation**: Binary classifiers for each positive and negative feature. If both negative features are absent AND at least one positive feature is present, flag for melanoma consideration.
 
 ### Pattern Analysis (Advanced Dermoscopy)
 
-Beyond ABCDE and checklists, DrAgnes performs pattern-level analysis:
+Beyond ABCDE and checklists, Mela performs pattern-level analysis:
 
 **Global Patterns**:
 | Pattern | Association | Detection |
@@ -294,9 +294,9 @@ Beyond ABCDE and checklists, DrAgnes performs pattern-level analysis:
 
 ### FHIR R4 Resources
 
-DrAgnes maps to standard FHIR resources for EHR interoperability:
+Mela maps to standard FHIR resources for EHR interoperability:
 
-| DrAgnes Entity | FHIR Resource | Notes |
+| Mela Entity | FHIR Resource | Notes |
 |---------------|---------------|-------|
 | DermImage | Media | With bodySite coding (SNOMED CT) |
 | LesionClassification | DiagnosticReport | observationResult references |
@@ -321,7 +321,7 @@ DrAgnes maps to standard FHIR resources for EHR interoperability:
 
 ### Color Calibration
 
-DermLite LEDs have a known color temperature (~4500K). DrAgnes calibrates:
+DermLite LEDs have a known color temperature (~4500K). Mela calibrates:
 1. Capture image of ColorChecker (X-Rite) chart through DermLite
 2. Compute color correction matrix (3x3 affine in CIELAB)
 3. Apply correction to all subsequent captures
@@ -336,7 +336,7 @@ DermLite LEDs have a known color temperature (~4500K). DrAgnes calibrates:
 
 ### Inter-Device Consistency
 
-Different DermLite models produce subtly different images. DrAgnes normalizes:
+Different DermLite models produce subtly different images. Mela normalizes:
 - **Color normalization**: Shades of Gray algorithm standardizes illumination
 - **Magnification normalization**: Resize to consistent pixels-per-mm
 - **Polarization normalization**: Separate processing paths for polarized vs. non-polarized

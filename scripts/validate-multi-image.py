@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Multi-Image Consensus Validation for DrAgnes ViT Classifier
+Multi-Image Consensus Validation for Mela ViT Classifier
 ============================================================
 Measures actual accuracy improvement from multi-image voting on HAM10000.
 
@@ -10,7 +10,7 @@ Three methods compared:
   3. 3-image quality-weighted vote (weighted by Laplacian sharpness)
 
 Dataset: kuchikihater/HAM10000 (10,015 images, 7 classes)
-Model:   ViT-Base fine-tuned on HAM10000 (scripts/dragnes-classifier/best/)
+Model:   ViT-Base fine-tuned on HAM10000 (scripts/mela-classifier/best/)
 """
 
 import json
@@ -29,7 +29,7 @@ from PIL import Image
 from transformers import ViTForImageClassification, ViTImageProcessor
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier" / "best"
 RESULTS_PATH = SCRIPT_DIR / "multi-image-validation-results.json"
 
 CLASS_NAMES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"]
@@ -124,7 +124,7 @@ def main():
     random.seed(SEED)
     np.random.seed(SEED)
     log("=" * 70)
-    log("Multi-Image Consensus Validation — DrAgnes ViT")
+    log("Multi-Image Consensus Validation — Mela ViT")
     log("=" * 70)
     log(f"Timestamp: {datetime.now().isoformat()}")
 

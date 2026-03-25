@@ -1,8 +1,8 @@
 {
   "adr": "ADR-124",
-  "title": "Fitzpatrick Skin Tone Equity Validation \u2014 DrAgnes v2",
+  "title": "Fitzpatrick Skin Tone Equity Validation \u2014 Mela v2",
   "timestamp": "2026-03-24T13:26:15.806885+00:00",
-  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best",
+  "model_path": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier-v2/best",
   "model_type": "ViT-Base (google/vit-base-patch16-224)",
   "device": "mps",
   "dataset": {

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ADR-124: Fitzpatrick Skin Tone Equity Validation — DrAgnes v2 Combined Model
+ADR-124: Fitzpatrick Skin Tone Equity Validation — Mela v2 Combined Model
 =============================================================================
-Validates the DrAgnes v2 ViT-Base classifier across all six Fitzpatrick skin
+Validates the Mela v2 ViT-Base classifier across all six Fitzpatrick skin
 types (I-VI) using a stratified sample from Fitzpatrick17k.
 
 Steps:
@@ -17,7 +17,7 @@ Steps:
   6. Save results to scripts/fitzpatrick-v2-validation.json
 
 Usage:
-    python3 examples/dragnes/scripts/fitzpatrick-validate-v2.py
+    python3 examples/mela/scripts/fitzpatrick-validate-v2.py
 """
 
 import csv
@@ -43,7 +43,7 @@ from transformers import ViTForImageClassification, ViTImageProcessor
 # ---------------------------------------------------------------------------
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-MODEL_DIR = SCRIPT_DIR / "dragnes-classifier-v2" / "best"
+MODEL_DIR = SCRIPT_DIR / "mela-classifier-v2" / "best"
 MANIFEST_PATH = SCRIPT_DIR / "dataset-manifests" / "fitzpatrick17k.json"
 RESULTS_PATH = SCRIPT_DIR / "fitzpatrick-v2-validation.json"
 IMAGE_CACHE_DIR = SCRIPT_DIR / ".fitzpatrick-image-cache"
@@ -98,7 +98,7 @@ def download_image(url: str, cache_path: Path) -> Image.Image | None:
             headers={
                 "User-Agent": (
                     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "DrAgnes-Research/1.0"
+                    "Mela-Research/1.0"
                 )
             },
         )
@@ -287,7 +287,7 @@ def _severity(gap: float) -> str:
 
 def main() -> None:
     log("=" * 72)
-    log("ADR-124: Fitzpatrick Skin Tone Equity Validation — DrAgnes v2")
+    log("ADR-124: Fitzpatrick Skin Tone Equity Validation — Mela v2")
     log("=" * 72)
     log(f"Timestamp: {datetime.now(timezone.utc).isoformat()}")
     log(f"Model:     {MODEL_DIR}")
@@ -325,15 +325,15 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 3. Filter to our 7 classes and valid skin types
     # ------------------------------------------------------------------
-    log("Filtering to DrAgnes 7 classes with valid Fitzpatrick types...")
+    log("Filtering to Mela 7 classes with valid Fitzpatrick types...")
     eligible: list[dict[str, Any]] = []
     unmapped_count = 0
     invalid_skin_count = 0
 
     for row in all_rows:
         label = row.get("label", "").strip().lower()
-        dragnes_class = class_mapping.get(label)
-        if dragnes_class is None:
+        mela_class = class_mapping.get(label)
+        if mela_class is None:
             unmapped_count += 1
             continue
 
@@ -355,7 +355,7 @@ def main() -> None:
         md5 = row.get("md5hash", "").strip()
         eligible.append({
             "label": label,
-            "dragnes_class": dragnes_class,
+            "mela_class": mela_class,
             "fitzpatrick": ft,
             "url": url,
             "md5": md5,
@@ -368,7 +368,7 @@ def main() -> None:
     # Distribution before sampling
     dist = defaultdict(lambda: defaultdict(int))
     for row in eligible:
-        dist[row["dragnes_class"]][row["fitzpatrick"]] += 1
+        dist[row["mela_class"]][row["fitzpatrick"]] += 1
 
     log("\n  Available distribution (class x skin type):")
     header = f"  {'Class':<8}" + "".join(f"{'T'+SKIN_TYPE_LABELS[s]:>6}" for s in VALID_SKIN_TYPES) + f"{'Total':>8}"
@@ -387,7 +387,7 @@ def main() -> None:
     log(f"Stratified sampling (max {MAX_PER_CLASS_PER_TYPE} per class per type)...")
     grouped: dict[tuple[str, int], list[dict]] = defaultdict(list)
     for row in eligible:
-        grouped[(row["dragnes_class"], row["fitzpatrick"])].append(row)
+        grouped[(row["mela_class"], row["fitzpatrick"])].append(row)
 
     sample: list[dict[str, Any]] = []
     for (cls, st), rows in grouped.items():
@@ -403,7 +403,7 @@ def main() -> None:
     # Sampled distribution
     sample_dist = defaultdict(lambda: defaultdict(int))
     for row in sample:
-        sample_dist[row["dragnes_class"]][row["fitzpatrick"]] += 1
+        sample_dist[row["mela_class"]][row["fitzpatrick"]] += 1
 
     log("\n  Sampled distribution:")
     header = f"  {'Class':<8}" + "".join(f"{'T'+SKIN_TYPE_LABELS[s]:>6}" for s in VALID_SKIN_TYPES) + f"{'Total':>8}"
@@ -445,7 +445,7 @@ def main() -> None:
             if img is not None:
                 download_results[idx] = {
                     "image": img,
-                    "dragnes_class": sample[idx]["dragnes_class"],
+                    "mela_class": sample[idx]["mela_class"],
                     "fitzpatrick": sample[idx]["fitzpatrick"],
                     "url": sample[idx]["url"],
                 }
@@ -535,7 +535,7 @@ def main() -> None:
                 img = item["image"]
                 if img.mode != "RGB":
                     img = img.convert("RGB")
-                cls_idx = CLASS_NAMES.index(item["dragnes_class"])
+                cls_idx = CLASS_NAMES.index(item["mela_class"])
                 batch_images.append(img)
                 batch_labels.append(cls_idx)
                 batch_skins.append(item["fitzpatrick"])
@@ -741,7 +741,7 @@ def main() -> None:
     # ------------------------------------------------------------------
     results = {
         "adr": "ADR-124",
-        "title": "Fitzpatrick Skin Tone Equity Validation — DrAgnes v2",
+        "title": "Fitzpatrick Skin Tone Equity Validation — Mela v2",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "model_path": str(MODEL_DIR),
         "model_type": "ViT-Base (google/vit-base-patch16-224)",

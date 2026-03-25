@@ -1,5 +1,5 @@
 /**
- * DrAgnes Local Model Classification API
+ * Mela Local Model Classification API
  *
  * POST /api/classify-local
  *
@@ -21,8 +21,8 @@ import { join } from "path";
 import { writeFileSync, unlinkSync } from "fs";
 
 const CLASS_NAMES = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
-const ONNX_MODEL_PATH = join(process.cwd(), "scripts/dragnes-onnx/model.onnx");
-const PYTORCH_MODEL_DIR = join(process.cwd(), "scripts/dragnes-classifier/best");
+const ONNX_MODEL_PATH = join(process.cwd(), "scripts/mela-onnx/model.onnx");
+const PYTORCH_MODEL_DIR = join(process.cwd(), "scripts/mela-classifier/best");
 const CLASSIFY_SCRIPT = join(process.cwd(), "scripts", "classify-image.py");
 
 let ortSession: any = null;
@@ -36,7 +36,7 @@ async function getOnnxSession() {
 			ortSession = await ort.InferenceSession.create(ONNX_MODEL_PATH);
 			return ortSession;
 		} catch (e) {
-			console.warn("[dragnes/classify-local] ONNX loading failed:", e);
+			console.warn("[mela/classify-local] ONNX loading failed:", e);
 		}
 	}
 	return null;
@@ -93,7 +93,7 @@ async function classifyWithPython(
 	imageBuffer: Buffer,
 ): Promise<Array<{ label: string; score: number }>> {
 	const { execSync } = await import("child_process");
-	const tmpPath = join(tmpdir(), `dragnes-${Date.now()}.jpg`);
+	const tmpPath = join(tmpdir(), `mela-${Date.now()}.jpg`);
 	writeFileSync(tmpPath, imageBuffer);
 	try {
 		const result = execSync(`python3 "${CLASSIFY_SCRIPT}" "${tmpPath}"`, {
@@ -134,7 +134,7 @@ export const GET: RequestHandler = async () => {
 	return json({
 		available: backend !== "none",
 		backend,
-		model: "dragnes-custom-vit-v1",
+		model: "mela-custom-vit-v1",
 		melanomaSensitivity: "95.97%",
 		trainedOn: "HAM10000 + ISIC 2019 combined (37,484 images)",
 	});
@@ -172,11 +172,11 @@ export const POST: RequestHandler = async ({ request }) => {
 		try {
 			results = await classifyWithPython(buffer);
 		} catch (err) {
-			console.error("[dragnes/classify-local] All backends failed:", err);
+			console.error("[mela/classify-local] All backends failed:", err);
 			throw error(
 				503,
 				"Classification unavailable -- no model loaded. " +
-					"Place ONNX model at scripts/dragnes-onnx/model.onnx or " +
+					"Place ONNX model at scripts/mela-onnx/model.onnx or " +
 					"train PyTorch model with: python3 scripts/train-fast.py",
 			);
 		}
@@ -184,7 +184,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	return json({
 		results,
-		model: "dragnes-custom-vit-v1",
+		model: "mela-custom-vit-v1",
 		backend,
 		melanomaSensitivity: "95.97%",
 		trainedOn: "HAM10000 + ISIC 2019 combined (37,484 images)",

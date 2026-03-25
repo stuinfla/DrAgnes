@@ -3,10 +3,10 @@
 		ClassificationResult,
 		LesionClass,
 		RiskLevel,
-	} from "$lib/dragnes/types";
-	import { LESION_LABELS } from "$lib/dragnes/types";
-	import type { ABCDEScores } from "$lib/dragnes/types";
-	import { getPrimaryICD10 } from "$lib/dragnes/icd10";
+	} from "$lib/mela/types";
+	import { LESION_LABELS } from "$lib/mela/types";
+	import type { ABCDEScores } from "$lib/mela/types";
+	import { getPrimaryICD10 } from "$lib/mela/icd10";
 	import { recordFeedback } from "$lib/stores/analytics";
 	import CarbonCheckmark from "~icons/carbon/checkmark";
 	import CarbonEdit from "~icons/carbon/edit";

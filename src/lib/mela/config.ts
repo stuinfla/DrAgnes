@@ -1,12 +1,12 @@
 /**
- * DrAgnes Configuration
+ * Mela Configuration
  *
  * Central configuration for the dermoscopy classification pipeline.
  */
 
 import type { LesionClass } from "./types";
 
-export interface DrAgnesConfig {
+export interface MelaConfig {
 	modelVersion: string;
 	cnnBackbone: string;
 	inputSize: number;
@@ -19,7 +19,7 @@ export interface DrAgnesConfig {
 	};
 }
 
-export const DRAGNES_CONFIG: DrAgnesConfig = {
+export const MELA_CONFIG: MelaConfig = {
 	modelVersion: "v1.0.0-demo",
 	cnnBackbone: "MobileNetV3-Small",
 	inputSize: 224,

@@ -63,7 +63,7 @@ Run the v2 model on every downloaded image. Record raw softmax probabilities per
 
 ```bash
 python scripts/fitzpatrick-stratified-eval.py \
-  --model models/dragnes-v2.onnx \
+  --model models/mela-v2.onnx \
   --images data/fitzpatrick17k/ \
   --manifest scripts/dataset-manifests/fitzpatrick17k.json \
   --output scripts/fitzpatrick-stratified-results.json

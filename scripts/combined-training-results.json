@@ -435,5 +435,5 @@
     "new_model_ham_accuracy": 0.6321,
     "ham_accuracy_delta": -0.1488
   },
-  "model_saved_to": "/Users/stuartkerr/RuVector_New/RuVector/examples/dragnes/scripts/dragnes-classifier-v2/best"
+  "model_saved_to": "/Users/stuartkerr/RuVector_New/RuVector/examples/mela/scripts/mela-classifier-v2/best"
 }

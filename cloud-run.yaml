@@ -1,9 +1,9 @@
 apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
-  name: dragnes
+  name: mela
   labels:
-    app: dragnes
+    app: mela
     component: dermatology-intelligence
   annotations:
     run.googleapis.com/launch-stage: GA
@@ -19,9 +19,9 @@ spec:
     spec:
       containerConcurrency: 80
       timeoutSeconds: 300
-      serviceAccountName: dragnes-sa@ruv-dev.iam.gserviceaccount.com
+      serviceAccountName: mela-sa@ruv-dev.iam.gserviceaccount.com
       containers:
-        - image: gcr.io/ruv-dev/dragnes:latest
+        - image: gcr.io/ruv-dev/mela:latest
           ports:
             - containerPort: 3000
           resources:
@@ -40,11 +40,11 @@ spec:
                   key: latest
             - name: MCP_SERVERS
               value: '[{"name":"pi-brain","url":"https://pi.ruv.io/sse"}]'
-            - name: DRAGNES_ENABLED
+            - name: MELA_ENABLED
               value: "true"
-            - name: DRAGNES_BRAIN_URL
+            - name: MELA_BRAIN_URL
               value: https://pi.ruv.io
-            - name: DRAGNES_MODEL_VERSION
+            - name: MELA_MODEL_VERSION
               value: 0.1.0
           startupProbe:
             httpGet:
