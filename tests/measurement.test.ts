@@ -38,7 +38,7 @@ function mockImageData(w = 100, h = 100): ImageData {
 
 describe("measureLesion", () => {
 	it("returns a LesionMeasurement object with all required fields", async () => {
-		const result: LesionMeasurement = measureLesion(mockImageData(), 500, "trunk");
+		const result: LesionMeasurement = await measureLesion(mockImageData(), 500, "trunk");
 		expect(result).toHaveProperty("diameterMm");
 		expect(result).toHaveProperty("confidence");
 		expect(result).toHaveProperty("method");

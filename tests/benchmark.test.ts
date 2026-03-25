@@ -58,10 +58,13 @@ describe("generateSyntheticLesion", () => {
 	it("should produce valid pixel values (0-255)", () => {
 		for (const cls of ALL_CLASSES) {
 			const img = generateSyntheticLesion(cls);
+			let min = 255, max = 0;
 			for (let i = 0; i < img.data.length; i++) {
-				expect(img.data[i]).toBeGreaterThanOrEqual(0);
-				expect(img.data[i]).toBeLessThanOrEqual(255);
+				if (img.data[i] < min) min = img.data[i];
+				if (img.data[i] > max) max = img.data[i];
 			}
+			expect(min).toBeGreaterThanOrEqual(0);
+			expect(max).toBeLessThanOrEqual(255);
 		}
 	});
 

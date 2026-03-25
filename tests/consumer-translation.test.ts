@@ -53,9 +53,10 @@ describe("translateForConsumer", () => {
 		}
 	});
 
-	it("adds low-confidence caveat when confidence < 0.4", () => {
+	it("recommends dermatologist when confidence < 0.4", () => {
 		const result = translateForConsumer("nv", 0.2);
-		expect(result.action).toContain("confidence is low");
+		expect(result.shouldSeeDoctor).toBe(true);
+		expect(result.action).toContain("dermatologist");
 	});
 
 	it("upgrades green to yellow when cancer probs exceed 30%", () => {

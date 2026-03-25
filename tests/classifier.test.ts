@@ -235,7 +235,7 @@ describe("DermClassifier", () => {
 		expect(result.confidence).toBeGreaterThan(0);
 		expect(result.confidence).toBeLessThanOrEqual(1);
 		expect(result.usedWasm).toBe(false);
-		expect(result.modelId).toBe("demo-color-texture");
+		expect(result.modelId).toBe("mela-features-fallback");
 	});
 
 	it("should return probabilities summing to 1", async () => {

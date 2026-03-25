@@ -88,7 +88,7 @@ export class DermClassifier {
 		try {
 			const moduleName = "@ruvector/cnn";
 			const cnnModule = await import(/* @vite-ignore */ moduleName);
-			if (cnnModule && typeof cnnModule.init === "function") {
+			if (cnnModule && typeof cnnModule.init === "function" && typeof cnnModule.predict === "function") {
 				await cnnModule.init();
 				this.wasmModule = cnnModule;
 				this.usesWasm = true;
