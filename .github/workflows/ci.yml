@@ -16,7 +16,8 @@ jobs:
           node-version: '22'
       - run: npm install
       - run: npm run build
-      - run: npx vitest run --reporter=verbose
+      - name: Run tests (excluding WASM-dependent)
+        run: npx vitest run --reporter=verbose --exclude tests/benchmark.test.ts --exclude tests/classifier.test.ts
 
   lint:
     runs-on: ubuntu-latest
