@@ -178,9 +178,9 @@ quantized binary that runs entirely in the browser via ONNX Runtime Web.
   generate. With ONNX, the image never leaves the device -- not even to a
   server-side proxy. Privacy is structural, not policy-dependent.
 - **Offline capability:** A rural health worker with no internet connection
-  can still run the full classification pipeline. The HuggingFace API
-  fallback exists for environments where the ONNX model has not been
-  downloaded, but the default path is fully local.
+  can still run the full classification pipeline. The ONNX model downloads
+  once and caches locally via service worker. No external API fallback
+  exists or is needed -- the entire pipeline runs on device.
 - **Quantization cost:** INT8 quantization reduces the model from 327MB to
   85MB with negligible accuracy loss. The sensitivity numbers reported
   throughout this README are from the full-precision model; the quantized
@@ -847,8 +847,8 @@ melanoma alpha=6.0 and selects the best checkpoint by melanoma sensitivity,
 not overall accuracy. The trained model (327MB) is not included in the
 repository. Source: `scripts/combined-training-results.json`
 
-The pre-trained model is available on HuggingFace:
-[stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
+The pre-trained model is bundled as an 85MB ONNX INT8 file at
+`static/models/mela-v2-int8.onnx`. No external download needed.
 
 ---
 
@@ -978,11 +978,9 @@ We believe honesty about limitations is more important than marketing.
    tested in clinical workflow conditions with real-time patient encounters.
    Retrospective accuracy and prospective accuracy are different things.
 
-6. **Custom model requires local training or download.** The trained model
-   weights (327MB) are not included in the repository. You must run
-   `train-fast.py` locally or download from
-   [stuartkerr/mela-classifier](https://huggingface.co/stuartkerr/mela-classifier)
-   on HuggingFace.
+6. **Full-precision model requires local training.** The INT8 ONNX model
+   (85MB) is included in the repository. The full-precision model (327MB)
+   is not -- run `train-fast.py` locally to reproduce it.
 
 7. **Attention heatmaps are feature saliency, not Grad-CAM.** The
    visualization shows diagnostically relevant regions but does not reflect

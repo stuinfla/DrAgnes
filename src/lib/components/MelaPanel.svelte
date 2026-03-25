@@ -1064,12 +1064,20 @@
 						</div>
 					{/if}
 
-					<!-- Fitzpatrick equity note -->
-					<div class="mx-5 mt-3 rounded-2xl border border-gray-700/40 bg-white/[0.02] px-4 py-2.5">
-						<p class="text-[10px] text-gray-500 leading-relaxed">
-							Skin tone note: Validation found a 30pp sensitivity gap across Fitzpatrick types. Tested on dermoscopy images, not clinical photos. Dark skin performance unverified.
-							<button onclick={() => (activeView = "learn")} class="text-gray-400 underline hover:text-gray-300 transition-colors">Details</button>
-						</p>
+					<!-- Disclaimers: Fitzpatrick equity + pediatric -->
+					<div class="mx-5 mt-3 space-y-2">
+						<div class="rounded-2xl border border-gray-700/40 bg-white/[0.02] px-4 py-2.5">
+							<p class="text-[10px] text-gray-500 leading-relaxed">
+								Skin tone note: Validation found a 30pp sensitivity gap across Fitzpatrick types. Training data is ~95% lighter skin tones (FST I-III). Results for darker skin tones may be less accurate. If you have darker skin and are concerned about a spot, see a dermatologist regardless of this result.
+							</p>
+						</div>
+						{#if patientAge !== undefined && patientAge < 18}
+							<div class="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5">
+								<p class="text-[10px] text-amber-400 leading-relaxed">
+									Pediatric note: Mela was trained on adult skin lesion images. Results for children may be less accurate. Congenital moles in children should always be evaluated by a pediatric dermatologist.
+								</p>
+							</div>
+						{/if}
 					</div>
 
 					<!-- Action buttons: clean and spacious -->
