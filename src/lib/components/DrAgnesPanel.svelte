@@ -408,7 +408,7 @@
 		// SAFETY GATE: Check first image for lesion presence
 		const lesionCheck = detectLesionPresence(images[0]);
 		if (!lesionCheck.hasLesion) {
-			classificationError = lesionCheck.reason + ". Please photograph a specific mole, spot, or lesion.";
+			classificationError = "healthy_skin:" + lesionCheck.reason;
 			analyzing = false;
 			return;
 		}
@@ -657,7 +657,7 @@
 		const lesionCheck = detectLesionPresence(capturedImageData);
 
 		if (!lesionCheck.hasLesion) {
-			classificationError = lesionCheck.reason + ". Please photograph a specific skin lesion for analysis.";
+			classificationError = "healthy_skin:" + lesionCheck.reason;
 			analyzing = false;
 			return;
 		}
@@ -1461,23 +1461,23 @@
 				</div>
 
 			<!-- ===== ERROR STATE ===== -->
-			{:else if classificationError && classificationError.includes("lesion")}
-				<!-- Lesion gate: no lesion detected -->
+			{:else if classificationError && classificationError.startsWith("healthy_skin:")}
+				<!-- Healthy skin: no concerning features -->
 				<div class="flex flex-col items-center gap-5 px-6 py-12 text-center animate-fadeIn">
-					<div class="h-20 w-20 rounded-full bg-amber-500/15 flex items-center justify-center ring-amber">
-						<svg class="h-10 w-10 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-							<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-1.964-.833-2.732 0L4.072 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+					<div class="h-20 w-20 rounded-full bg-emerald-500/15 flex items-center justify-center">
+						<svg class="h-10 w-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
 						</svg>
 					</div>
 					<div>
-						<h2 class="text-xl font-semibold text-amber-300">{classificationError}</h2>
-						<p class="mt-2 text-sm text-gray-400 max-w-xs mx-auto">Photograph a specific mole, spot, or lesion at close range with good lighting.</p>
+						<h2 class="text-xl font-semibold text-emerald-300">{classificationError.replace("healthy_skin:", "Your skin looks healthy! ")}</h2>
+						<p class="mt-2 text-sm text-gray-400 max-w-xs mx-auto">To check a specific area, photograph a mole or spot you want evaluated.</p>
 					</div>
 					<button
 						onclick={handleNewScan}
-						class="rounded-full bg-amber-500/20 px-6 py-3 text-sm font-medium text-amber-300 hover:bg-amber-500/30 active:scale-95 transition-all"
+						class="rounded-full bg-teal-600 px-6 py-3 text-sm font-medium text-white hover:bg-teal-500 active:scale-95 transition-all"
 					>
-						Retake Image
+						Scan a Spot
 					</button>
 				</div>
 
@@ -1489,7 +1489,7 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
 						</svg>
 					</div>
-					<p class="text-sm font-medium text-red-400">{classificationError}</p>
+					<p class="text-sm font-medium text-red-400">{classificationError.replace("healthy_skin:", "Your skin looks healthy! ")}</p>
 					<button
 						onclick={handleNewScan}
 						class="rounded-full bg-red-500/20 px-6 py-3 text-sm font-medium text-red-300 hover:bg-red-500/30 active:scale-95 transition-all"
