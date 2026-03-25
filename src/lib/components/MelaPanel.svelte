@@ -89,6 +89,14 @@
 	let patientSex: "male" | "female" | undefined = $state(undefined);
 	let demographicsEnabled: boolean = $state(true);
 
+	// Clinical history (ADR-130, Dr. Chang feedback)
+	let showClinicalHistory: boolean = $state(false);
+	let clinicalIsNew: "new" | "months" | "years" | "unsure" = $state("unsure");
+	let clinicalHasChanged: "yes" | "no" | "unsure" = $state("unsure");
+	let clinicalPreviouslyBiopsied: "yes" | "no" = $state("no");
+	let clinicalFamilyHistory: "yes" | "no" | "unsure" = $state("unsure");
+	let clinicalSymptoms: ("itching" | "bleeding" | "pain" | "none")[] = $state(["none"]);
+
 	// Results state
 	let classificationResult: (ClassificationResult & {
 		rawProbabilities?: unknown;
@@ -1606,6 +1614,96 @@
 									</div>
 								</div>
 							{/if}
+						</div>
+					{/if}
+				</div>
+
+				<!-- Clinical context (ADR-130, Dr. Chang) -->
+				<div class="mx-5 mt-3">
+					<button
+						onclick={() => (showClinicalHistory = !showClinicalHistory)}
+						class="flex w-full items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-left transition-colors hover:bg-white/[0.04] touch-target"
+					>
+						<span class="text-[11px] font-medium text-gray-400">Clinical Context (optional)</span>
+						<svg
+							class="h-4 w-4 text-gray-500 transition-transform duration-300 {showClinicalHistory ? 'rotate-180' : ''}"
+							fill="none" stroke="currentColor" viewBox="0 0 24 24"
+						>
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+						</svg>
+					</button>
+					{#if showClinicalHistory}
+						<div class="mt-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 animate-fadeIn">
+							<p class="text-[10px] text-gray-500 mb-3">These questions help Mela give you a more accurate risk assessment.</p>
+
+							<div class="flex flex-col gap-3">
+								<div>
+									<label class="mb-1 block text-[11px] text-gray-400">Is this spot new?</label>
+									<div class="flex gap-2">
+										{#each [["new", "New"], ["months", "Months"], ["years", "Years"], ["unsure", "Not sure"]] as [val, label]}
+											<button
+												onclick={() => clinicalIsNew = val as any}
+												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalIsNew === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
+											>{label}</button>
+										{/each}
+									</div>
+								</div>
+
+								<div>
+									<label class="mb-1 block text-[11px] text-gray-400">Has it changed recently?</label>
+									<div class="flex gap-2">
+										{#each [["yes", "Yes"], ["no", "No"], ["unsure", "Not sure"]] as [val, label]}
+											<button
+												onclick={() => clinicalHasChanged = val as any}
+												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalHasChanged === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
+											>{label}</button>
+										{/each}
+									</div>
+								</div>
+
+								<div>
+									<label class="mb-1 block text-[11px] text-gray-400">Previously biopsied?</label>
+									<div class="flex gap-2">
+										{#each [["no", "No"], ["yes", "Yes"]] as [val, label]}
+											<button
+												onclick={() => clinicalPreviouslyBiopsied = val as any}
+												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalPreviouslyBiopsied === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
+											>{label}</button>
+										{/each}
+									</div>
+								</div>
+
+								<div>
+									<label class="mb-1 block text-[11px] text-gray-400">Family history of melanoma?</label>
+									<div class="flex gap-2">
+										{#each [["no", "No"], ["yes", "Yes"], ["unsure", "Not sure"]] as [val, label]}
+											<button
+												onclick={() => clinicalFamilyHistory = val as any}
+												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalFamilyHistory === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
+											>{label}</button>
+										{/each}
+									</div>
+								</div>
+
+								<div>
+									<label class="mb-1 block text-[11px] text-gray-400">Any symptoms?</label>
+									<div class="flex gap-2 flex-wrap">
+										{#each [["none", "None"], ["itching", "Itching"], ["bleeding", "Bleeding"], ["pain", "Pain"]] as [val, label]}
+											<button
+												onclick={() => {
+													if (val === "none") { clinicalSymptoms = ["none"]; }
+													else {
+														const filtered = clinicalSymptoms.filter(s => s !== "none");
+														if (filtered.includes(val as any)) { clinicalSymptoms = filtered.filter(s => s !== val); if (!clinicalSymptoms.length) clinicalSymptoms = ["none"]; }
+														else { clinicalSymptoms = [...filtered, val as any]; }
+													}
+												}}
+												class="rounded-lg px-3 py-1.5 text-[10px] border transition-colors {clinicalSymptoms.includes(val as any) ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
+											>{label}</button>
+										{/each}
+									</div>
+								</div>
+							</div>
 						</div>
 					{/if}
 				</div>

@@ -60,6 +60,63 @@ function getAgeMultiplier(age: number | undefined): number {
 }
 
 // ---------------------------------------------------------------------------
+// Clinical history risk multipliers (Dr. Chang feedback, ADR-130)
+// ---------------------------------------------------------------------------
+export interface ClinicalHistory {
+	/** Is this lesion new or longstanding? */
+	isNew?: "new" | "months" | "years" | "unsure";
+	/** Has it changed recently? */
+	hasChanged?: "yes" | "no" | "unsure";
+	/** Has it been biopsied before? */
+	previouslyBiopsied?: "yes" | "no";
+	/** Family history of melanoma? */
+	familyHistoryMelanoma?: "yes" | "no" | "unsure";
+	/** Current symptoms? */
+	symptoms?: ("itching" | "bleeding" | "pain" | "none")[];
+}
+
+/**
+ * Compute a combined risk multiplier from clinical history.
+ *
+ * These multipliers are applied to the pre-test prevalence before
+ * the Bayesian update. A new, changing mole with family history in
+ * someone with symptoms has a substantially higher pre-test probability
+ * than a stable, asymptomatic mole.
+ *
+ * Evidence: Gandini et al. 2005 (family history RR 1.74), Abbasi et al.
+ * 2004 (ABCDE evolution), Grob & Bonerandi 1998 (change as predictor).
+ */
+function getClinicalHistoryMultiplier(history: ClinicalHistory | undefined): number {
+	if (!history) return 1.0;
+
+	let multiplier = 1.0;
+
+	// New lesion: higher risk than longstanding
+	if (history.isNew === "new") multiplier *= 1.3;
+	else if (history.isNew === "months") multiplier *= 1.15;
+	// "years" and "unsure" = no adjustment
+
+	// Recent change: strong predictor (the "E" in ABCDE)
+	if (history.hasChanged === "yes") multiplier *= 1.5;
+
+	// Previously biopsied: could be recurrent nevi (looks like cancer but isn't)
+	// Lower the multiplier slightly to account for this
+	if (history.previouslyBiopsied === "yes") multiplier *= 0.8;
+
+	// Family history: RR ~1.74 for first-degree relative (Gandini 2005)
+	if (history.familyHistoryMelanoma === "yes") multiplier *= 1.7;
+
+	// Symptoms: itching/bleeding/pain are concerning
+	if (history.symptoms && history.symptoms.length > 0) {
+		const hasSymptoms = history.symptoms.some((s) => s !== "none");
+		if (hasSymptoms) multiplier *= 1.3;
+		if (history.symptoms.includes("bleeding")) multiplier *= 1.2; // extra for bleeding
+	}
+
+	return multiplier;
+}
+
+// ---------------------------------------------------------------------------
 // Risk-level thresholds and messaging
 // ---------------------------------------------------------------------------
 interface RiskTier {
@@ -150,6 +207,7 @@ export function assessRisk(
 	modelConfidence: number,
 	allProbabilities: Record<string, number>,
 	demographics?: { age?: number; bodyLocation?: string },
+	clinicalHistory?: ClinicalHistory,
 ): RiskAssessment {
 	// 1. Aggregate malignant probability from the model
 	const melProb = allProbabilities["mel"] ?? 0;
@@ -157,9 +215,10 @@ export function assessRisk(
 	const akiecProb = allProbabilities["akiec"] ?? 0;
 	const malignantProb = Math.min(melProb + bccProb + akiecProb, 0.9999);
 
-	// 2. Compute age-adjusted prevalence
+	// 2. Compute age-adjusted and clinical-history-adjusted prevalence
 	const ageMultiplier = getAgeMultiplier(demographics?.age);
-	const adjustedPrevalence = Math.min(MALIGNANT_PREVALENCE * ageMultiplier, 0.5);
+	const historyMultiplier = getClinicalHistoryMultiplier(clinicalHistory);
+	const adjustedPrevalence = Math.min(MALIGNANT_PREVALENCE * ageMultiplier * historyMultiplier, 0.5);
 
 	// 3. Bayesian update
 	//    Likelihood ratio: LR = P(model output | disease) / P(model output | no disease)
