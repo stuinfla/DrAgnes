@@ -29,6 +29,10 @@ export {
 } from "./image-analysis";
 export type { LesionPresenceResult } from "./image-analysis";
 
+// Two-pass hybrid spot detection (replaces legacy five-gate approach)
+export { detectSpots } from "./spot-detector";
+export type { SpotDetection } from "./spot-detector";
+
 // Trained-weights classifier (literature-derived logistic regression)
 export {
 	classifyWithTrainedWeights,
