@@ -152,6 +152,134 @@
 			/>
 		</div>
 
+		<!-- SECTION 0: CONSUMER INTRODUCTION -->
+		<section class="mt-6">
+			<!-- What is Dr. Agnes -->
+			<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+				<h3 class="text-lg font-semibold text-white tracking-tight">What is Dr. Agnes?</h3>
+				<p class="mt-3 text-[13px] text-gray-300 leading-relaxed">
+					Dr. Agnes is a free AI skin screening tool. It helps you decide if a spot on your skin
+					is worth seeing a doctor about.
+				</p>
+				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
+					It is not a diagnosis. Think of it like a thermometer for your skin. A thermometer tells
+					you if you might have a fever. Dr. Agnes tells you if a spot might need professional attention.
+					Always see a doctor for a definitive answer.
+				</p>
+			</div>
+
+			<!-- Who it's for -->
+			<div class="mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+				<h3 class="text-sm font-semibold text-gray-200">Who is this for?</h3>
+				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
+					You. Anyone who notices a spot, mole, or mark on their skin and wonders
+					"Should I worry about this?" You do not need to be a doctor. You do not need
+					special equipment. Just your phone camera.
+				</p>
+			</div>
+
+			<!-- Why we built it -->
+			<div class="mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+				<h3 class="text-sm font-semibold text-gray-200">Why does this exist?</h3>
+				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
+					Skin cancer is the most common cancer worldwide. Caught early, melanoma has a
+					99% survival rate. Caught late, it drops to 30%.
+				</p>
+				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
+					The tools that detect it cost $7,000 and require a specialist visit. We believe
+					everyone deserves access to an initial screening — not just people who can
+					afford a dermatologist.
+				</p>
+			</div>
+
+			<!-- How to use it -->
+			<div class="mt-3 rounded-2xl border border-teal-500/15 bg-teal-500/[0.03] p-5">
+				<h3 class="text-sm font-semibold text-teal-300">How to use Dr. Agnes</h3>
+				<ol class="mt-3 space-y-3 text-[13px] text-gray-400 leading-relaxed">
+					<li class="flex gap-3">
+						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">1</span>
+						<span>Open Dr. Agnes on your phone.</span>
+					</li>
+					<li class="flex gap-3">
+						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">2</span>
+						<span>Photograph a spot that concerns you. Get close, use good lighting, use macro mode if your phone has it.</span>
+					</li>
+					<li class="flex gap-3">
+						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">3</span>
+						<span>Dr. Agnes analyzes the image using AI trained on 37,484 dermoscopy images from multiple hospitals.</span>
+					</li>
+					<li class="flex gap-3">
+						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">4</span>
+						<span>You get a clear result: <strong class="text-gray-300">"Looks healthy"</strong>, <strong class="text-gray-300">"Worth monitoring"</strong>, or <strong class="text-gray-300">"See a dermatologist"</strong>.</span>
+					</li>
+					<li class="flex gap-3">
+						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">5</span>
+						<span>For better accuracy, take 2-3 photos and place a USB-C charger cable next to the spot for size measurement.</span>
+					</li>
+				</ol>
+			</div>
+
+			<!-- Tips for best results -->
+			<div class="mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+				<h3 class="text-sm font-semibold text-gray-200">Tips for best results</h3>
+				<ul class="mt-3 space-y-2 text-[12px] text-gray-400 leading-relaxed">
+					<li class="flex gap-2.5">
+						<svg class="h-4 w-4 text-teal-500/60 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+						<span>Use <strong class="text-gray-300">macro mode</strong> on your phone camera for close-up detail.</span>
+					</li>
+					<li class="flex gap-2.5">
+						<svg class="h-4 w-4 text-teal-500/60 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+						<span>Good lighting. Natural daylight is best. Avoid shadows on the spot.</span>
+					</li>
+					<li class="flex gap-2.5">
+						<svg class="h-4 w-4 text-teal-500/60 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+						<span>Photograph the <strong class="text-gray-300">spot</strong>, not a large area of skin.</span>
+					</li>
+					<li class="flex gap-2.5">
+						<svg class="h-4 w-4 text-teal-500/60 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+						<span>Hold the phone <strong class="text-gray-300">4-6 inches</strong> from the spot.</span>
+					</li>
+					<li class="flex gap-2.5">
+						<svg class="h-4 w-4 text-teal-500/60 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+						<span>If the spot is on your back, ask someone to take the photo for you.</span>
+					</li>
+					<li class="flex gap-2.5">
+						<svg class="h-4 w-4 text-teal-500/60 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+						<span>Take <strong class="text-gray-300">2-3 photos</strong> from slightly different angles for multi-image analysis.</span>
+					</li>
+				</ul>
+			</div>
+
+			<!-- What it's NOT + Honesty -->
+			<div class="mt-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-5">
+				<h3 class="text-sm font-semibold text-amber-300">What Dr. Agnes is NOT</h3>
+				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
+					Dr. Agnes is not a medical diagnosis. It is a screening aid. It tells you if a spot
+					<em>might</em> be worth professional evaluation. It does not replace a dermatologist.
+					If a result says "See a dermatologist," please do.
+				</p>
+				<p class="mt-3 text-[13px] text-gray-400 leading-relaxed">
+					<strong class="text-gray-300">Our commitment to honesty:</strong> We publish our accuracy numbers,
+					our limitations, and our failure modes openly. We disclose that our model has not been proven to
+					work equally across all skin tones. We would rather you know our limitations than be surprised by them.
+				</p>
+			</div>
+
+			<!-- The technology (brief) -->
+			<div class="mt-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
+				<h3 class="text-sm font-semibold text-gray-200">The technology in plain English</h3>
+				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
+					Dr. Agnes uses a Vision Transformer — an AI that learned to recognize skin conditions
+					by studying 37,484 images from multiple hospitals. Every result goes through Bayesian
+					risk calibration and multi-layer safety gates so you get honest, actionable information.
+					Not false alarms. Not false reassurance.
+				</p>
+				<p class="mt-2 text-[11px] text-gray-500 leading-relaxed">
+					Scroll down for the full technical details, our validation journey, and the numbers behind every claim.
+				</p>
+			</div>
+		</section>
+
 		<!-- SECTION 1: HERO with animated counters -->
 		<section class="mt-5">
 			<div class="rounded-2xl border border-teal-500/20 bg-gradient-to-b from-teal-500/10 to-transparent p-6">
