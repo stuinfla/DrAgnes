@@ -1,6 +1,6 @@
 {
   "name": "dragnes",
-  "version": "0.8.0",
+  "version": "0.9.1",
   "private": true,
   "description": "DrAgnes -- AI-Powered Dermatology Intelligence Platform",
   "type": "module",
