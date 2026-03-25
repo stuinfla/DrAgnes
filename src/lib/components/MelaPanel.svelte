@@ -515,7 +515,7 @@
 			});
 
 			if (result.confidence < 0.5) {
-				lowConfidenceWarning = "The image quality or classification confidence is low. Consider retaking the photo with better lighting, or see a dermatologist for a definitive assessment.";
+				lowConfidenceWarning = "Mela could not classify this with high confidence. This can happen with image quality, unusual lesion appearance, or flesh-colored spots. We recommend seeing a dermatologist to be safe.";
 			}
 
 			// Phase 4: Fetch similar cases from pi-brain (non-blocking)
@@ -795,7 +795,7 @@
 
 			// Low-confidence warning
 			if (classificationResult.confidence < 0.4) {
-				lowConfidenceWarning = "Low confidence classification. The image may not contain a clear lesion or may be poor quality.";
+				lowConfidenceWarning = "Mela could not classify this with enough confidence. This may indicate an unusual lesion type, poor image quality, or a flesh-colored spot with low contrast. We recommend seeing a dermatologist to be safe -- some serious conditions are difficult for any AI to detect.";
 			} else {
 				lowConfidenceWarning = null;
 			}
@@ -1518,6 +1518,26 @@
 					<div>
 						<h2 class="text-2xl font-semibold text-white leading-tight">Check a skin spot</h2>
 						<p class="mt-2.5 text-[15px] text-gray-400 leading-relaxed max-w-xs mx-auto">Take a photo of what concerns you. We'll analyze it in seconds.</p>
+					</div>
+				</div>
+
+				<!-- Photo guidance tips -->
+				<div class="mx-5 mb-3 grid grid-cols-2 gap-2">
+					<div class="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2">
+						<span class="text-amber-400 text-sm">&#9728;</span>
+						<span class="text-[10px] text-gray-400">Good lighting, no shadows</span>
+					</div>
+					<div class="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2">
+						<span class="text-teal-400 text-sm">&#8982;</span>
+						<span class="text-[10px] text-gray-400">4-6 inches from the spot</span>
+					</div>
+					<div class="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2">
+						<span class="text-blue-400 text-sm">&#9673;</span>
+						<span class="text-[10px] text-gray-400">One spot per photo</span>
+					</div>
+					<div class="flex items-center gap-2 rounded-xl bg-white/[0.03] px-3 py-2">
+						<span class="text-purple-400 text-sm">&#10023;</span>
+						<span class="text-[10px] text-gray-400">Clean camera lens</span>
 					</div>
 				</div>
 

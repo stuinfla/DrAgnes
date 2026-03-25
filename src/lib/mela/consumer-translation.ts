@@ -169,18 +169,20 @@ export function translateForConsumer(
 	// that can't even reach 40% for its top pick is essentially guessing.
 	if (confidence < 0.40) {
 		return {
-			headline: "Unable to classify",
-			riskLevel: "yellow",
-			riskColor: RISK_COLORS["yellow"],
+			headline: "See a dermatologist to be safe",
+			riskLevel: "orange",
+			riskColor: RISK_COLORS["orange"],
 			explanation:
-				"The AI could not identify a specific skin condition with sufficient confidence. " +
-				"This may happen when the image does not contain a clear lesion, the lighting is poor, " +
-				"or the image is taken from too far away.",
+				"Mela could not classify this spot with enough confidence. " +
+				"This can happen with image quality issues, but it can also happen with " +
+				"unusual or flesh-colored lesions that are difficult for any AI to assess. " +
+				"Some serious conditions, including amelanotic melanoma, have very low visual contrast.",
 			action:
-				"Try a closer photo of a specific spot with good lighting. " +
-				"If you have a mole or spot that concerns you, see a dermatologist for a definitive assessment.",
-			shouldSeeDoctor: false,
-			urgency: "none",
+				"We recommend seeing a dermatologist. When the AI is uncertain, " +
+				"a professional evaluation is the safest path. Try retaking the photo " +
+				"with better lighting and closer framing, but do not rely solely on a re-scan.",
+			shouldSeeDoctor: true,
+			urgency: "routine",
 			medicalTerm: topClass,
 			confidence,
 		};

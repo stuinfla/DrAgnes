@@ -283,33 +283,44 @@ These terms have precise meanings in this project. Use them consistently in code
 
 ## Implementation Plan
 
-### Phase 1: Foundation (before V2 wiring)
-1. Create shared types module (`types.ts` — already exists, verify complete)
-2. Extract morphology helpers into `lib/mela/cv/morphology.ts` (resolve duplicates)
-3. Extract color space helpers into `lib/mela/cv/color-space.ts` (resolve `rgbToLab` duplicate)
+### Phase 1: V2 Model Wiring (COMPLETED 2026-03-25)
+1. ~~Wire V2 ONNX as primary inference~~ -- Done, HuggingFace removed
+2. ~~3-layer ensemble: 70% ONNX + 15% trained-weights + 15% rules~~ -- Done
+3. ~~Service worker caching for offline~~ -- Done
 
-### Phase 2: Feature Extraction decomposition
-4. Split `image-analysis.ts` into 9 modules per the table above
-5. Create `lib/mela/cv/` directory for all CV modules
-6. Update imports in `classifier.ts` and `MelaPanel.svelte`
-7. Verify all 98 passing tests still pass
+### Phase 2: Clinical Safety (ADR-130, Dr. Chang Feedback)
+4. Verify healthy skin gate across diverse inputs (freckles, scars, clear skin)
+5. Low-confidence default: confidence < 0.40 -> "See a dermatologist to be safe"
+6. Photo capture guidance (lighting, distance, lens, single lesion)
+7. Clinical history questions (new? changing? biopsied? family history? symptoms?)
+8. Fix referral letter (remove provider signature, add AI disclaimer)
+9. Pediatric disclaimer (age < 18 warning)
+10. Fitzpatrick equity disclaimer (FST IV-VI warning)
+11. Multiple lesion guidance (crop instructions, multi-lesion detection)
+12. Amelanotic melanoma warning (low-contrast segmentation failure path)
 
-### Phase 3: V2 model wiring (ADR-127 Gap 1)
-8. Wire V2 ONNX into `inference-orchestrator.ts` as primary strategy
-9. Update `classifier.ts` strategy selection to prefer V2
-10. Wire `ensemble.ts` into the inference path (V1+V2 dual)
-11. Verify melanoma safety gates still fire correctly
+### Phase 3: Accuracy Validation
+13. ONNX INT8 validation on full ISIC 2019 test set (3,901 images)
+14. Test across resolutions, formats, device types (iPhone vs Android)
+15. Per-category stats: sensitivity, specificity, AUROC per lesion class
+16. Phone camera validation with real-world photos
 
-### Phase 4: UI decomposition
-12. Split `MelaPanel.svelte` into 9 components per the analysis
-13. Create state stores: `analysisState.ts`, `settingsState.ts`, `navigationState.ts`
-14. Wire components to stores
+### Phase 4: Model Improvements
+17. SCC as 8th classification category (retraining required)
+18. Acral/subungual melanoma detection (nail images)
+19. Tattoo/scar/piercing detection and warning
+20. Evolution tracking (ABCDE "E" -- side-by-side comparison over time)
 
-### Phase 5: Security hardening
-15. Add upload validation (file size, MIME, image headers) to API endpoints
-16. Add CSP/CORS headers
-17. Fix `any` type on ortSession
-18. Add EXIF stripping to classify-local
+### Phase 5: File Decomposition
+21. Split `image-analysis.ts` into 9 CV modules
+22. Split `MelaPanel.svelte` into 9 UI components
+23. Create state stores
+
+### Phase 6: Security Hardening
+24. Upload validation (file size, MIME, image headers)
+25. CSP/CORS headers
+26. Fix `any` type on ortSession
+27. EXIF stripping on all paths
 
 ---
 
