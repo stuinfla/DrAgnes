@@ -154,12 +154,27 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, "No image provided");
 	}
 
-	// Security: validate file size and content type
-	const MAX_SIZE = 10 * 1024 * 1024;
+	// Security: validate file size
+	const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 	if (imageFile.size > MAX_SIZE) throw error(413, "Image too large (max 10MB)");
 	if (imageFile.size === 0) throw error(400, "Empty file");
 
+	// Security: validate content type
+	const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+	if (imageFile.type && !ALLOWED_TYPES.includes(imageFile.type)) {
+		throw error(415, `Unsupported image type: ${imageFile.type}. Use JPEG, PNG, or WebP.`);
+	}
+
 	const buffer = Buffer.from(await imageFile.arrayBuffer());
+
+	// Security: validate image magic bytes
+	if (buffer.length < 4) throw error(400, "File too small to be a valid image");
+	const isJPEG = buffer[0] === 0xFF && buffer[1] === 0xD8;
+	const isPNG = buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4E && buffer[3] === 0x47;
+	const isWEBP = buffer[0] === 0x52 && buffer[1] === 0x49 && buffer[2] === 0x46 && buffer[3] === 0x46;
+	if (!isJPEG && !isPNG && !isWEBP) {
+		throw error(415, "Invalid image format. File does not contain valid JPEG, PNG, or WebP data.");
+	}
 
 	// Try ONNX first, fall back to Python
 	let results: Array<{ label: string; score: number }> = [];
