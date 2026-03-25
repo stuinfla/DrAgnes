@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Mela is Designed to Help Keep You Safe</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface-2: #1a1a28;
+  --border: #2a2a3a;
+  --teal: #14b8a6;
+  --teal-dim: rgba(20, 184, 166, 0.15);
+  --gold: #f0c020;
+  --gold-dim: rgba(240, 192, 32, 0.15);
+  --purple: #a855f7;
+  --purple-dim: rgba(168, 85, 247, 0.15);
+  --blue: #3b82f6;
+  --blue-dim: rgba(59, 130, 246, 0.15);
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.15);
+  --green: #10b981;
+  --text: #e8eaed;
+  --text-dim: #8892a4;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+#particleCanvas {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; z-index: 0;
+}
+
+.overlay {
+  position: fixed; top: 0; left: 0;
+  width: 100%; height: 100%; z-index: 10;
+  display: flex; flex-direction: column;
+  pointer-events: none;
+}
+.overlay * { pointer-events: auto; }
+
+.stage-nav {
+  display: flex; justify-content: center;
+  gap: 8px; padding: 52px 20px 8px 20px;
+  z-index: 20; flex-shrink: 0;
+}
+
+.stage-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border); border: 1px solid rgba(255,255,255,0.1);
+  cursor: pointer; transition: all 0.4s ease;
+}
+.stage-dot.active {
+  background: var(--teal);
+  box-shadow: 0 0 12px var(--teal), 0 0 30px rgba(20,184,166,0.3);
+  transform: scale(1.3);
+}
+.stage-dot.completed {
+  background: var(--green);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+.stage-content {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 20px 40px; opacity: 0; transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+  position: absolute; top: 80px; left: 0; right: 0; bottom: 70px;
+  pointer-events: none; overflow-y: auto; overflow-x: hidden;
+}
+.stage-content.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+
+.stage-title {
+  font-size: clamp(1.4rem, 4vw, 2.6rem); font-weight: 800;
+  letter-spacing: -0.03em; margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--teal), var(--purple));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; text-align: center;
+}
+
+.stage-subtitle {
+  font-size: clamp(0.85rem, 1.8vw, 1.1rem); color: var(--text-dim);
+  max-width: 700px; text-align: center; line-height: 1.65; margin-bottom: 28px;
+}
+.stage-subtitle strong { color: var(--text); font-weight: 600; }
+.stage-subtitle .hl { color: var(--teal); font-weight: 700; font-family: var(--mono); }
+
+.stat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; max-width: 680px; width: 100%;
+}
+@media (max-width: 600px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 16px; text-align: center;
+  transition: all 0.3s ease;
+}
+.stat-card:hover { border-color: var(--teal); box-shadow: 0 0 20px rgba(20,184,166,0.1); transform: translateY(-2px); }
+
+.stat-value { font-family: var(--mono); font-size: 1.5rem; font-weight: 700; color: var(--teal); display: block; }
+.stat-value.gold { color: var(--gold); }
+.stat-value.purple { color: var(--purple); }
+.stat-value.green { color: var(--green); }
+.stat-value.red { color: var(--red); }
+.stat-value.blue { color: var(--blue); }
+.stat-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.compression-bar { display: flex; flex-direction: column; gap: 12px; max-width: 500px; width: 100%; margin: 16px 0; }
+.bar-row { display: flex; align-items: center; gap: 12px; }
+.bar-label { font-family: var(--mono); font-size: 0.8rem; color: var(--text-dim); width: 100px; text-align: right; flex-shrink: 0; }
+.bar-track { flex: 1; height: 28px; background: var(--surface); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); }
+.bar-fill { height: 100%; border-radius: 14px; transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1); display: flex; align-items: center; justify-content: flex-end; padding-right: 12px; font-family: var(--mono); font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.9); }
+.bar-fill.raw { background: linear-gradient(90deg, rgba(239,68,68,0.8), rgba(239,68,68,0.5)); width: 0; }
+.bar-fill.raw.animate { width: 100%; }
+.bar-fill.onnx { background: linear-gradient(90deg, rgba(240,192,32,0.8), rgba(240,192,32,0.5)); width: 0; }
+.bar-fill.onnx.animate { width: 26%; }
+.bar-fill.cached { background: linear-gradient(90deg, rgba(20,184,166,0.8), rgba(20,184,166,0.5)); width: 0; }
+.bar-fill.cached.animate { width: 0.5%; }
+
+.flow-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; max-width: 680px; }
+.flow-step { padding: 8px 14px; border-radius: 8px; font-family: var(--mono); font-size: 0.72rem; white-space: nowrap; opacity: 0; transform: translateX(-10px); transition: all 0.4s ease; }
+.flow-step.visible { opacity: 1; transform: translateX(0); }
+.flow-step.capture { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(20,184,166,0.2); }
+.flow-step.analyze { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(168,85,247,0.2); }
+.flow-step.classify { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,192,32,0.2); }
+.flow-step.result { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+.flow-arrow { color: var(--text-dim); opacity: 0; transition: opacity 0.3s ease; flex-shrink: 0; }
+.flow-arrow.visible { opacity: 0.5; }
+
+.journey-table { width: 100%; max-width: 680px; border-collapse: collapse; margin: 16px 0; }
+.journey-table th { font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; }
+.journey-table td { font-size: 0.82rem; padding: 10px 12px; border-bottom: 1px solid rgba(42,42,58,0.5); }
+.journey-table .sens { font-family: var(--mono); font-weight: 700; }
+.journey-table .sens.bad { color: var(--red); }
+.journey-table .sens.ok { color: var(--gold); }
+.journey-table .sens.good { color: var(--green); }
+
+.privacy-bar { font-family: var(--mono); font-size: 0.7rem; color: var(--teal); padding: 10px 20px; border-radius: 8px; background: var(--teal-dim); border: 1px solid rgba(20,184,166,0.2); margin-top: auto; text-align: center; width: 100%; max-width: 680px; }
+
+.controls { padding: 12px 20px; flex-shrink: 0; z-index: 20; }
+.controls-row { display: flex; justify-content: center; align-items: center; gap: 12px; }
+.ctrl-btn { font-family: var(--mono); font-size: 0.8rem; padding: 8px 20px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text-dim); cursor: pointer; transition: all 0.2s ease; }
+.ctrl-btn:hover { border-color: var(--teal); color: var(--text); }
+.ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+.ctrl-btn.primary { background: var(--teal); color: var(--bg); border-color: var(--teal); font-weight: 600; }
+.ctrl-btn.primary:hover { box-shadow: 0 0 20px rgba(20,184,166,0.3); }
+.stage-counter { font-family: var(--mono); font-size: 0.75rem; color: var(--text-dim); min-width: 50px; text-align: center; }
+
+.iphone-mockup { width: 180px; height: 360px; border-radius: 32px; border: 3px solid var(--border); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; margin: 16px 0; }
+.iphone-notch { width: 80px; height: 24px; background: var(--bg); border-radius: 0 0 14px 14px; position: absolute; top: 0; }
+.iphone-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 40px 16px 16px; }
+.iphone-dot { width: 40px; height: 40px; border-radius: 50%; background: var(--teal); opacity: 0.2; }
+.iphone-dot.inner { width: 20px; height: 20px; opacity: 0.4; position: absolute; }
+.iphone-dot.core { width: 8px; height: 8px; opacity: 1; position: absolute; }
+.iphone-text { font-family: var(--mono); font-size: 0.6rem; color: var(--teal); }
+.iphone-label { font-size: 0.55rem; color: var(--text-dim); }
+</style>
+</head>
+<body>
+<canvas id="particleCanvas" aria-hidden="true"></canvas>
+
+<div class="overlay">
+  <div class="stage-nav" role="tablist" aria-label="Presentation stages">
+    <div class="stage-dot active" data-stage="0" role="tab" aria-selected="true" tabindex="0"></div>
+    <div class="stage-dot" data-stage="1" role="tab" aria-selected="false" tabindex="-1"></div>
+    <div class="stage-dot" data-stage="2" role="tab" aria-selected="false" tabindex="-1"></div>
+    <div class="stage-dot" data-stage="3" role="tab" aria-selected="false" tabindex="-1"></div>
+    <div class="stage-dot" data-stage="4" role="tab" aria-selected="false" tabindex="-1"></div>
+    <div class="stage-dot" data-stage="5" role="tab" aria-selected="false" tabindex="-1"></div>
+    <div class="stage-dot" data-stage="6" role="tab" aria-selected="false" tabindex="-1"></div>
+  </div>
+
+  <!-- Stage 1: The Foundation -->
+  <div class="stage-content visible" id="stage0" role="tabpanel">
+    <div class="stage-title">37,484 Images. Two Continents. One Mission.</div>
+    <div class="stage-subtitle">Mela begins with the world's best publicly available dermoscopy datasets &mdash; <strong>HAM10000</strong> from the Medical University of Vienna and <strong>ISIC 2019</strong> from institutions worldwide. <span class="hl">37,484 images</span> of real skin lesions, each diagnosed by a dermatologist. Melanoma, basal cell carcinoma, benign moles, vascular lesions &mdash; the full spectrum of what your skin can show.</div>
+    <div class="stat-grid">
+      <div class="stat-card"><span class="stat-value" data-count="37484">0</span><span class="stat-label">Training Images</span></div>
+      <div class="stat-card"><span class="stat-value gold" data-count="7">0</span><span class="stat-label">Lesion Types</span></div>
+      <div class="stat-card"><span class="stat-value purple" data-count="10015">0</span><span class="stat-label">HAM10000</span></div>
+      <div class="stat-card"><span class="stat-value green" data-count="26006">0</span><span class="stat-label">ISIC 2019</span></div>
+    </div>
+    <div class="privacy-bar">Every image is a real clinical case. Every diagnosis was confirmed by a specialist.</div>
+  </div>
+
+  <!-- Stage 2: Teaching the AI -->
+  <div class="stage-content" id="stage1" role="tabpanel">
+    <div class="stage-title">Teaching an AI to See What Doctors See</div>
+    <div class="stage-subtitle">We trained a <strong>Vision Transformer</strong> &mdash; the same architecture behind the world's best image recognition &mdash; with a critical innovation: <strong>focal loss</strong>. Standard AI treats all mistakes equally. Ours treats missing a melanoma as <span class="hl">6x worse</span> than misclassifying a mole. Because missing cancer is the one mistake that matters most.</div>
+    <div class="stat-grid">
+      <div class="stat-card"><span class="stat-value">85.8M</span><span class="stat-label">Parameters</span></div>
+      <div class="stat-card"><span class="stat-value gold">6.0x</span><span class="stat-label">Melanoma Weight</span></div>
+      <div class="stat-card"><span class="stat-value purple">3.3 hrs</span><span class="stat-label">Training Time</span></div>
+      <div class="stat-card"><span class="stat-value green">5</span><span class="stat-label">Epochs</span></div>
+    </div>
+    <div class="stage-subtitle" style="margin-top: 16px; font-size: 0.82rem;">Trained on an Apple M3 Max. No cloud GPU farm. No million-dollar compute budget. Just the right architecture, the right loss function, and the right data.</div>
+    <div class="privacy-bar">Focal loss forces the model to focus on the hardest, most dangerous cases first.</div>
+  </div>
+
+  <!-- Stage 3: Refined and Validated -->
+  <div class="stage-content" id="stage2" role="tabpanel">
+    <div class="stage-title">Tested, Refined, and Validated</div>
+    <div class="stage-subtitle">We didn't stop at one model. We continuously tested against <strong>multiple datasets and independent models</strong>, refining the architecture to maximize the information that matters: <strong>catching real cancers</strong> while minimizing false alarms that cause unnecessary worry. The final model was validated on <span class="hl">3,901 images it had never seen</span> &mdash; from different cameras, hospitals, and countries.</div>
+    <div class="stat-grid">
+      <div class="stat-card"><span class="stat-value">95.97%</span><span class="stat-label">Melanoma Sensitivity</span></div>
+      <div class="stat-card"><span class="stat-value gold">0.960</span><span class="stat-label">AUROC</span></div>
+      <div class="stat-card"><span class="stat-value green">98.3%</span><span class="stat-label">All-Cancer Sensitivity</span></div>
+      <div class="stat-card"><span class="stat-value purple">3,901</span><span class="stat-label">External Test Images</span></div>
+    </div>
+    <div class="stage-subtitle" style="margin-top: 16px; font-size: 0.82rem;">Every number is measured, not claimed. Every metric cites its evidence file. An internal audit ensures nothing is overstated.</div>
+    <div class="privacy-bar">Cross-dataset validated: tested on data from cameras and institutions the model never trained on.</div>
+  </div>
+
+  <!-- Stage 4: Compressed into RuVector -->
+  <div class="stage-content" id="stage3" role="tabpanel">
+    <div class="stage-title">327MB to 85MB. Fits in Your Pocket.</div>
+    <div class="stage-subtitle">A full AI model is too large for a phone. We used <strong>INT8 quantization</strong> via RuVector Format (RVF) to compress it to <span class="hl">85MB</span> &mdash; small enough to download once and cache permanently. After the first visit, <strong>Mela loads instantly from your phone's local storage</strong>. No waiting. No re-downloading. Ever.</div>
+    <div class="compression-bar">
+      <div class="bar-row"><span class="bar-label">Raw Model</span><div class="bar-track"><div class="bar-fill raw" id="barRaw">327 MB</div></div></div>
+      <div class="bar-row"><span class="bar-label">RVF INT8</span><div class="bar-track"><div class="bar-fill onnx" id="barOnnx">85 MB</div></div></div>
+      <div class="bar-row"><span class="bar-label">After Cache</span><div class="bar-track"><div class="bar-fill cached" id="barCached">0 MB transfer</div></div></div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="stat-card"><span class="stat-value" style="color:var(--text-dim);">327MB</span><span class="stat-label">Original</span></div>
+      <div class="stat-card"><span class="stat-value gold">85MB</span><span class="stat-label">Compressed</span></div>
+      <div class="stat-card"><span class="stat-value green">Instant</span><span class="stat-label">After First Load</span></div>
+    </div>
+    <div class="privacy-bar">RuVector Format: self-contained, portable, runs entirely via WebAssembly in your browser.</div>
+  </div>
+
+  <!-- Stage 5: Your iPhone, Your AI -->
+  <div class="stage-content" id="stage4" role="tabpanel">
+    <div class="stage-title">Your Phone. Your AI. Completely Private.</div>
+    <div class="stage-subtitle">The entire screening engine runs <strong>inside your browser</strong> via WebAssembly. Your skin photo <strong>never leaves your device</strong> &mdash; not to a server, not to a cloud, not to anyone. This isn't a privacy policy. It's how the app is built: <strong>the data physically cannot leave your phone.</strong></div>
+    <div style="display:flex; gap: 32px; align-items: center; flex-wrap: wrap; justify-content: center;">
+      <div class="iphone-mockup">
+        <div class="iphone-notch"></div>
+        <div class="iphone-screen">
+          <div class="iphone-dot"></div>
+          <div class="iphone-dot inner"></div>
+          <div class="iphone-dot core"></div>
+          <div class="iphone-text">Mela</div>
+          <div class="iphone-label">95.97% sensitivity</div>
+          <div class="iphone-label">100% on your phone</div>
+        </div>
+      </div>
+      <div class="stat-grid" style="grid-template-columns: 1fr; max-width: 280px; gap: 10px;">
+        <div class="stat-card"><span class="stat-value">0</span><span class="stat-label">Photos Sent Anywhere</span></div>
+        <div class="stat-card"><span class="stat-value gold">0</span><span class="stat-label">Cloud Dependencies</span></div>
+        <div class="stat-card"><span class="stat-value green">100%</span><span class="stat-label">Works Offline</span></div>
+        <div class="stat-card"><span class="stat-value purple">Instant</span><span class="stat-label">After First Visit</span></div>
+      </div>
+    </div>
+    <div class="privacy-bar">No internet needed after the first download. Screen for skin cancer anytime, anywhere.</div>
+  </div>
+
+  <!-- Stage 6: How It Works -->
+  <div class="stage-content" id="stage5" role="tabpanel">
+    <div class="stage-title">What Happens When You Scan</div>
+    <div class="stage-subtitle">When you photograph a skin spot, Mela runs a <strong>clinical-grade pipeline</strong> entirely on your phone &mdash; the same steps a dermatologist follows. It segments the lesion, measures its features, runs the AI, checks safety gates, and translates everything into <strong>clear guidance you can act on</strong>.</div>
+    <div class="flow-row" id="pipelineFlow">
+      <span class="flow-step capture">Your Photo</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step capture">Quality Check</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step analyze">Find the Lesion</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step analyze">Measure Features</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step classify">AI Classification</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step classify">Safety Check</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step result">Risk Score</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step result">Your Result</span>
+    </div>
+    <div class="stage-subtitle" style="margin-top: 20px; font-size: 0.82rem;">Mela doesn't just give you a label. It tells you <strong>what it found, why it matters, and what to do next</strong> &mdash; in plain language anyone can understand.</div>
+    <div class="stat-grid" style="margin-top: 16px;">
+      <div class="stat-card"><span class="stat-value">3</span><span class="stat-label">AI Layers</span></div>
+      <div class="stat-card"><span class="stat-value gold">2</span><span class="stat-label">Safety Gates</span></div>
+      <div class="stat-card"><span class="stat-value green">5</span><span class="stat-label">Risk Levels</span></div>
+      <div class="stat-card"><span class="stat-value purple">Plain</span><span class="stat-label">English Results</span></div>
+    </div>
+    <div class="privacy-bar">Every step runs on your phone. Nothing is sent to any server. Ever.</div>
+  </div>
+
+  <!-- Stage 7: The Mission -->
+  <div class="stage-content" id="stage6" role="tabpanel">
+    <div class="stage-title">Because Catching It Early Changes Everything</div>
+    <div class="stage-subtitle" style="font-size: 1rem; line-height: 1.7; max-width: 640px;">Melanoma caught early has a <span class="hl">99% five-year survival rate</span>. Caught late, that drops to <span class="hl" style="color:var(--red);">30%</span>. The difference is detection. Today, clinical-grade screening tools cost <strong>$7,000</strong> and require proprietary hardware. That means early detection is a luxury available to well-funded clinics in wealthy countries. <strong>Mela is designed to change that.</strong></div>
+    <div class="stat-grid" style="margin-top: 20px;">
+      <div class="stat-card"><span class="stat-value">95.97%</span><span class="stat-label">Sensitivity</span></div>
+      <div class="stat-card"><span class="stat-value gold">$0</span><span class="stat-label">Cost</span></div>
+      <div class="stat-card"><span class="stat-value green">100%</span><span class="stat-label">Private</span></div>
+      <div class="stat-card"><span class="stat-value purple">Open</span><span class="stat-label">Source</span></div>
+    </div>
+    <div class="stage-subtitle" style="margin-top: 20px; font-size: 0.9rem;">
+      <strong>Mela puts clinical-grade skin cancer screening in the hands of anyone with a smartphone.</strong> Open source. Free forever. Because saving lives shouldn't require a $7,000 device.
+    </div>
+    <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+      <div style="font-size: 0.85rem; color: var(--text); line-height: 1.6;">
+        <a href="https://mela-app.vercel.app" target="_blank" rel="noopener" style="color: var(--teal); text-decoration: none; font-weight: 600;">Try Mela Now</a> &middot;
+        <a href="https://github.com/stuinfla/Mela" target="_blank" rel="noopener" style="color: var(--teal); text-decoration: none; font-weight: 600;">View Source</a>
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-dim); margin-top: 8px;">RESEARCH USE ONLY &mdash; Not FDA-cleared</div>
+    </div>
+    <div class="privacy-bar">Your photos never leave your phone. Not now. Not ever. No cloud. No exceptions.</div>
+  </div>
+
+  <div class="controls">
+    <div class="controls-row">
+      <button class="ctrl-btn" id="restartBtn" aria-label="Restart">&#x21BA;</button>
+      <button class="ctrl-btn" id="prevBtn" disabled aria-label="Previous">&larr; Prev</button>
+      <span class="stage-counter" id="stageCounter">1 / 8</span>
+      <button class="ctrl-btn primary" id="nextBtn" aria-label="Next">Next &rarr;</button>
+      <button class="ctrl-btn" id="autoBtn" aria-label="Auto-play">&#9654; Auto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  var TOTAL = 7;
+  var TIMING = [8000, 8000, 8000, 8000, 7000, 9000, 10000];
+
+  var canvas = document.getElementById('particleCanvas');
+  var ctx = canvas.getContext('2d');
+  var W, H;
+  var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var PCOUNT = prefersReduced ? 0 : (window.innerWidth < 768 ? 400 : 1500);
+  var current = 0;
+  var particles = [];
+  var animating = !prefersReduced;
+  var autoPlay = false;
+  var autoTimer = null;
+
+  var COLORS = [
+    { c: [20, 184, 166], w: 0.35 },
+    { c: [168, 85, 247], w: 0.20 },
+    { c: [240, 192, 32], w: 0.15 },
+    { c: [16, 185, 129], w: 0.20 },
+    { c: [239, 68, 68], w: 0.10 }
+  ];
+
+  function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+  function pickColor() { var r = Math.random(), a = 0; for (var i = 0; i < COLORS.length; i++) { a += COLORS[i].w; if (r <= a) return COLORS[i].c; } return COLORS[0].c; }
+
+  function makeP() {
+    return { x: Math.random()*W, y: Math.random()*H, tx: Math.random()*W, ty: Math.random()*H, r: Math.random()*2+0.5, c: pickColor(), a: Math.random()*0.6+0.2, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4, ph: Math.random()*Math.PI*2, sp: Math.random()*0.005+0.002 };
+  }
+
+  function init() { particles = []; for (var i = 0; i < PCOUNT; i++) particles.push(makeP()); }
+
+  function targets(s) {
+    var cx = W/2, cy = H/2;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i], angle, dist, sec;
+      switch(s) {
+        case 0: p.tx = Math.random()*W; p.ty = Math.random()*H; break;
+        case 1:
+          angle = (i/particles.length)*Math.PI*2 + Math.random()*0.2;
+          dist = 30 + Math.random()*Math.min(W,H)*0.2;
+          p.tx = cx + Math.cos(angle)*dist; p.ty = cy + Math.sin(angle)*dist; break;
+        case 2:
+          sec = i % 5; var sx = (sec-2) * Math.min(W,H)*0.08;
+          p.tx = cx + sx + (Math.random()-0.5)*40; p.ty = cy + (Math.random()-0.5)*Math.min(W,H)*0.2; break;
+        case 3:
+          angle = (i/particles.length)*Math.PI*2;
+          var maxR = Math.min(W,H)*0.15; dist = Math.sqrt(Math.random())*maxR;
+          p.tx = cx + Math.cos(angle)*dist; p.ty = cy + Math.sin(angle)*dist; break;
+        case 4:
+          p.tx = cx + (Math.random()-0.5)*120; p.ty = cy + (Math.random()-0.5)*200; break;
+        case 5:
+          var col = i % 11; var row = Math.floor(i/11) % 3;
+          p.tx = cx - 200 + col*40 + (Math.random()-0.5)*10; p.ty = cy - 30 + row*30 + (Math.random()-0.5)*10; break;
+        case 6:
+          angle = (i/particles.length)*Math.PI*2 + Math.random()*0.1;
+          dist = 20 + Math.random()*Math.min(W,H)*0.35;
+          p.tx = cx + Math.cos(angle)*dist; p.ty = cy + Math.sin(angle)*dist; break;
+      }
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    if (current >= 3 && current <= 5) {
+      var grd = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.min(W,H)*0.4);
+      grd.addColorStop(0, 'rgba(20,184,166,0.04)'); grd.addColorStop(0.5, 'rgba(168,85,247,0.02)'); grd.addColorStop(1, 'transparent');
+      ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+    }
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x += (p.tx - p.x)*0.018 + p.vx + Math.sin(p.ph)*0.12;
+      p.y += (p.ty - p.y)*0.018 + p.vy + Math.cos(p.ph)*0.12;
+      p.ph += p.sp;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r*2.5, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba('+p.c[0]+','+p.c[1]+','+p.c[2]+','+(p.a*0.12)+')'; ctx.fill();
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba('+p.c[0]+','+p.c[1]+','+p.c[2]+','+p.a+')'; ctx.fill();
+    }
+    if (animating) requestAnimationFrame(draw);
+  }
+
+  var stages = document.querySelectorAll('.stage-content');
+  var dots = document.querySelectorAll('.stage-dot');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var autoBtn = document.getElementById('autoBtn');
+  var restartBtn = document.getElementById('restartBtn');
+  var counter = document.getElementById('stageCounter');
+
+  function go(n) {
+    if (n < 0 || n >= TOTAL) return;
+    current = n;
+    for (var i = 0; i < stages.length; i++) { stages[i].classList.toggle('visible', i===n); }
+    for (var j = 0; j < dots.length; j++) { dots[j].classList.toggle('active', j===n); dots[j].classList.toggle('completed', j<n); }
+    prevBtn.disabled = n===0;
+    nextBtn.textContent = n===TOTAL-1 ? 'Restart' : 'Next \u2192';
+    counter.textContent = (n+1)+' / '+TOTAL;
+    targets(n); effects(n);
+  }
+
+  function effects(n) {
+    if (n===0) { var els = document.querySelectorAll('#stage0 [data-count]'); for (var i=0;i<els.length;i++) countUp(els[i], parseInt(els[i].dataset.count)); }
+    if (n===3) {
+      setTimeout(function(){ document.getElementById('barRaw').classList.add('animate'); setTimeout(function(){ document.getElementById('barOnnx').classList.add('animate'); setTimeout(function(){ document.getElementById('barCached').classList.add('animate'); },300); },400); },300);
+    } else { ['barRaw','barOnnx','barCached'].forEach(function(id){ document.getElementById(id).classList.remove('animate'); }); }
+    if (n===5) animateFlow();
+  }
+
+  function countUp(el, target) {
+    var start = performance.now(), dur = 1500;
+    function tick(now) { var t = Math.min((now-start)/dur,1); el.textContent = Math.floor((1-Math.pow(1-t,3))*target).toLocaleString(); if(t<1) requestAnimationFrame(tick); else el.textContent = target.toLocaleString(); }
+    requestAnimationFrame(tick);
+  }
+
+  function animateFlow() {
+    var flow = document.getElementById('pipelineFlow');
+    var steps = flow.querySelectorAll('.flow-step'), arrows = flow.querySelectorAll('.flow-arrow');
+    for(var i=0;i<steps.length;i++) steps[i].classList.remove('visible');
+    for(var j=0;j<arrows.length;j++) arrows[j].classList.remove('visible');
+    for(var k=0;k<steps.length;k++) { (function(s,a,idx){ setTimeout(function(){ s.classList.add('visible'); if(idx>0&&a) a.classList.add('visible'); }, idx*300); })(steps[k], arrows[k-1], k); }
+  }
+
+  prevBtn.addEventListener('click', function(){ go(current-1); });
+  nextBtn.addEventListener('click', function(){ if(current===TOTAL-1) go(0); else go(current+1); });
+  restartBtn.addEventListener('click', function(){ go(0); });
+  for(var d=0;d<dots.length;d++) { (function(dot){ dot.addEventListener('click', function(){ go(parseInt(dot.dataset.stage)); }); })(dots[d]); }
+
+  function startAuto() { autoPlay=true; autoBtn.textContent='\u23F8 Pause'; schedNext(); }
+  function stopAuto() { autoPlay=false; autoBtn.textContent='\u25B6 Auto'; clearTimeout(autoTimer); }
+  function schedNext() { if(!autoPlay) return; autoTimer = setTimeout(function(){ if(!autoPlay) return; if(current<TOTAL-1){ go(current+1); schedNext(); } else stopAuto(); }, TIMING[current]||7000); }
+  autoBtn.addEventListener('click', function(){ if(autoPlay) stopAuto(); else startAuto(); });
+
+  document.addEventListener('keydown', function(e) {
+    if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); go(Math.min(current+1,TOTAL-1)); }
+    if(e.key==='ArrowLeft'){ e.preventDefault(); go(Math.max(current-1,0)); }
+  });
+
+  resize(); window.addEventListener('resize', function(){ resize(); targets(current); });
+  init(); targets(0); draw(); effects(0);
+  setTimeout(function(){ startAuto(); }, 500);
+})();
+</script>
+</body>
+</html>
