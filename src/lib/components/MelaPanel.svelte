@@ -1269,19 +1269,60 @@
 									</details>
 								{/if}
 
-								<!-- Explainability -->
+								<!-- Explainability — always visible summary + expandable details -->
 								{#if explanationFindings.length > 0}
-									<details class="rounded-2xl border border-white/[0.06] overflow-hidden">
-										<summary class="px-4 py-3.5 text-xs text-gray-400 cursor-pointer hover:text-gray-300 transition-colors touch-target font-medium">
-											Why this classification?
-										</summary>
-										<div class="px-4 pb-4">
-											<ExplainPanel
-												topClass={LESION_LABELS[classificationResult.topClass]}
-												findings={explanationFindings}
-											/>
+									<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+										<div class="px-4 py-3">
+											<h4 class="text-xs font-semibold text-teal-400 mb-2 flex items-center gap-1.5">
+												<svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+												</svg>
+												What Mela found
+											</h4>
+											<!-- Always-visible summary of top findings -->
+											<div class="space-y-1.5">
+												{#each explanationFindings.slice(0, 3) as f}
+													<div class="flex items-start gap-2 text-[11px]">
+														<span class="mt-0.5 flex-shrink-0">
+															{#if f.impact === "supports"}
+																<span class="text-red-400">&#9650;</span>
+															{:else if f.impact === "opposes"}
+																<span class="text-green-400">&#9660;</span>
+															{:else}
+																<span class="text-gray-500">&#9679;</span>
+															{/if}
+														</span>
+														<span class="text-gray-300"><strong>{f.feature}:</strong> {f.value}</span>
+													</div>
+												{/each}
+											</div>
 										</div>
-									</details>
+										{#if explanationFindings.length > 3}
+											<details>
+												<summary class="px-4 py-2 text-[10px] text-teal-400/70 cursor-pointer hover:text-teal-300 transition-colors border-t border-white/[0.04]">
+													Show all {explanationFindings.length} findings with clinical details...
+												</summary>
+												<div class="px-4 pb-4">
+													<ExplainPanel
+														topClass={LESION_LABELS[classificationResult.topClass]}
+														findings={explanationFindings}
+													/>
+												</div>
+											</details>
+										{:else}
+											<details>
+												<summary class="px-4 py-2 text-[10px] text-teal-400/70 cursor-pointer hover:text-teal-300 transition-colors border-t border-white/[0.04]">
+													Show clinical details and citations...
+												</summary>
+												<div class="px-4 pb-4">
+													<ExplainPanel
+														topClass={LESION_LABELS[classificationResult.topClass]}
+														findings={explanationFindings}
+													/>
+												</div>
+											</details>
+										{/if}
+									</div>
 								{/if}
 
 								<!-- ICD-10 & Referral -->
