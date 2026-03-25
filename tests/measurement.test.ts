@@ -37,7 +37,7 @@ function mockImageData(w = 100, h = 100): ImageData {
 }
 
 describe("measureLesion", () => {
-	it("returns a LesionMeasurement object with all required fields", () => {
+	it("returns a LesionMeasurement object with all required fields", async () => {
 		const result: LesionMeasurement = measureLesion(mockImageData(), 500, "trunk");
 		expect(result).toHaveProperty("diameterMm");
 		expect(result).toHaveProperty("confidence");
@@ -47,32 +47,32 @@ describe("measureLesion", () => {
 		expect(typeof result.diameterMm).toBe("number");
 	});
 
-	it("confidence is one of high/medium/low", () => {
-		const result = measureLesion(mockImageData(), 500, "trunk");
+	it("confidence is one of high/medium/low", async () => {
+		const result = await measureLesion(mockImageData(), 500, "trunk");
 		expect(["high", "medium", "low"]).toContain(result.confidence);
 	});
 
-	it("method is one of connector/texture/estimate", () => {
-		const result = measureLesion(mockImageData(), 500, "trunk");
-		expect(["connector", "texture", "estimate"]).toContain(result.method);
+	it("method is one of connector/texture/estimate", async () => {
+		const result = await measureLesion(mockImageData(), 500, "trunk");
+		expect(['connector', 'texture', 'estimate', 'lidar']).toContain(result.method);
 	});
 
-	it("diameterMm is a positive number", () => {
-		const result = measureLesion(mockImageData(), 1000, "upper_extremity");
+	it("diameterMm is a positive number", async () => {
+		const result = await measureLesion(mockImageData(), 1000, "upper_extremity");
 		expect(result.diameterMm).toBeGreaterThan(0);
 	});
 
-	it("pixelsPerMm is positive", () => {
-		const result = measureLesion(mockImageData(200, 200), 800, "head");
+	it("pixelsPerMm is positive", async () => {
+		const result = await measureLesion(mockImageData(200, 200), 800, "head");
 		expect(result.pixelsPerMm).toBeGreaterThan(0);
 	});
 
-	it("includes safety warning for low-confidence 4-8mm measurements", () => {
+	it("includes safety warning for low-confidence 4-8mm measurements", async () => {
 		// Use a lesion area that would produce ~5-7mm at estimate confidence
 		// With 100px wide image and estimate method: pxPerMm = 100/25 = 4
 		// diameter = 2 * sqrt(area/pi) / pxPerMm
 		// For 6mm: area = pi * (6*4/2)^2 = pi*144 ~ 452
-		const result = measureLesion(mockImageData(100, 100), 450, "trunk");
+		const result = await measureLesion(mockImageData(100, 100), 450, "trunk");
 		if (result.confidence === "low" && result.diameterMm >= 4 && result.diameterMm <= 8) {
 			expect(result.details).toContain("6mm clinical threshold");
 		}
