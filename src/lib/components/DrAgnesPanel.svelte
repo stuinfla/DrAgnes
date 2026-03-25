@@ -26,7 +26,8 @@
 	import { anonymizeCase } from "$lib/dragnes/anonymization";
 	import type { AnonymizedCase } from "$lib/dragnes/anonymization";
 	import { shareToBrain, searchSimilarCases } from "$lib/dragnes/brain-client";
-	import { warmOfflineModel, isOfflineModelLoaded } from "$lib/dragnes/inference-offline";
+	import { isOfflineModelLoaded } from "$lib/dragnes/inference-offline";
+	import { warmOfflineModel } from "$lib/dragnes/inference-orchestrator";
 	import type { InferenceStrategy } from "$lib/dragnes/inference-orchestrator";
 	import { ensembleClassify } from "$lib/dragnes/ensemble";
 	import type { EnsembleResult } from "$lib/dragnes/ensemble";
