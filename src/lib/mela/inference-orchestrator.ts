@@ -1,58 +1,47 @@
 /**
  * Inference Orchestrator for Mela
  *
- * Routes classification requests between:
- *  - offline: ONNX Runtime Web in-browser inference (no network)
- *  - online:  HF API via existing DermClassifier ensemble
- *  - auto:    offline-first with online fallback
+ * Routes classification through the local ONNX V2 model (95.97% mel sensitivity).
+ * No external API dependencies — runs 100% on device.
  *
- * ADR-122 Phase 5
+ * Strategy:
+ *  - auto (default): ONNX model if loaded, else trained-weights + rules fallback
+ *  - offline: ONNX only, throws if not loaded
+ *
+ * ADR-122 / RuVector-native architecture
  */
 
 import type { ClassProbability } from "./types";
 import { initOfflineModel, isOfflineModelLoaded, classifyOffline } from "./inference-offline";
-import { DermClassifier } from "./classifier";
 
-export type InferenceStrategy = "online" | "offline" | "auto";
+export type InferenceStrategy = "auto" | "offline";
 
 export interface InferenceResult {
 	/** Sorted class probabilities from the chosen backend. */
 	probabilities: ClassProbability[];
 	/** Which backend actually produced the result. */
-	backend: "onnx-offline" | "hf-online";
+	backend: "onnx-local" | "features-fallback";
 	/** Wall-clock inference time in milliseconds. */
 	latencyMs: number;
 }
 
-/** Lazily-created online classifier (shared across calls). */
-let onlineClassifier: DermClassifier | null = null;
-
-function getOnlineClassifier(): DermClassifier {
-	if (!onlineClassifier) {
-		onlineClassifier = new DermClassifier();
-	}
-	return onlineClassifier;
-}
-
 /**
- * Classify a dermoscopic image using the specified strategy.
+ * Classify a skin lesion image using the local ONNX V2 model.
  *
  * @param imageData - Raw RGBA ImageData from a canvas capture.
  * @param strategy  - Routing strategy (default: "auto").
  *
  * Strategy behaviour:
- *  - **auto** (default): Use the offline ONNX model if it has been loaded,
- *    otherwise fall back to the online HF API ensemble.
- *  - **online**: Always route through DermClassifier (HF API + local ensemble).
- *  - **offline**: Use only the ONNX model; throws if it has not been loaded.
+ *  - **auto** (default): Use the ONNX model if loaded, otherwise return null
+ *    to signal the caller should use the trained-weights + rules fallback.
+ *  - **offline**: Use only the ONNX model; throws if not loaded.
  */
 export async function classify(
 	imageData: ImageData,
 	strategy: InferenceStrategy = "auto",
-): Promise<InferenceResult> {
+): Promise<InferenceResult | null> {
 	const start = performance.now();
 
-	// ---- offline ----
 	if (strategy === "offline") {
 		if (!isOfflineModelLoaded()) {
 			throw new Error(
@@ -63,39 +52,40 @@ export async function classify(
 		const probabilities = await classifyOffline(imageData);
 		return {
 			probabilities,
-			backend: "onnx-offline",
+			backend: "onnx-local",
 			latencyMs: Math.round(performance.now() - start),
 		};
 	}
 
-	// ---- auto ----
-	if (strategy === "auto" && isOfflineModelLoaded()) {
+	// auto: try ONNX, return null if unavailable
+	if (isOfflineModelLoaded()) {
 		try {
 			const probabilities = await classifyOffline(imageData);
 			return {
 				probabilities,
-				backend: "onnx-offline",
+				backend: "onnx-local",
 				latencyMs: Math.round(performance.now() - start),
 			};
 		} catch {
-			// ONNX inference failed; fall through to online
+			// ONNX inference failed; caller will use fallback
+			return null;
 		}
 	}
 
-	// ---- online (also the fallback for auto) ----
-	const clf = getOnlineClassifier();
-	const result = await clf.classify(imageData);
-	return {
-		probabilities: result.probabilities,
-		backend: "hf-online",
-		latencyMs: Math.round(performance.now() - start),
-	};
+	// ONNX not loaded — caller handles fallback
+	return null;
 }
 
 /**
- * Pre-warm the offline model. Safe to call multiple times.
+ * Pre-warm the ONNX model. Safe to call multiple times.
+ * Downloads and caches the 85MB model via service worker on first call.
  * Returns true when the model is ready, false if unavailable.
  */
 export async function warmOfflineModel(): Promise<boolean> {
 	return initOfflineModel();
 }
+
+/**
+ * Whether the ONNX model is loaded and ready.
+ */
+export { isOfflineModelLoaded };

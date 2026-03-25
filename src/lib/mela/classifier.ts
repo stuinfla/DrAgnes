@@ -37,53 +37,10 @@ import {
 	classifyWithTrainedWeights,
 	extractFeatureVector,
 } from "./trained-weights";
-import { LABEL_MAP } from "./hf-classifier";
+import { classify as onnxClassify, warmOfflineModel, isOfflineModelLoaded } from "./inference-orchestrator";
 
 /** All HAM10000 classes in canonical order (used by all ensemble layers) */
 const CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
-
-/**
- * Label mapping for skintaglabs/siglip-skin-lesion-classifier (SigLIP 400M).
- * Maps SigLIP model labels to our canonical 7-class HAM10000 taxonomy.
- * Covers both full names and short forms the model might return.
- */
-const SIGLIP_LABEL_MAP: Record<string, string> = {
-	// Full names (title case variants)
-	"Melanoma": "mel",
-	"Basal Cell Carcinoma": "bcc",
-	"Actinic Keratosis": "akiec",
-	"Benign Keratosis-like Lesions": "bkl",
-	"Benign Keratosis": "bkl",
-	"Dermatofibroma": "df",
-	"Melanocytic Nevi": "nv",
-	"Melanocytic Nevus": "nv",
-	"Vascular Lesions": "vasc",
-	"Vascular Lesion": "vasc",
-	// Lower case variants
-	"melanoma": "mel",
-	"basal cell carcinoma": "bcc",
-	"actinic keratosis": "akiec",
-	"benign keratosis-like lesions": "bkl",
-	"benign keratosis": "bkl",
-	"dermatofibroma": "df",
-	"melanocytic nevi": "nv",
-	"melanocytic nevus": "nv",
-	"vascular lesion": "vasc",
-	"vascular lesions": "vasc",
-	// SigLIP may also output SCC and other extended classes
-	"squamous cell carcinoma": "akiec",
-	"Squamous Cell Carcinoma": "akiec",
-	"seborrheic keratosis": "bkl",
-	"Seborrheic Keratosis": "bkl",
-	// Short-form abbreviations
-	"akiec": "akiec",
-	"bcc": "bcc",
-	"bkl": "bkl",
-	"df": "df",
-	"mel": "mel",
-	"nv": "nv",
-	"vasc": "vasc",
-};
 
 /** Interface for the WASM CNN module */
 interface WasmCnnModule {
@@ -99,21 +56,9 @@ export class DermClassifier {
 	private wasmModule: WasmCnnModule | null = null;
 	private initialized = false;
 	private usesWasm = false;
+	private usesOnnx = false;
 	private lastTensor: ImageTensor | null = null;
 	private lastImageData: ImageData | null = null;
-
-	/** Whether the HuggingFace ViT model was used in the last classification */
-	private lastUsedHF = false;
-
-	/** Whether the custom-trained local ViT model was used */
-	private lastUsedCustomModel = false;
-
-	/** Whether the dual-model ensemble was used in the last classification */
-	private lastUsedDualModel = false;
-	/** Whether the two HF models disagreed on the top class */
-	private lastModelsDisagree = false;
-	/** Cosine similarity between the two model output distributions (0-1) */
-	private lastModelAgreement = 0;
 
 	/** Cached results from the last real image analysis pass */
 	private lastSegmentation: SegmentationResult | null = null;
@@ -125,15 +70,22 @@ export class DermClassifier {
 
 	/**
 	 * Initialize the classifier.
-	 * Attempts to load the @ruvector/cnn WASM module.
-	 * Falls back to demo mode if unavailable.
+	 * Loads the ONNX V2 model (85MB, cached by service worker after first download).
+	 * Falls back to @ruvector/cnn WASM, then to trained-weights + rules.
 	 */
 	async init(): Promise<void> {
 		if (this.initialized) return;
 
+		// Priority 1: ONNX V2 model (95.97% mel sensitivity, runs 100% local)
+		const onnxReady = await warmOfflineModel();
+		if (onnxReady) {
+			this.usesOnnx = true;
+			this.initialized = true;
+			return;
+		}
+
+		// Priority 2: @ruvector/cnn WASM module
 		try {
-			// Dynamic import of the WASM CNN package
-			// Use variable to prevent Vite from pre-bundling this optional dependency
 			const moduleName = "@ruvector/cnn";
 			const cnnModule = await import(/* @vite-ignore */ moduleName);
 			if (cnnModule && typeof cnnModule.init === "function") {
@@ -142,28 +94,25 @@ export class DermClassifier {
 				this.usesWasm = true;
 			}
 		} catch {
-			// WASM module not available, use demo fallback
 			this.wasmModule = null;
 			this.usesWasm = false;
 		}
 
+		// Priority 3: trained-weights + rules fallback (no neural network)
 		this.initialized = true;
 	}
 
 	/**
-	 * Classify a dermoscopic image.
+	 * Classify a skin lesion image.
 	 *
 	 * Classification strategy (priority order):
-	 * 1. Custom-trained local ViT model (95.97% melanoma sensitivity on external data, /api/classify-local)
-	 *    -> 70% custom model + 15% trained-weights + 15% rule-based
-	 * 2. Dual HF models in parallel via server proxy
-	 *    -> 50% dual-HF-ensemble + 30% trained-weights + 20% rule-based
-	 * 3. Single HF model
-	 *    -> 60% single-HF + 25% trained-weights + 15% rule-based
-	 * 4. Offline fallback (local analysis only)
+	 * 1. ONNX V2 model (local, 95.97% mel sensitivity on external data)
+	 *    -> 70% ONNX + 15% trained-weights + 15% rule-based
+	 * 2. @ruvector/cnn WASM (if ONNX unavailable)
+	 * 3. Trained-weights + rules fallback (no neural network)
 	 *    -> 60% trained-weights + 40% rule-based
 	 *
-	 * Local image analysis always runs for ABCDE scores and ensemble blending.
+	 * No external API calls. Runs 100% on device.
 	 *
 	 * @param imageData - RGBA ImageData from canvas
 	 * @returns Classification result with probabilities for all 7 classes
@@ -180,63 +129,39 @@ export class DermClassifier {
 		this.lastTensor = tensor;
 		this.lastImageData = imageData;
 
+		// Always run local CV analysis for ABCDE scores and ensemble blending
+		const localProbabilities = this.classifyReal(imageData);
+
 		let rawProbabilities: number[];
+		let modelId: string;
 
-		// Reset model state
-		this.lastUsedDualModel = false;
-		this.lastUsedCustomModel = false;
-		this.lastModelsDisagree = false;
-		this.lastModelAgreement = 0;
-
-		if (this.usesWasm && this.wasmModule) {
-			// WASM path: use the CNN model directly, skip HF
-			rawProbabilities = await this.classifyWasm(tensor);
-			this.lastUsedHF = false;
-		} else {
-			// Local analysis (always runs -- needed for ABCDE scores, fallback, and ensemble)
-			const localProbabilities = this.classifyReal(imageData);
-
-			// Priority 1: Try the custom-trained local ViT model (95.97% mel sensitivity on external data)
-			const customResult = await this.classifyCustomLocal(imageData);
-
-			if (customResult) {
-				// Custom model available: 70% custom + 15% trained-weights + 15% rule-based
+		if (this.usesOnnx && isOfflineModelLoaded()) {
+			// Priority 1: ONNX V2 model — 70% ONNX + 15% trained-weights + 15% rules
+			const onnxResult = await onnxClassify(imageData, "auto");
+			if (onnxResult) {
+				const onnxProbs = CLASSES.map((cls) => {
+					const match = onnxResult.probabilities.find((p) => p.className === cls);
+					return match ? match.probability : 0;
+				});
 				rawProbabilities = CLASSES.map((_, i) =>
-					DermClassifier.CUSTOM_MODEL_WEIGHT * customResult[i] +
-					DermClassifier.TRAINED_WEIGHTS_WEIGHT_WITH_CUSTOM * this.getTrainedProbAtIndex(imageData, i) +
-					DermClassifier.RULE_BASED_WEIGHT_WITH_CUSTOM * this.getRuleBasedProbAtIndex(localProbabilities, i),
+					DermClassifier.ONNX_WEIGHT * onnxProbs[i] +
+					DermClassifier.TRAINED_WEIGHTS_WEIGHT_WITH_ONNX * this.getTrainedProbAtIndex(imageData, i) +
+					DermClassifier.RULE_BASED_WEIGHT_WITH_ONNX * this.getRuleBasedProbAtIndex(localProbabilities, i),
 				);
-				this.lastUsedCustomModel = true;
-				this.lastUsedHF = false;
+				modelId = "mela-v2-onnx-int8";
 			} else {
-				// Priority 2-3: Try dual HF ViT classification via server proxy
-				const dualResult = await this.classifyHFDual(imageData);
-
-				if (dualResult.dualAvailable) {
-					// 4-way ensemble: 50% dual-HF + 30% trained-weights + 20% rule-based
-					rawProbabilities = CLASSES.map((_, i) =>
-						DermClassifier.DUAL_HF_WEIGHT * dualResult.ensembledProbabilities[i] +
-						DermClassifier.TRAINED_WEIGHTS_WEIGHT_WITH_DUAL * this.getTrainedProbAtIndex(imageData, i) +
-						DermClassifier.RULE_BASED_WEIGHT_WITH_DUAL * this.getRuleBasedProbAtIndex(localProbabilities, i),
-					);
-					this.lastUsedHF = true;
-					this.lastUsedDualModel = true;
-					this.lastModelsDisagree = dualResult.modelsDisagree;
-					this.lastModelAgreement = dualResult.modelAgreement;
-				} else if (dualResult.singleAvailable) {
-					// 3-way ensemble: 60% single-HF + 25% trained-weights + 15% rule-based
-					rawProbabilities = CLASSES.map((_, i) =>
-						DermClassifier.HF_WEIGHT * dualResult.singleProbabilities![i] +
-						DermClassifier.TRAINED_WEIGHTS_WEIGHT_WITH_HF * this.getTrainedProbAtIndex(imageData, i) +
-						DermClassifier.RULE_BASED_WEIGHT_WITH_HF * this.getRuleBasedProbAtIndex(localProbabilities, i),
-					);
-					this.lastUsedHF = true;
-				} else {
-					// Offline fallback: local ensemble only
-					rawProbabilities = localProbabilities;
-					this.lastUsedHF = false;
-				}
+				// ONNX failed at runtime — fall back to local
+				rawProbabilities = localProbabilities;
+				modelId = "mela-features-fallback";
 			}
+		} else if (this.usesWasm && this.wasmModule) {
+			// Priority 2: WASM CNN
+			rawProbabilities = await this.classifyWasm(tensor);
+			modelId = "ruvector-cnn-wasm";
+		} else {
+			// Priority 3: trained-weights + rules only
+			rawProbabilities = localProbabilities;
+			modelId = "mela-features-fallback";
 		}
 
 		const inferenceTimeMs = Math.round(performance.now() - startTime);
@@ -251,19 +176,6 @@ export class DermClassifier {
 		const topClass = probabilities[0].className;
 		const confidence = probabilities[0].probability;
 
-		let modelId: string;
-		if (this.usesWasm) {
-			modelId = "mobilenetv3-small-wasm";
-		} else if (this.lastUsedCustomModel) {
-			modelId = "mela-custom-v1-98pct-mel";
-		} else if (this.lastUsedDualModel) {
-			modelId = "dual-ensemble-v2-siglip50-anwarkh50-trained30-rule20";
-		} else if (this.lastUsedHF) {
-			modelId = "ensemble-v2-hf60-trained25-rule15";
-		} else {
-			modelId = "ensemble-v1-rule40-trained60";
-		}
-
 		return {
 			topClass,
 			confidence,
@@ -271,11 +183,11 @@ export class DermClassifier {
 			modelId,
 			inferenceTimeMs,
 			usedWasm: this.usesWasm,
-			usedHF: this.lastUsedHF,
-			usedDualModel: this.lastUsedDualModel,
-			usedCustomModel: this.lastUsedCustomModel,
-			modelsDisagree: this.lastModelsDisagree,
-			modelAgreement: this.lastModelAgreement,
+			usedHF: false,
+			usedDualModel: false,
+			usedCustomModel: this.usesOnnx,
+			modelsDisagree: false,
+			modelAgreement: this.usesOnnx ? 1.0 : 0,
 		};
 	}
 
@@ -450,304 +362,27 @@ export class DermClassifier {
 	// ---- Ensemble configuration ----
 
 	/**
-	 * Ensemble weights for combining classifiers.
+	 * Ensemble weights for combining ONNX V2 model with local classifiers.
 	 *
-	 * Offline (no HF): 40% rule-based + 60% trained-weights
-	 * Online (single HF): 60% HF ViT + 25% trained-weights + 15% rule-based
-	 * Online (dual HF): 50% dual-HF-ensemble + 30% trained-weights + 20% rule-based
+	 * ONNX V2 available: 70% ONNX + 15% trained-weights + 15% rule-based
+	 * Fallback (no ONNX): 40% rule-based + 60% trained-weights
 	 *
-	 * The HF ViT models have actual trained weights from skin lesion data,
-	 * so they get the highest weight when available. The local trained-weights
-	 * classifier uses a linear model with literature-derived weights for smooth
-	 * generalization. Rule-based captures nonlinear interactions (gates, floors,
-	 * TDS overrides) that linear models miss.
+	 * The ONNX V2 model has 95.97% melanoma sensitivity on external data,
+	 * so it gets the dominant weight. Trained-weights provide smooth linear
+	 * discrimination. Rule-based captures nonlinear safety gates (melanoma
+	 * floor, TDS override) that neural networks may miss.
 	 */
 	private static readonly RULE_BASED_WEIGHT = 0.4;
 	private static readonly TRAINED_WEIGHTS_WEIGHT = 0.6;
 
-	/** Weights when single HF ViT is available (3-way ensemble) */
-	private static readonly HF_WEIGHT = 0.6;
-	private static readonly TRAINED_WEIGHTS_WEIGHT_WITH_HF = 0.25;
-	private static readonly RULE_BASED_WEIGHT_WITH_HF = 0.15;
-
-	/** Weights when dual HF models are available (4-way ensemble) */
-	private static readonly DUAL_HF_WEIGHT = 0.5;
-	private static readonly TRAINED_WEIGHTS_WEIGHT_WITH_DUAL = 0.3;
-	private static readonly RULE_BASED_WEIGHT_WITH_DUAL = 0.2;
-
-	/** Weights when custom-trained local model is available (highest priority) */
-	private static readonly CUSTOM_MODEL_WEIGHT = 0.7;
-	private static readonly TRAINED_WEIGHTS_WEIGHT_WITH_CUSTOM = 0.15;
-	private static readonly RULE_BASED_WEIGHT_WITH_CUSTOM = 0.15;
-
-	/**
-	 * Per-class weights within the dual-HF ensemble.
-	 *
-	 * Model 1 (Anwarkh1): 85.8M params, 44K+ downloads, 7-class HAM10000.
-	 * Model 2 (SigLIP skintaglabs): SigLIP 400M, MIT license, dermatology company.
-	 *
-	 * Neither model has independently verified melanoma recall, so we use
-	 * equal weighting (50/50) for all classes until validation data is available.
-	 * This replaces the previous actavkid weighting (removed from HuggingFace).
-	 */
-	private static readonly MODEL2_MELANOMA_WEIGHT = 0.5;
-	private static readonly MODEL1_MELANOMA_WEIGHT = 0.5;
-	private static readonly MODEL2_OTHER_WEIGHT = 0.5;
-	private static readonly MODEL1_OTHER_WEIGHT = 0.5;
+	/** Weights when ONNX V2 model is available (3-way ensemble) */
+	private static readonly ONNX_WEIGHT = 0.70;
+	private static readonly TRAINED_WEIGHTS_WEIGHT_WITH_ONNX = 0.15;
+	private static readonly RULE_BASED_WEIGHT_WITH_ONNX = 0.15;
 
 	/** Cached individual classifier outputs for ensemble decomposition */
 	private lastRuleBasedProbs: Record<string, number> | null = null;
 	private lastTrainedProbs: Record<string, number> | null = null;
-
-	// ---- Custom-trained local ViT model ----
-	// Trained on HAM10000 + ISIC 2019 combined (37,484 images) with focal loss, 95.97% melanoma sensitivity on external data.
-	// Runs via /api/classify-local (Python subprocess with model.safetensors).
-
-	/**
-	 * Classify using the custom-trained local ViT model via /api/classify-local.
-	 *
-	 * This is the highest-priority classification path because it was trained
-	 * specifically for this task with 95.97% melanoma sensitivity on external ISIC 2019 data
-	 * (focal loss, HAM10000 + ISIC 2019 combined, ViT-base-patch16-224).
-	 *
-	 * @param imageData - RGBA ImageData from canvas
-	 * @returns Canonical-order probability array, or null if the local model is unavailable
-	 */
-	private async classifyCustomLocal(imageData: ImageData): Promise<number[] | null> {
-		try {
-			// Convert ImageData to JPEG blob
-			const canvas = document.createElement("canvas");
-			canvas.width = imageData.width;
-			canvas.height = imageData.height;
-			const ctx = canvas.getContext("2d")!;
-			ctx.putImageData(imageData, 0, 0);
-			const blob = await new Promise<Blob>((resolve, reject) => {
-				canvas.toBlob(
-					(b) => (b ? resolve(b) : reject(new Error("blob failed"))),
-					"image/jpeg",
-					0.95,
-				);
-			});
-
-			const formData = new FormData();
-			formData.append("image", blob, "lesion.jpg");
-
-			const response = await fetch("/api/classify-local", {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!response.ok) return null;
-
-			const { results } = await response.json() as {
-				results: Array<{ label: string; score: number }>;
-			};
-
-			// Map results to canonical class order
-			const probs: Record<string, number> = {
-				akiec: 0, bcc: 0, bkl: 0, df: 0, mel: 0, nv: 0, vasc: 0,
-			};
-
-			for (const r of results) {
-				const key = r.label.toLowerCase();
-				if (key in probs) {
-					probs[key] = r.score;
-				}
-			}
-
-			// Normalize to sum to 1
-			const total = Object.values(probs).reduce((a, b) => a + b, 0);
-			return CLASSES.map((c) => (total > 0 ? probs[c] / total : 1 / 7));
-		} catch {
-			// Custom model not available -- fall through to HF models
-			return null;
-		}
-	}
-
-	// ---- Dual-model HuggingFace ensemble ----
-	// Model 1: Anwarkh1/Skin_Cancer-Image_Classification (ViT-Base, 85.8M)
-	// Model 2: skintaglabs/siglip-skin-lesion-classifier (SigLIP 400M)
-	// Replaces: actavkid/vit-large-patch32-384 (REMOVED from HuggingFace, HTTP 410)
-
-	/**
-	 * Classify using BOTH HuggingFace models in parallel and ensemble them.
-	 *
-	 * Model 1: Anwarkh1/Skin_Cancer-Image_Classification (ViT-Base, 85.8M params, 7-class)
-	 * Model 2: skintaglabs/siglip-skin-lesion-classifier (SigLIP 400M, MIT license)
-	 *
-	 * Ensemble logic:
-	 * - Equal weighting (50/50) for all classes (no proven recall advantage for either model)
-	 * - If models disagree on top class: flag with modelsDisagree = true
-	 *
-	 * Falls back to single model if one fails, or empty if both fail.
-	 */
-	private async classifyHFDual(
-		imageData: ImageData,
-	): Promise<{
-		dualAvailable: boolean;
-		singleAvailable: boolean;
-		ensembledProbabilities: number[];
-		singleProbabilities?: number[];
-		modelsDisagree: boolean;
-		modelAgreement: number;
-	}> {
-		// Convert ImageData to JPEG blob once, share between both calls
-		let blob: Blob;
-		try {
-			const canvas = document.createElement("canvas");
-			canvas.width = imageData.width;
-			canvas.height = imageData.height;
-			const ctx = canvas.getContext("2d")!;
-			ctx.putImageData(imageData, 0, 0);
-			blob = await new Promise<Blob>((resolve, reject) => {
-				canvas.toBlob(
-					(b) => (b ? resolve(b) : reject(new Error("blob failed"))),
-					"image/jpeg",
-					0.95,
-				);
-			});
-		} catch {
-			return { dualAvailable: false, singleAvailable: false, ensembledProbabilities: [], modelsDisagree: false, modelAgreement: 0 };
-		}
-
-		// Call both models in PARALLEL using Promise.allSettled
-		const [v1Result, v2Result] = await Promise.allSettled([
-			this.callHFModel("/api/classify", blob, LABEL_MAP),
-			this.callHFModel("/api/classify-v2", blob, SIGLIP_LABEL_MAP),
-		]);
-
-		const v1Available = v1Result.status === "fulfilled" && v1Result.value !== null;
-		const v2Available = v2Result.status === "fulfilled" && v2Result.value !== null;
-
-		const v1Probs = v1Available ? (v1Result as PromiseFulfilledResult<number[]>).value : null;
-		const v2Probs = v2Available ? (v2Result as PromiseFulfilledResult<number[]>).value : null;
-
-		if (v1Probs && v2Probs) {
-			// Both models available -- ensemble them
-			const ensembled = this.ensembleDualModels(v1Probs, v2Probs);
-
-			// Determine top classes from each model
-			const v1TopIdx = v1Probs.indexOf(Math.max(...v1Probs));
-			const v2TopIdx = v2Probs.indexOf(Math.max(...v2Probs));
-			const modelsDisagree = v1TopIdx !== v2TopIdx;
-
-			// Compute cosine similarity between the two distributions
-			const agreement = cosineSimilarity(v1Probs, v2Probs);
-
-			return {
-				dualAvailable: true,
-				singleAvailable: true,
-				ensembledProbabilities: ensembled,
-				modelsDisagree,
-				modelAgreement: agreement,
-			};
-		} else if (v1Probs) {
-			// Only Anwarkh1 available
-			return {
-				dualAvailable: false,
-				singleAvailable: true,
-				ensembledProbabilities: [],
-				singleProbabilities: v1Probs,
-				modelsDisagree: false,
-				modelAgreement: 0,
-			};
-		} else if (v2Probs) {
-			// Only skintaglabs SigLIP available
-			return {
-				dualAvailable: false,
-				singleAvailable: true,
-				ensembledProbabilities: [],
-				singleProbabilities: v2Probs,
-				modelsDisagree: false,
-				modelAgreement: 0,
-			};
-		} else {
-			// Both failed -- fall back to local analysis
-			return {
-				dualAvailable: false,
-				singleAvailable: false,
-				ensembledProbabilities: [],
-				modelsDisagree: false,
-				modelAgreement: 0,
-			};
-		}
-	}
-
-	/**
-	 * Call a single HF model endpoint and return normalized canonical probabilities.
-	 *
-	 * @param endpoint - API endpoint path (e.g., "/api/classify" or "/api/classify-v2")
-	 * @param blob - Image JPEG blob
-	 * @param labelMap - Label-to-canonical-class mapping for this model
-	 * @returns Canonical-order probability array, or null if call fails
-	 */
-	private async callHFModel(
-		endpoint: string,
-		blob: Blob,
-		labelMap: Record<string, string>,
-	): Promise<number[] | null> {
-		try {
-			const formData = new FormData();
-			formData.append("image", blob, "lesion.jpg");
-
-			const response = await fetch(endpoint, {
-				method: "POST",
-				body: formData,
-			});
-
-			if (!response.ok) return null;
-
-			const { results } = await response.json() as {
-				results: Array<{ label: string; score: number }>;
-			};
-
-			// Map labels to canonical classes
-			const probs: Record<string, number> = {
-				akiec: 0, bcc: 0, bkl: 0, df: 0, mel: 0, nv: 0, vasc: 0,
-			};
-
-			for (const r of results) {
-				const canonical =
-					labelMap[r.label] || labelMap[r.label.toLowerCase()] || null;
-				if (canonical && canonical in probs) {
-					// Accumulate scores for labels that map to the same class
-					// (e.g., "melanoma" and "melanoma metastasis" both map to "mel")
-					probs[canonical] += r.score;
-				}
-			}
-
-			// Normalize to sum to 1
-			const total = Object.values(probs).reduce((a, b) => a + b, 0);
-			return CLASSES.map((c) => (total > 0 ? probs[c] / total : 1 / 7));
-		} catch {
-			return null;
-		}
-	}
-
-	/**
-	 * Ensemble two model outputs with class-specific weighting.
-	 *
-	 * Currently uses equal weighting (50/50) for all classes since neither
-	 * model has independently verified melanoma recall. To be updated once
-	 * validation results for the skintaglabs SigLIP model are available.
-	 */
-	private ensembleDualModels(v1Probs: number[], v2Probs: number[]): number[] {
-		const ensembled = CLASSES.map((cls, i) => {
-			if (cls === "mel") {
-				return DermClassifier.MODEL1_MELANOMA_WEIGHT * v1Probs[i] +
-					DermClassifier.MODEL2_MELANOMA_WEIGHT * v2Probs[i];
-			}
-			return DermClassifier.MODEL1_OTHER_WEIGHT * v1Probs[i] +
-				DermClassifier.MODEL2_OTHER_WEIGHT * v2Probs[i];
-		});
-
-		// Renormalize to sum to 1
-		const total = ensembled.reduce((a, b) => a + b, 0);
-		if (total > 0) {
-			return ensembled.map((p) => p / total);
-		}
-		return ensembled;
-	}
 
 	/**
 	 * Get the trained-weights probability for a specific class index.
