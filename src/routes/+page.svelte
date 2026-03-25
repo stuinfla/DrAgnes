@@ -1,6 +1,7 @@
 <script lang="ts">
 	import DrAgnesPanel from '$lib/components/DrAgnesPanel.svelte';
-	import { version } from '../../package.json';
+	declare const __APP_VERSION__: string;
+	const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.9.1';
 </script>
 
 <div class="flex h-dvh w-full flex-col bg-[#0a0a0f] overflow-hidden">
@@ -8,8 +9,9 @@
 		<div class="flex items-center gap-2.5">
 			<img src="/icons/icon-32x32.png" alt="Dr. Agnes" class="h-8 w-8 rounded-full object-cover ring-1 ring-white/[0.08]" />
 			<span class="text-[15px] font-semibold text-white tracking-tight">Dr. Agnes</span>
+			<span class="text-[9px] text-gray-600 font-mono">v{appVersion}</span>
 		</div>
-		<span class="text-[10px] text-gray-500 uppercase tracking-widest font-medium">v{version}</span>
+		<span class="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Research Preview</span>
 	</header>
 	<main class="flex-1 overflow-hidden">
 		<DrAgnesPanel />
