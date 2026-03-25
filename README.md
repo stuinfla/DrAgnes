@@ -371,61 +371,95 @@ cameras it has never seen, at institutions it has never been to.
 
 ---
 
-## Architecture: The 4-Layer Ensemble
+## Architecture: 100% Local, Zero External Dependencies
 
-![Classification Pipeline](docs/diagrams/classification-pipeline.svg)
-
-A single neural network is not trustworthy enough for cancer screening.
-Mela combines four independent classification layers with safety gates.
+Mela runs entirely on the user's device. No images leave the phone. No API
+calls to external servers. The ONNX model downloads once (85MB, cached by
+service worker) and every subsequent scan is fully offline.
 
 ```
-Image --> Preprocessing --> Segmentation --> Feature Extraction --> 4-Layer Ensemble --> Clinical Recommendation
-          (Color norm,     (Otsu in LAB,    (ABCDE, GLCM,        (Custom ViT +        (Biopsy? Refer?
-           hair removal,    morphological     LBP, k-means         clinical rules +      Monitor? Reassure?)
-           224x224 resize)  cleanup, BFS)     color in LAB)        literature +
-                                                                   demographics)
+                        +-----------------------+
+                        |    ONNX V2 Model      |
+                        |  (85MB INT8, cached)  |
+                        |  95.97% mel sens      |
+                        +----------+------------+
+                                   |
+                                   | 70% weight
+                                   v
++--------+    +--------+    +-------------+    +------------+    +----------+    +-----------+
+| Camera |    | Lesion |    |   3-Layer   |    | Threshold  |    | Bayesian |    | Consumer  |
+| Upload |--->| Gate   |--->|  Ensemble   |--->| + Meta     |--->|   Risk   |--->| Result    |
++--------+    +--------+    +-------------+    +------------+    +----------+    +-----------+
+                                   ^                                               |
+                     +-------------+-------------+                          "See a derm
+                     |                           |                           within 2 weeks"
+              15% weight                  15% weight
+              Trained Weights             Rule-Based
+              (Literature LR)             (Safety Gates)
 ```
 
-### Layer 1: Custom ViT Model v2 (50% of final score when online)
+### Layer 1: ONNX V2 ViT Model (70% of ensemble)
 
-stuartkerr/mela-classifier -- ViT-Base fine-tuned with focal loss.
-85.8M parameters. Trained on 37,484 images from HAM10000 + ISIC 2019 combined
-with focal loss (gamma=2.0, melanoma alpha=6.0). 95.97% melanoma sensitivity
-on external ISIC 2019 test set (3,901 images), 97.01% on HAM10000 holdout
-(1,503 images). Source: `scripts/combined-training-results.json`
+ViT-Base fine-tuned with focal loss on 37,484 images (HAM10000 + ISIC 2019).
+85.8M parameters, INT8 quantized to 85MB. Runs in-browser via ONNX Runtime
+Web (WASM backend). 95.97% melanoma sensitivity on external ISIC 2019 data
+(3,901 images). Source: `scripts/combined-training-results.json`
 
-### Layer 2: Literature-Derived Logistic Regression (30%)
+The model is stored in RuVector Format (RVF) and cached locally after first
+download via the service worker. Subsequent scans load from cache in <100ms.
+
+### Layer 2: Literature-Derived Logistic Regression (15%)
 
 A 20-feature x 7-class weight matrix where every weight is cited to published
-dermoscopy literature (Stolz 1994, Argenziano 1998, Menzies 1996). This layer
-encodes explicit clinical knowledge the ViT may not have learned, especially
-for rare classes with limited training data.
+dermoscopy literature (Stolz 1994, Argenziano 1998, Menzies 1996). Encodes
+clinical knowledge the ViT may not have learned from pixels alone.
 
-### Layer 3: Rule-Based Clinical Scoring (20%)
+### Layer 3: Rule-Based Safety Gates (15%)
 
 - **TDS formula:** A*1.3 + B*0.1 + C*0.5 + D*0.5 with validated cutoffs
 - **7-point checklist:** Threshold >= 3 triggers biopsy recommendation
-- **Melanoma safety gate:** 2+ concurrent suspicious indicators enforce a
-  15% probability floor for melanoma, regardless of what the other layers say
-- **TDS override:** TDS > 5.45 forces >= 30% malignant probability
+- **Melanoma safety gate:** 2+ suspicious ABCDE criteria enforce melanoma >= 15%
+- **TDS override:** TDS > 5.45 forces malignant >= 30%
 
-### Layer 4: Bayesian Demographic Adjustment (applied on top)
+These gates are the last line of defense. They override the neural network
+when clinical features contradict the model's confidence.
 
-Age/sex/body-location prevalence multipliers derived from HAM10000 demographic
-distributions. Skipped if no patient demographics are provided.
+### Bayesian Demographic Adjustment (applied on top)
 
-### Collective Intelligence: pi-brain (pi.ruv.io)
+Age-adjusted prevalence multipliers: under 30 = 0.3x, 30-50 = 0.7x,
+50-70 = 1.5x, over 70 = 2.5x base melanoma prevalence. Combined with
+sex and body-location priors from HAM10000.
 
-Practices that opt in contribute anonymized case data to a shared intelligence
-layer. Differential privacy (epsilon=1.0) protects patient data. The model
-gets smarter with every case across participating practices.
+### Offline-First Design
 
-### Fallback Behavior
+```
+First Visit:                          Every Visit After:
++----------+     +----------+        +----------+
+| Download |---->| Service  |        | Load     |
+| 85MB     |     | Worker   |        | from     |
+| ONNX     |     | Cache    |        | Cache    |
++----------+     +----------+        +----------+
+                      |                    |
+                      v                    v
+              +---------------+    +---------------+
+              | Full offline  |    | Full offline  |
+              | capability    |    | inference     |
+              | from now on   |    | <100ms load   |
+              +---------------+    +---------------+
+```
 
-The system degrades gracefully. If the HuggingFace API is unavailable, it
-falls back to the literature and rule-based layers (60/40 split). If no
-demographics are provided, Layer 4 is skipped. The safety gates always run
-regardless of connectivity.
+No fallback to any external API. If the ONNX model hasn't been downloaded
+yet, the system uses trained-weights + rule-based scoring (60/40 split) as a
+purely local fallback. The safety gates always run regardless.
+
+### Privacy by Architecture
+
+Images never leave the device -- not to a proxy, not to a cloud API, nowhere.
+Classification runs in-browser via WASM. EXIF metadata is stripped at capture.
+No device fingerprinting. No persistent identifiers.
+
+This is structural privacy, not policy-dependent. If the data never exists on
+a server, it cannot be breached from a server.
 
 ---
 
@@ -642,11 +676,9 @@ system does not need to be validated twice.
 Medical images are among the most sensitive data a person can generate.
 Mela is designed so that privacy is structural, not policy-dependent.
 
-- **Images never leave the device.** Classification runs via server-side
-  HuggingFace API proxy (the image is sent to the server for inference and
-  immediately discarded), but the architecture is designed for full ONNX
-  offline inference where even this hop is eliminated. No image is stored
-  on any server.
+- **Images never leave the device.** Classification runs entirely in-browser
+  via ONNX Runtime Web. No server proxy, no cloud API, no network hop. The
+  image stays on the user's phone from capture to result.
 - **EXIF stripping.** All metadata (GPS coordinates, device identifiers,
   timestamps) is removed from images before any processing. Even if an image
   were somehow exfiltrated, it carries no identifying metadata.
@@ -778,25 +810,10 @@ The app starts at `http://localhost:5173`.
 **Vercel project:** https://vercel.com/stuart-kerrs-projects/mela
 **GitHub:** https://github.com/stuinfla/Mela
 
-The app uses ONNX Runtime Web for in-browser inference — the 85MB INT8 model
-runs at 155ms with zero network dependency. Images never leave the device.
-A HuggingFace API fallback is available for online mode.
-
-### Environment Variables
-
-Create a `.env` file:
-
-```bash
-# Optional: HuggingFace API for online fallback mode
-HF_TOKEN=hf_your_token_here
-
-# Optional: override default models
-HF_MODEL_1=stuartkerr/mela-classifier
-```
-
-Without `HF_TOKEN`, the system runs in ONNX offline mode using the v2
-combined model (95.97% mel sensitivity) directly in the browser. No
-network required.
+The app uses ONNX Runtime Web for in-browser inference. The 85MB INT8 model
+downloads once and is cached by a service worker for fully offline use.
+No API keys needed. No external service dependencies. Images never leave
+the device.
 
 ### Train a Custom Model (Optional)
 
@@ -821,12 +838,14 @@ The pre-trained model is available on HuggingFace:
 | Component | Technology |
 |-----------|-----------|
 | Frontend | SvelteKit 5 + TailwindCSS, mobile-first PWA |
-| Custom model | ViT-Base fine-tuned on 37,484 images (HAM10000 + ISIC 2019), 85.8M params, focal loss (gamma=2.0, melanoma alpha=6.0) |
-| Image analysis | 1,890-line TypeScript engine: Otsu segmentation, GLCM, LBP, k-means++ color, principal-axis moments |
-| Clinical scoring | TDS (Stolz 1994), 7-point checklist (Argenziano 1998), DermaSensor-calibrated thresholds |
-| Collective intelligence | Pi-brain (pi.ruv.io, 1,807+ memories), differential privacy (epsilon=1.0) |
-| Privacy | EXIF stripping, witness chain (SHAKE-256), images never leave device |
-| Inference | ONNX Runtime Web (85MB INT8, 22ms, offline-first) with HuggingFace API fallback |
+| Model | ViT-Base, 85.8M params, focal loss (gamma=2.0, mel alpha=6.0), trained on 37,484 images |
+| Inference | ONNX Runtime Web (85MB INT8, WASM backend, fully offline) |
+| Model format | RuVector Format (RVF) -- self-contained, cached by service worker |
+| Image analysis | 2,000-line TypeScript CV engine: Otsu segmentation, GLCM, LBP, k-means++ color |
+| Clinical scoring | TDS (Stolz 1994), 7-point checklist (Argenziano 1998), per-class ROC thresholds |
+| Risk stratification | Bayesian post-test probability, age-adjusted prevalence, temperature calibration |
+| Privacy | 100% on-device inference, EXIF stripping, witness chain (SHAKE-256) |
+| Vector infrastructure | RuVector -- HNSW indexing, SONA self-optimization, federated learning |
 
 ---
 
@@ -835,35 +854,36 @@ The pre-trained model is available on HuggingFace:
 ```
 src/
   lib/
-    mela/
-      index.ts               Exports and types
-      classifier.ts          4-layer ensemble orchestration
-      image-analysis.ts      Real CV: segmentation, ABCDE, GLCM, LBP, k-means (1,890 lines)
-      clinical-baselines.ts  DermaSensor benchmarks, TDS formula, 7-point checklist
+    mela/                    Core classification engine
+      classifier.ts          3-layer ensemble: ONNX + trained-weights + rules
+      inference-orchestrator.ts  ONNX-first routing, no external APIs
+      inference-offline.ts   ONNX Runtime Web model loading + inference
+      image-analysis.ts      CV pipeline: segmentation, ABCDE, GLCM, LBP, k-means
+      threshold-classifier.ts  Per-class ROC-optimized thresholds
+      meta-classifier.ts     Neural + clinical feature agreement scoring
+      risk-stratification.ts Bayesian post-test probability
+      consumer-translation.ts  Medical -> plain English + action items
       trained-weights.ts     Literature-derived logistic regression (20x7 matrix)
-      abcde.ts               ABCDE scoring types and utilities
-      icd10.ts               ICD-10-CM code mapping
-      ham10000-knowledge.ts  Bayesian demographic adjustment
-      preprocessing.ts       Color normalization, hair removal, tensor conversion
-      privacy.ts             EXIF strip, differential privacy, witness chain
+      clinical-baselines.ts  TDS formula, 7-point checklist
+      types.ts               Shared type definitions
     components/
+      MelaPanel.svelte       Main UI orchestrator
       DermCapture.svelte     Camera + body map + image upload
-      ClassificationResult.svelte  Results display with risk indicators
-      MelaPanel.svelte    Main panel with 5 tabs
-      ReferralLetter.svelte  Referral letter generator
       ExplainPanel.svelte    "Why this classification?" with citations
+      ReferralLetter.svelte  Referral letter generator
   routes/
     +page.svelte             Main page
     api/
-      classify/              HuggingFace model proxy (primary)
-      classify-v2/           HuggingFace model proxy (secondary)
+      classify-local/        Server-side ONNX inference endpoint
+      analyze/               Vector search + literature retrieval
+static/
+  models/
+    mela-v2-int8.onnx        V2 model (85MB INT8, cached by service worker)
+  sw-model-cache.js          Service worker for offline model caching
 scripts/
   train-fast.py              Custom ViT training with focal loss
-  validate-models.mjs        HAM10000 validation harness
-  validate-isic2019.py       ISIC 2019 cross-dataset validation
-  cross-validate.py          Multi-dataset cross-validation
-docs/                        Technical documentation
-static/                      PWA manifest, icons
+  deploy-verified.sh         7-step verified deployment pipeline
+docs/                        Technical documentation + 14 ADRs
 ```
 
 ### Detailed Documentation
@@ -1005,7 +1025,7 @@ the hands of the 5 billion people who will never see one.
 
 ## License
 
-Apache-2.0
+MIT
 
 ---
 
