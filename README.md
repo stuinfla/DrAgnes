@@ -12,7 +12,7 @@ ONNX deployment: 85MB INT8, 22ms inference, fully offline.
 
 Source: `scripts/combined-training-results.json`
 
-**Version 0.9.0** | **Updated 2026-03-24** | **RESEARCH USE ONLY -- Not FDA-cleared**
+**Version 0.9.4** | **Updated 2026-03-25** | **RESEARCH USE ONLY -- Not FDA-cleared**
 
 > **Honesty note (2026-03-23):** An internal FDA-style audit found that previous
 > claims of "91.3% cross-dataset" and "96.2% sensitivity" were not backed by any

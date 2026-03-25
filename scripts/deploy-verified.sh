@@ -1,10 +1,10 @@
 #!/bin/bash
-# Dr. Agnes Verified Deployment Script
-# 1. Bumps version (patch)
-# 2. Commits + pushes to GitHub (stuinfla/DrAgnes)
-# 3. Waits for Vercel deployment
-# 4. Verifies live site shows new version via Playwright
-# 5. Reports success/failure
+# Dr. Agnes Verified Deployment Script (Standalone Repo)
+# 1. Bumps version (patch/minor/major)
+# 2. Updates version in all 3 places (package.json, +page.svelte, README.md)
+# 3. Commits + pushes to GitHub (stuinfla/DrAgnes)
+# 4. Waits for Vercel deployment
+# 5. Verifies live site shows new version
 #
 # Usage: bash scripts/deploy-verified.sh [major|minor|patch]
 # Default: patch
@@ -12,16 +12,14 @@
 set -euo pipefail
 
 BUMP_TYPE="${1:-patch}"
-MONOREPO_ROOT="/Users/stuartkerr/RuVector_New/RuVector"
-DRAGNES_DIR="$MONOREPO_ROOT/examples/dragnes"
+REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 GITHUB_REPO="stuinfla/DrAgnes"
 VERCEL_URL="https://dragnes.vercel.app"
-PLAYWRIGHT_DIR="$MONOREPO_ROOT/ui/ruvocal"  # has playwright installed
 
-cd "$DRAGNES_DIR"
+cd "$REPO_DIR"
 
 echo "============================================"
-echo "Dr. Agnes Verified Deployment"
+echo "Dr. Agnes Verified Deployment (Standalone)"
 echo "============================================"
 echo ""
 
@@ -37,50 +35,53 @@ case "$BUMP_TYPE" in
 esac
 
 NEW_VERSION="$MAJOR.$MINOR.$PATCH"
-echo "📦 Version: $OLD_VERSION → $NEW_VERSION ($BUMP_TYPE)"
+echo "Version: $OLD_VERSION -> $NEW_VERSION ($BUMP_TYPE)"
 
 # Update package.json
-cd "$DRAGNES_DIR"
 node -e "
 const fs = require('fs');
 const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
 pkg.version = '$NEW_VERSION';
 fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
-echo "   ✅ package.json updated"
+echo "   package.json updated"
 
-# Update version in +page.svelte header (single source of truth: package.json → here)
-cd "$DRAGNES_DIR"
+# Update version in +page.svelte header
 sed -i '' "s/v[0-9]*\.[0-9]*\.[0-9]*<\/span>/v${NEW_VERSION}<\/span>/" src/routes/+page.svelte
-echo "   ✅ +page.svelte header updated"
+echo "   +page.svelte header updated"
 
 # Update version in README headline
 sed -i '' "s/Version [0-9]*\.[0-9]*\.[0-9]*/Version ${NEW_VERSION}/" README.md
-echo "   ✅ README.md version updated"
+echo "   README.md version updated"
 
-# Step 2: Commit
-cd "$MONOREPO_ROOT"
-git add examples/dragnes/package.json examples/dragnes/src/routes/+page.svelte examples/dragnes/README.md
+# Step 2: Build check
+echo ""
+echo "Running build check..."
+npm run build > /dev/null 2>&1
+echo "   Build passed"
+
+# Step 3: Commit + push
+echo ""
+echo "Committing and pushing..."
+git add package.json src/routes/+page.svelte README.md
 git commit -m "chore(dragnes): bump version to $NEW_VERSION
 
 Co-Authored-By: claude-flow <ruv@ruv.net>"
-echo "   ✅ Committed"
+echo "   Committed"
 
-# Step 3: Subtree split + push to GitHub
-echo ""
-echo "🚀 Pushing to GitHub ($GITHUB_REPO)..."
-SPLIT_SHA=$(git subtree split --prefix=examples/dragnes -b dragnes-deploy-$NEW_VERSION 2>/dev/null | tail -1)
-git push fork dragnes-deploy-$NEW_VERSION:main --force 2>&1
-echo "   ✅ Pushed to $GITHUB_REPO (SHA: ${SPLIT_SHA:0:8})"
+git push origin main
+echo "   Pushed to $GITHUB_REPO"
 
 # Step 4: Wait for Vercel deployment
 echo ""
-echo "⏳ Waiting for Vercel deployment..."
-MAX_WAIT=120
+echo "Waiting for Vercel deployment..."
+MAX_WAIT=180
 WAITED=0
 while [ $WAITED -lt $MAX_WAIT ]; do
-  DEPLOY_STATE=$(gh api "repos/$GITHUB_REPO/commits/main/status" --jq '.state' 2>/dev/null || echo "unknown")
-  if [ "$DEPLOY_STATE" = "success" ] || [ "$DEPLOY_STATE" = "pending" ]; then
+  # Check if Vercel has a new deployment
+  DEPLOY_STATUS=$(vercel ls 2>/dev/null | head -5 | grep -c "Ready" || true)
+  if [ "$DEPLOY_STATUS" -gt 0 ]; then
+    # Check if the deployment is recent (within last 3 minutes)
     break
   fi
   sleep 10
@@ -88,59 +89,42 @@ while [ $WAITED -lt $MAX_WAIT ]; do
   echo "   Waiting... ${WAITED}s"
 done
 
-# Give Vercel extra time to build
-echo "   Waiting 30s for Vercel build..."
-sleep 30
+# Give Vercel extra time to propagate
+echo "   Waiting 20s for CDN propagation..."
+sleep 20
 
-# Step 5: Verify with Playwright
+# Step 5: Verify deployment
 echo ""
-echo "🔍 Verifying live deployment..."
-cd "$PLAYWRIGHT_DIR"
+echo "Verifying live deployment..."
 
-VERIFY_RESULT=$(node -e "
-const { chromium } = require('playwright');
-(async () => {
-  const browser = await chromium.launch({ headless: true });
-  const page = await browser.newPage();
-  await page.goto('$VERCEL_URL', { waitUntil: 'networkidle', timeout: 30000 });
+# Use curl to check version string on live site
+SITE_HTML=$(curl -s --max-time 15 "$VERCEL_URL" 2>/dev/null || echo "FETCH_FAILED")
 
-  const html = await page.content();
-  const hasVersion = html.includes('v$NEW_VERSION');
-  const hasHeader = html.includes('Dr. Agnes');
-  const hasButtons = html.includes('Take Photo') || html.includes('Upload Photo');
+VERSION_OK="false"
+HEADER_OK="false"
 
-  await page.screenshot({ path: '/tmp/deploy-verify-$NEW_VERSION.png', fullPage: true });
+if echo "$SITE_HTML" | grep -q "v${NEW_VERSION}"; then
+  VERSION_OK="true"
+fi
 
-  console.log(JSON.stringify({
-    version_visible: hasVersion,
-    header_present: hasHeader,
-    buttons_present: hasButtons,
-    url: '$VERCEL_URL'
-  }));
-
-  await browser.close();
-})().catch(e => { console.log(JSON.stringify({ error: e.message })); process.exit(1); });
-" 2>&1)
-
-echo "   Verification: $VERIFY_RESULT"
-
-# Parse result
-VERSION_OK=$(echo "$VERIFY_RESULT" | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).version_visible" 2>/dev/null || echo "false")
-HEADER_OK=$(echo "$VERIFY_RESULT" | node -p "JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).header_present" 2>/dev/null || echo "false")
+if echo "$SITE_HTML" | grep -q "Dr. Agnes"; then
+  HEADER_OK="true"
+fi
 
 echo ""
 echo "============================================"
 if [ "$VERSION_OK" = "true" ] && [ "$HEADER_OK" = "true" ]; then
-  echo "✅ DEPLOYMENT VERIFIED: v$NEW_VERSION live at $VERCEL_URL"
-  echo "   Screenshot: /tmp/deploy-verify-$NEW_VERSION.png"
+  echo "DEPLOYMENT VERIFIED: v$NEW_VERSION live at $VERCEL_URL"
+  echo "   Version visible: $VERSION_OK"
+  echo "   Header present: $HEADER_OK"
   echo "============================================"
   exit 0
 else
-  echo "❌ DEPLOYMENT VERIFICATION FAILED"
+  echo "DEPLOYMENT VERIFICATION FAILED"
   echo "   Version visible: $VERSION_OK"
   echo "   Header present: $HEADER_OK"
-  echo "   Screenshot: /tmp/deploy-verify-$NEW_VERSION.png"
   echo "   Check $VERCEL_URL manually"
+  echo "   Run: vercel ls && vercel inspect $VERCEL_URL --logs"
   echo "============================================"
   exit 1
 fi

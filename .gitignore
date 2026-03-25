@@ -14,4 +14,8 @@ scripts/dragnes-onnx-int8/
 scripts/dragnes-onnx-v2/
 scripts/dragnes-onnx-v2-int8/
 scripts/.fitzpatrick-image-cache/
+ruvector/
+.claude/
+.claude-flow/
+.mcp.json
 # v0.9.4

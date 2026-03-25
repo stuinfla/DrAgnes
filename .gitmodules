@@ -1,0 +1,4 @@
+[submodule "ruvector"]
+	path = ruvector
+	url = https://github.com/ruvnet/RuVector.git
+	branch = main
