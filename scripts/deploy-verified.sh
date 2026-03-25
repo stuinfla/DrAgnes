@@ -49,9 +49,18 @@ fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
 "
 echo "   ✅ package.json updated"
 
+# Update version in +page.svelte header (single source of truth: package.json → here)
+cd "$DRAGNES_DIR"
+sed -i '' "s/v[0-9]*\.[0-9]*\.[0-9]*<\/span>/v${NEW_VERSION}<\/span>/" src/routes/+page.svelte
+echo "   ✅ +page.svelte header updated"
+
+# Update version in README headline
+sed -i '' "s/Version [0-9]*\.[0-9]*\.[0-9]*/Version ${NEW_VERSION}/" README.md
+echo "   ✅ README.md version updated"
+
 # Step 2: Commit
 cd "$MONOREPO_ROOT"
-git add examples/dragnes/package.json
+git add examples/dragnes/package.json examples/dragnes/src/routes/+page.svelte examples/dragnes/README.md
 git commit -m "chore(dragnes): bump version to $NEW_VERSION
 
 Co-Authored-By: claude-flow <ruv@ruv.net>"
