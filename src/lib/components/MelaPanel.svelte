@@ -1504,7 +1504,7 @@
 				<div class="mx-5 mt-4 rounded-2xl bg-teal-500/5 border border-teal-500/15 px-5 py-3.5 text-center">
 					<p class="text-[11px] text-teal-400/80">
 						95.97% melanoma detection on external data &bull; 37,484 training images &bull;
-						<button onclick={() => (activeView = "learn")} class="underline hover:text-teal-300 transition-colors">How it works</button>
+						<a href="/how-it-works.html" target="_blank" class="underline hover:text-teal-300 transition-colors">How it works</a>
 					</p>
 				</div>
 
