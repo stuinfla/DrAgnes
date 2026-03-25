@@ -296,7 +296,7 @@ Created: 2026-03-24
 ## 10. Deployment: 75/100 (Weight: 5%)
 
 **What is deployed:**
-- Vercel deployment exists at mela.vercel.app.
+- Vercel deployment exists at mela-app.vercel.app.
 - `@sveltejs/adapter-vercel` configured in package.json.
 - Build scripts: `vite build`.
 - Deploy script referenced: `scripts/deploy.sh`.
@@ -387,7 +387,7 @@ Three areas still prevent confidence in production readiness:
 
 - I did not run `npm run build` to verify the app compiles.
 - I did not run `npm test` to verify the 91/104 pass rate claim independently.
-- I did not access mela.vercel.app to verify the live deployment.
+- I did not access mela-app.vercel.app to verify the live deployment.
 - I did not verify that the Svelte components render correctly.
 - I did not test the classification pipeline end-to-end with a real image.
 - I did not verify the measurement pipeline produces accurate mm values.

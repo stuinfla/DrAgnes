@@ -174,7 +174,7 @@ The system classifies dermoscopic and clinical images into 7 diagnostic categori
 
 ### Current State: v0.9.4 (March 25, 2026)
 
-The app is live at https://mela.vercel.app. The architecture is sound, the science is real, the evidence chain is intact, but production deployment still serves the V1 model via HuggingFace Inference API. The V2 combined model (95.97%) exists as ONNX exports and local trained weights but is not yet the default production inference path.
+The app is live at https://mela-app.vercel.app. The architecture is sound, the science is real, the evidence chain is intact, but production deployment still serves the V1 model via HuggingFace Inference API. The V2 combined model (95.97%) exists as ONNX exports and local trained weights but is not yet the default production inference path.
 
 ---
 
@@ -557,7 +557,7 @@ The `stuinfla/Mela` GitHub repo is connected to a Vercel project. Every push to 
 | Project ID | prj_FORojA8ujKmBMIH9IyAb1IFTXnCi |
 | Team | stuart-kerrs-projects |
 | User | sikerr-6092 |
-| Domain | https://mela.vercel.app |
+| Domain | https://mela-app.vercel.app |
 | Adapter | @sveltejs/adapter-vercel (runtime: nodejs22.x) |
 | Build command | vite build |
 | Framework | SvelteKit |

@@ -4,7 +4,7 @@ Created: 2026-03-23
 # ADR-120: Make It Actually Work — No Bullshit Deployment Checklist
 
 ## Status: IMPLEMENTED -- All Phases Complete | Last Updated: 2026-03-24 12:00 EST
-**Implementation Note**: Phase 0 (verify) done -- cross-validation and ISIC 2019 results confirmed. Phase 1 (custom model) partial -- HuggingFace API proxy works as fallback; ONNX browser inference blocked by ConvInteger compat. Phase 2 (consumer output) done -- consumer-translation.ts. Phase 3 (quality gate) done -- image-quality.ts + detectLesionPresence(). Phase 4 (E2E testing) done -- Playwright E2E on desktop + mobile. Phase 5 (deploy) partial -- Vercel live at mela.vercel.app; auth protection requires manual disable.
+**Implementation Note**: Phase 0 (verify) done -- cross-validation and ISIC 2019 results confirmed. Phase 1 (custom model) partial -- HuggingFace API proxy works as fallback; ONNX browser inference blocked by ConvInteger compat. Phase 2 (consumer output) done -- consumer-translation.ts. Phase 3 (quality gate) done -- image-quality.ts + detectLesionPresence(). Phase 4 (E2E testing) done -- Playwright E2E on desktop + mobile. Phase 5 (deploy) partial -- Vercel live at mela-app.vercel.app; auth protection requires manual disable.
 
 ## Context
 

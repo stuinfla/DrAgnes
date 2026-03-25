@@ -774,7 +774,7 @@ The app starts at `http://localhost:5173`.
 
 ### Deployment
 
-**Live:** https://mela.vercel.app
+**Live:** https://mela-app.vercel.app
 **Vercel project:** https://vercel.com/stuart-kerrs-projects/mela
 **GitHub:** https://github.com/stuinfla/Mela
 

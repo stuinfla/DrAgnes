@@ -18,7 +18,7 @@ set -euo pipefail
 BUMP_TYPE="${1:-patch}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 GITHUB_REPO="stuinfla/Mela"
-VERCEL_URL="https://mela.vercel.app"
+VERCEL_URL="https://mela-app.vercel.app"
 VERCEL_PROJECT="mela"
 REPORT_FILE="/tmp/mela-deploy-report.txt"
 

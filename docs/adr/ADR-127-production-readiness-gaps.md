@@ -15,7 +15,7 @@ The gaps are ordered by impact — fixing #1 alone moves the needle more than fi
 
 ## Gap 1: V2 Model Not Serving in Production (CRITICAL)
 
-**Problem:** The deployed app at mela.vercel.app uses the v1 HuggingFace model (`stuartkerr/mela-classifier` — trained on HAM10000 only, 61.6% mel sensitivity on external data). The v2 combined model (95.97% on external data) exists only locally at `scripts/mela-classifier-v2/best/`.
+**Problem:** The deployed app at mela-app.vercel.app uses the v1 HuggingFace model (`stuartkerr/mela-classifier` — trained on HAM10000 only, 61.6% mel sensitivity on external data). The v2 combined model (95.97% on external data) exists only locally at `scripts/mela-classifier-v2/best/`.
 
 **Impact:** Every user today gets the WORSE model. This is the single most impactful gap.
 
@@ -176,7 +176,7 @@ The gaps are ordered by impact — fixing #1 alone moves the needle more than fi
 
 | Criterion | Target | How to Verify |
 |-----------|--------|--------------|
-| V2 model serving in production | mela.vercel.app returns v2 probabilities | Test with known image |
+| V2 model serving in production | mela-app.vercel.app returns v2 probabilities | Test with known image |
 | Phone-camera accuracy | >80% mel sensitivity on 50 phone photos | phone-camera-validation-results.json |
 | Truly external validation | >85% mel sensitivity on PH2/ISIC2020 | truly-external-validation-results.json |
 | CI/CD operational | Tests run on every push | GitHub Actions badge green |

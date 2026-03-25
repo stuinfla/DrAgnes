@@ -178,7 +178,7 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 
 | System | URL / Identifier |
 |---|---|
-| Live app | https://mela.vercel.app |
+| Live app | https://mela-app.vercel.app |
 | GitHub repo | https://github.com/stuinfla/Mela |
 | Vercel project | https://vercel.com/stuart-kerrs-projects/mela |
 | Vercel team | stuart-kerrs-projects |
