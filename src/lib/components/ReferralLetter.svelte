@@ -20,6 +20,7 @@
 	const riskLevel = classification.confidence > 0.7 ? "high" : classification.confidence > 0.4 ? "moderate" : "low";
 
 	let copied = $state(false);
+	let copyError = $state(false);
 
 	let letterText = $derived(`DERMATOLOGY REFERRAL
 
@@ -56,10 +57,16 @@ Patient requesting evaluation: ___________________________
 Date: ___________________________
 `);
 
-	function copyToClipboard() {
-		navigator.clipboard.writeText(letterText);
-		copied = true;
-		setTimeout(() => (copied = false), 2000);
+	async function copyToClipboard() {
+		try {
+			await navigator.clipboard.writeText(letterText);
+			copied = true;
+			copyError = false;
+			setTimeout(() => (copied = false), 2000);
+		} catch {
+			copyError = true;
+			setTimeout(() => (copyError = false), 4000);
+		}
 	}
 </script>
 
@@ -69,7 +76,7 @@ Date: ___________________________
 		<pre class="whitespace-pre-wrap text-sm text-gray-300 bg-gray-900 rounded-lg p-4 border border-gray-700 max-h-96 overflow-y-auto font-mono">{letterText}</pre>
 		<div class="flex gap-3 mt-4">
 			<button onclick={copyToClipboard} class="flex-1 rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-500">
-				{copied ? "Copied!" : "Copy to Clipboard"}
+				{copied ? "Copied!" : copyError ? "Failed to copy - please select and copy manually" : "Copy to Clipboard"}
 			</button>
 			<button onclick={onclose} class="rounded-lg border border-gray-600 px-4 py-2 text-sm text-gray-400 hover:bg-gray-800">
 				Close

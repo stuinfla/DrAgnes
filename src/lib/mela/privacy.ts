@@ -274,7 +274,7 @@ export class PrivacyPipeline {
 	async computeHash(data: Uint8Array): Promise<string> {
 		try {
 			if (typeof globalThis.crypto !== "undefined" && globalThis.crypto.subtle) {
-				const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data);
+				const hashBuffer = await globalThis.crypto.subtle.digest("SHA-256", data as BufferSource);
 				const hashArray = new Uint8Array(hashBuffer);
 				return Array.from(hashArray)
 					.map((b) => b.toString(16).padStart(2, "0"))
@@ -285,6 +285,7 @@ export class PrivacyPipeline {
 		}
 
 		// Simple fallback hash (FNV-1a inspired, for environments without crypto)
+		console.warn("Privacy hash falling back to weak FNV-1a - SubtleCrypto unavailable");
 		let h = 0x811c9dc5;
 		for (let i = 0; i < data.length; i++) {
 			h ^= data[i];
@@ -327,6 +328,11 @@ export class PrivacyPipeline {
 	 * @returns True if k-anonymity requirement is met
 	 */
 	checkKAnonymity(metadata: Record<string, string>): boolean {
+		// LIMITATION: This is a heuristic check, not a real k-anonymity verification
+		// against a population table. It only counts the number of quasi-identifiers
+		// present and flags when too many are combined. A true k-anonymity check would
+		// require a reference population dataset.
+
 		// Quasi-identifiers that could re-identify a person
 		const quasiIdentifiers = ["age", "gender", "zip", "zipcode", "postal_code", "city", "state", "ethnicity"];
 

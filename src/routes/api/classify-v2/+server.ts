@@ -30,7 +30,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const formData = await request.formData();
 	const imageFile = formData.get("image");
 
-	if (!imageFile || !(imageFile instanceof File || imageFile instanceof Blob)) {
+	if (!imageFile || typeof imageFile === 'string') {
 		throw error(400, "No image provided");
 	}
 

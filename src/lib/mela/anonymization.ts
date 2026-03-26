@@ -12,6 +12,8 @@
  *   - No raw images, device identifiers, or patient identifiers included
  */
 
+import { MELA_CONFIG } from "./config";
+
 /** De-identified case record ready for collective sharing */
 export interface AnonymizedCase {
 	/** Classification output (noised) */
@@ -163,6 +165,6 @@ export function anonymizeCase(
 		outcome: outcomeCategory,
 		pathologyResult: outcome?.pathologyResult ?? null,
 		timestamp,
-		modelVersion: "mela-v1",
+		modelVersion: MELA_CONFIG.modelVersion,
 	};
 }

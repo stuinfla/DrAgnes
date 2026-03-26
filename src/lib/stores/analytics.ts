@@ -104,10 +104,25 @@ function loadFromStorage<T>(key: string): T[] {
 	}
 }
 
+/** Maximum total localStorage budget for analytics (4 MB). */
+const MAX_STORAGE_BYTES = 4 * 1024 * 1024;
+
 function saveToStorage<T>(key: string, data: T[]): void {
 	if (typeof window === "undefined") return;
 	try {
-		localStorage.setItem(key, JSON.stringify(data));
+		const json = JSON.stringify(data);
+		localStorage.setItem(key, json);
+
+		// Trim oldest entries if total analytics storage exceeds 4 MB
+		const eventsSize = localStorage.getItem(STORAGE_KEY_EVENTS)?.length ?? 0;
+		const feedbackSize = localStorage.getItem(STORAGE_KEY_FEEDBACK)?.length ?? 0;
+		const totalSize = (eventsSize + feedbackSize) * 2; // chars to approximate bytes (UTF-16)
+		if (totalSize > MAX_STORAGE_BYTES && key === STORAGE_KEY_EVENTS && data.length > 10) {
+			// Remove oldest 20% of events to free space
+			const trimCount = Math.ceil(data.length * 0.2);
+			const trimmed = data.slice(trimCount);
+			localStorage.setItem(key, JSON.stringify(trimmed));
+		}
 	} catch {
 		// localStorage full or unavailable -- silently fail
 	}

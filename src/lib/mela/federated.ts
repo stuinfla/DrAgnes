@@ -1,3 +1,6 @@
+// NOT IN PRODUCTION: Federated learning module is aspirational infrastructure.
+// Not imported by any production code path.
+
 /**
  * Mela Federated Learning Module
  *

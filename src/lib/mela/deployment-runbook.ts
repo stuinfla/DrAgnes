@@ -1,8 +1,14 @@
+// OUTDATED: This runbook references nonexistent infrastructure (GCR, mela.ruv.io).
+// Actual deployment is via Vercel at mela-app.vercel.app. See CLAUDE.md Deployment section.
+
 /**
  * Mela Deployment Runbook
  *
  * Structured deployment procedures, cost model, monitoring configuration,
  * and rollback strategies for the Mela classification service.
+ *
+ * @deprecated This runbook was written for a Cloud Run deployment that was
+ * never built. The live app deploys to Vercel via git push. See CLAUDE.md.
  */
 
 /** Deployment step definition */

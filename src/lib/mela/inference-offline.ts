@@ -24,11 +24,25 @@ const MEAN: [number, number, number] = [0.485, 0.456, 0.406];
 /** ImageNet channel standard deviations (RGB). */
 const STD: [number, number, number] = [0.229, 0.224, 0.225];
 
+/** Minimal interface for onnxruntime-web InferenceSession. */
+interface OrtSession {
+	run(feeds: Record<string, unknown>): Promise<Record<string, { data: Float32Array }>>;
+	outputNames?: string[];
+}
+
+/** Minimal interface for the dynamically imported ort module. */
+interface OrtModule {
+	InferenceSession: {
+		create(uri: string, options?: Record<string, unknown>): Promise<OrtSession>;
+	};
+	Tensor: new (type: string, data: Float32Array, dims: number[]) => unknown;
+}
+
 /** onnxruntime-web InferenceSession (lazy-loaded). */
-let session: any = null;
+let session: OrtSession | null = null;
 
 /** Reference to the dynamically imported ort module. */
-let ort: any = null;
+let ort: OrtModule | null = null;
 
 /**
  * Initialise the offline ONNX model.
@@ -102,7 +116,7 @@ export async function classifyOffline(imageData: ImageData): Promise<ClassProbab
 	const inputTensor = new ort.Tensor("float32", tensorData, [1, 3, 224, 224]);
 
 	// 3. Run inference
-	const feeds: Record<string, any> = { pixel_values: inputTensor };
+	const feeds: Record<string, unknown> = { pixel_values: inputTensor };
 	const results = await session.run(feeds);
 
 	// The model may expose logits under different output names

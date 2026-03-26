@@ -1,3 +1,6 @@
+// DEPRECATED: HuggingFace API classifier is no longer in the inference path.
+// Kept for reference only. See ADR for migration to ONNX-only.
+
 /**
  * HuggingFace Inference API classifier for skin lesion classification.
  * Uses Anwarkh1/Skin_Cancer-Image_Classification (ViT, 85.8M params)
@@ -7,6 +10,10 @@
  * - Direct HF API call (for server-side use)
  * - Label mapping from HF model output to canonical 7-class names
  * - Utility to convert ImageData to Blob for API transport
+ *
+ * @deprecated No longer used in production. ONNX inference-offline.ts
+ * is the active inference path. Label maps and imageDataToBlob are still
+ * imported by legacy code.
  */
 
 const HF_MODEL = "Anwarkh1/Skin_Cancer-Image_Classification";

@@ -35,18 +35,15 @@ function checkRateLimit(ip: string): boolean {
 	return true;
 }
 
-/** Periodically clean up stale rate limit entries */
-setInterval(
-	() => {
-		const now = Date.now();
-		for (const [ip, entry] of rateLimitMap) {
-			if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS * 2) {
-				rateLimitMap.delete(ip);
-			}
+/** Clean up stale rate limit entries (called at the start of each request). */
+function cleanupStaleEntries(): void {
+	const now = Date.now();
+	for (const [ip, entry] of rateLimitMap) {
+		if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS * 2) {
+			rateLimitMap.delete(ip);
 		}
-	},
-	5 * 60_000
-);
+	}
+}
 
 interface AnalyzeRequest {
 	embedding: number[];
@@ -55,6 +52,9 @@ interface AnalyzeRequest {
 }
 
 export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	// Clean up stale rate limit entries on each request (no setInterval in serverless)
+	cleanupStaleEntries();
+
 	// Rate limiting
 	const clientIp = getClientAddress();
 	if (!checkRateLimit(clientIp)) {
@@ -118,6 +118,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 			throw err;
 		}
 
+		// Intentional server-side log -- visible in Vercel function logs for debugging
 		console.error("[mela/analyze] Error:", err);
 		throw error(500, "Analysis failed. The brain may be temporarily unavailable.");
 	}

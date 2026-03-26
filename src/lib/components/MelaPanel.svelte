@@ -87,6 +87,7 @@
 	// Demographics for HAM10000-calibrated adjustment
 	let patientAge: number | undefined = $state(undefined);
 	let patientSex: "male" | "female" | undefined = $state(undefined);
+	let patientFitzpatrick: number | undefined = $state(undefined);
 	let demographicsEnabled: boolean = $state(true);
 
 	// Clinical history (ADR-130, Dr. Chang feedback)
@@ -145,8 +146,14 @@
 	// History state
 	let records: DiagnosisRecord[] = $state([]);
 
-	// Settings state
-	let modelVersion: string = $state("V2 ONNX (95.97% sensitivity)");
+	// Settings state -- model version derived from actual detection
+	let modelVersion: string = $derived(
+		customModelAvailable === true
+			? "V2 ONNX (95.97% sensitivity)"
+			: customModelAvailable === false
+				? "Offline mode (literature-based)"
+				: "Checking model..."
+	);
 	let brainSyncEnabled: boolean = $state(false);
 	let privacyStripExif: boolean = $state(true);
 	let privacyLocalOnly: boolean = $state(true);
@@ -510,16 +517,16 @@
 				probabilities: metaResult.adjustedProbabilities,
 			};
 
-			// Record in analytics
-			const eventId = crypto.randomUUID();
-			lastEventId = eventId;
-			recordClassification({
-				eventId,
-				topClass: classificationResult.topClass,
+			// Record in analytics (use same field names as single-image path)
+			lastEventId = recordClassification({
+				predictedClass: classificationResult.topClass,
 				confidence: classificationResult.confidence,
-				probabilities: classificationResult.probabilities,
-				bodyLocation: capturedBodyLocation,
+				allProbabilities: Object.fromEntries(
+					classificationResult.probabilities.map((p) => [p.className, p.probability]),
+				),
 				modelId: classificationResult.modelId + ` (${images.length}-image consensus)`,
+				demographics: { age: patientAge, sex: patientSex, fitzpatrick: patientFitzpatrick },
+				bodyLocation: capturedBodyLocation,
 			});
 
 			if (result.confidence < 0.5) {
@@ -816,7 +823,7 @@
 					classificationResult.probabilities.map((p) => [p.className, p.probability]),
 				),
 				modelId: classificationResult.modelId,
-				demographics: { age: patientAge, sex: patientSex },
+				demographics: { age: patientAge, sex: patientSex, fitzpatrick: patientFitzpatrick },
 				bodyLocation: capturedBodyLocation,
 			});
 
@@ -827,8 +834,7 @@
 			setTimeout(() => {
 				scrollContainer?.scrollTo({ top: 0, behavior: "smooth" });
 			}, 100);
-		} catch (err) {
-			console.error("Classification failed:", err);
+		} catch (_err) {
 			classificationError = "Analysis could not be completed. Please retake the image and try again.";
 		} finally {
 			clearInterval(stepInterval);
@@ -842,7 +848,7 @@
 			showReferralLetter = true;
 			return;
 		}
-		console.log("Mela action:", action, payload);
+		// Other actions are no-ops for now
 	}
 
 	function handleNewScan() {
@@ -887,10 +893,14 @@
 
 <!-- Full-screen image viewer overlay -->
 {#if showFullImage && capturedImageData}
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions a11y_interactive_supports_focus -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-sm"
 		role="dialog"
+		aria-modal="true"
 		aria-label="Full-screen lesion image"
+		tabindex="-1"
+		onkeydown={(e) => { if (e.key === 'Escape') showFullImage = false; }}
 	>
 		<button
 			onclick={() => (showFullImage = false)}
@@ -1662,6 +1672,23 @@
 										</select>
 									</div>
 								</div>
+								<div class="mt-3">
+									<label class="mb-1 block text-[11px] text-gray-500" for="fitzpatrick-input">Skin type (Fitzpatrick)</label>
+									<select
+										id="fitzpatrick-input"
+										bind:value={patientFitzpatrick}
+										class="w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5 text-sm text-gray-200"
+									>
+										<option value={undefined}>Not specified</option>
+										<option value={1}>I -- Very fair, always burns</option>
+										<option value={2}>II -- Fair, burns easily</option>
+										<option value={3}>III -- Medium, sometimes burns</option>
+										<option value={4}>IV -- Olive, rarely burns</option>
+										<option value={5}>V -- Brown, very rarely burns</option>
+										<option value={6}>VI -- Dark brown/black, never burns</option>
+									</select>
+									<p class="mt-1 text-[9px] text-gray-600">Helps track accuracy across skin tones</p>
+								</div>
 							{/if}
 						</div>
 					{/if}
@@ -1858,7 +1885,7 @@
 
 				<div class="card">
 					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Inference</h3>
-					<p class="text-[11px] text-gray-500 mb-3">Where classification runs (ADR-122)</p>
+					<p class="text-[11px] text-gray-500 mb-3">Where classification runs</p>
 					<div class="flex flex-col gap-2">
 						{#each [
 							{ value: "auto", label: "Auto", desc: "Offline ONNX when loaded, otherwise HF API" },

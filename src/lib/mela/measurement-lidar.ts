@@ -61,7 +61,7 @@ export async function measureWithLidar(): Promise<LidarMeasurement> {
 					try {
 						const m = frame.getDepthInformation?.(null)?.getDepthInMeters(0.5, 0.5) ?? 0.3;
 						resolve(m * 1000);
-					} catch { resolve(300); }
+					} catch (e) { console.warn("LiDAR depth read failed, using default distance:", e); resolve(300); }
 				});
 			});
 			await session.end();
@@ -74,7 +74,7 @@ export async function measureWithLidar(): Promise<LidarMeasurement> {
 				pixelsPerMm: Math.round(pxPerMm * 100) / 100,
 				confidence: 0.85, device: "LiDAR (WebXR)", hint: null,
 			};
-		} catch { /* WebXR session failed -- fall through */ }
+		} catch (e) { console.warn("WebXR LiDAR session failed, falling back:", e); }
 	}
 
 	if (detectIPhonePro()) {
