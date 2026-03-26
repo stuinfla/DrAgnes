@@ -30,9 +30,15 @@
 <div class="w-full">
 	{#if records.length === 0}
 		<div
-			class="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-300 p-8 dark:border-gray-600"
+			class="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-10 text-center"
 		>
-			<p class="text-sm text-gray-400">No previous records for this lesion</p>
+			<svg class="h-12 w-12 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+			</svg>
+			<div>
+				<p class="text-sm font-medium text-gray-300">No scans yet</p>
+				<p class="mt-1 text-xs text-gray-500">When you scan a spot, it will appear here so you can track changes over time.</p>
+			</div>
 		</div>
 	{:else}
 		<div class="relative ml-4 border-l-2 border-gray-200 pl-6 dark:border-gray-700">

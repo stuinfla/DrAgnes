@@ -146,7 +146,7 @@
 	let records: DiagnosisRecord[] = $state([]);
 
 	// Settings state
-	let modelVersion: string = $state("v1.0.0-demo");
+	let modelVersion: string = $state("V2 ONNX (95.97% sensitivity)");
 	let brainSyncEnabled: boolean = $state(false);
 	let privacyStripExif: boolean = $state(true);
 	let privacyLocalOnly: boolean = $state(true);
@@ -1810,11 +1810,11 @@
 
 				<div class="card">
 					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Classification Mode</h3>
-					<p class="text-[11px] text-gray-500 mb-3">Per-class thresholds from ADR-123 ROC analysis</p>
+					<p class="text-[11px] text-gray-500 mb-3">How cautious should Mela be?</p>
 					<div class="flex flex-col gap-2">
 						{#each [
-							{ value: "screening", label: "Screening", desc: "Max cancer detection (fewer missed, more false alarms)" },
-							{ value: "triage", label: "Balanced", desc: "Optimised sensitivity / specificity tradeoff" },
+							{ value: "screening", label: "Extra cautious", desc: "Flags more spots for review — catches more, but may over-flag some benign spots" },
+							{ value: "triage", label: "Balanced", desc: "Best balance between catching real issues and avoiding false alarms" },
 							{ value: "default", label: "Default", desc: "Standard argmax classification" },
 						] as opt (opt.value)}
 							<label
