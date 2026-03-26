@@ -578,13 +578,11 @@
 					GitHub
 				</a>
 				<a
-					href="https://huggingface.co/stuartkerr/mela-classifier"
-					target="_blank"
-					rel="noopener noreferrer"
+					href="/how-it-works.html"
 					class="flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2.5 text-[11px] font-medium text-gray-300 hover:bg-white/[0.06] active:scale-95 transition-all focus:outline-none focus:ring-2 focus:ring-teal-500/40"
 				>
-					<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 2a8 8 0 110 16 8 8 0 010-16zm-1 4a1 1 0 100 2 1 1 0 000-2zm2 0a1 1 0 100 2 1 1 0 000-2zm-4 5a5 5 0 008 0H9z"></path></svg>
-					Model on HuggingFace
+					<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+					How It Works
 				</a>
 			</div>
 		</section>

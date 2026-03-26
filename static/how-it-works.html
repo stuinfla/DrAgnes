@@ -441,7 +441,7 @@ html, body {
     for (var i = 0; i < stages.length; i++) { stages[i].classList.toggle('visible', i===n); }
     for (var j = 0; j < dots.length; j++) { dots[j].classList.toggle('active', j===n); dots[j].classList.toggle('completed', j<n); }
     prevBtn.disabled = n===0;
-    nextBtn.textContent = n===TOTAL-1 ? 'Restart' : 'Next \u2192';
+    nextBtn.textContent = n===TOTAL-1 ? 'Try Mela Now \u2192' : 'Next \u2192';
     counter.textContent = (n+1)+' / '+TOTAL;
     targets(n); effects(n);
   }
@@ -469,7 +469,7 @@ html, body {
   }
 
   prevBtn.addEventListener('click', function(){ go(current-1); });
-  nextBtn.addEventListener('click', function(){ if(current===TOTAL-1) go(0); else go(current+1); });
+  nextBtn.addEventListener('click', function(){ if(current===TOTAL-1) window.location.href='/'; else go(current+1); });
   restartBtn.addEventListener('click', function(){ go(0); });
   for(var d=0;d<dots.length;d++) { (function(dot){ dot.addEventListener('click', function(){ go(parseInt(dot.dataset.stage)); }); })(dots[d]); }
 
@@ -485,7 +485,7 @@ html, body {
 
   resize(); window.addEventListener('resize', function(){ resize(); targets(current); });
   init(); targets(0); draw(); effects(0);
-  setTimeout(function(){ startAuto(); }, 500);
+  // No auto-play — let users read at their own pace
 })();
 </script>
 </body>
