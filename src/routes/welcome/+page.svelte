@@ -612,7 +612,7 @@
 				<div class="flex items-center gap-2">
 					<img src="/icons/icon-32x32.png" alt="Mela" class="h-6 w-6 rounded-full" />
 					<span class="text-sm font-semibold">Mela</span>
-					<span class="text-xs text-gray-600">v0.9.4</span>
+					<span class="text-xs text-gray-600">v1.0.0</span>
 				</div>
 				<div class="flex items-center gap-6 text-xs text-gray-600">
 					<a href="https://github.com/stuinfla/Mela" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400">GitHub</a>

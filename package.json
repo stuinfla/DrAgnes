@@ -1,8 +1,8 @@
 {
   "name": "mela",
-  "version": "0.9.4",
+  "version": "1.0.0",
   "private": true,
-  "description": "Mela — AI-powered skin cancer screening. Because catching it early changes everything.",
+  "description": "Mela — AI-powered skin awareness and education. Because catching it early changes everything.",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
