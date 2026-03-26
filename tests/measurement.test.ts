@@ -74,7 +74,7 @@ describe("measureLesion", () => {
 		// For 6mm: area = pi * (6*4/2)^2 = pi*144 ~ 452
 		const result = await measureLesion(mockImageData(100, 100), 450, "trunk");
 		if (result.confidence === "low" && result.diameterMm >= 4 && result.diameterMm <= 8) {
-			expect(result.details).toContain("6mm clinical threshold");
+			expect(result.details).toContain("6mm reference threshold");
 		}
 	});
 });

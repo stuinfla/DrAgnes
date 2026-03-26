@@ -1,4 +1,4 @@
-# Mela -- AI Skin Cancer Screening
+# Mela -- AI Skin Awareness Tool
 # https://mela-app.vercel.app
 # robots.txt -- Production v1.0.0
 # Last updated: 2026-03-26
@@ -130,7 +130,7 @@ Sitemap: https://mela-app.vercel.app/sitemap.xml
 # Notes:
 # - /api/ endpoints handle medical image classification -- not for crawling
 # - /models/ contains ONNX model files -- not for indexing
-# - AI training bots are blocked to protect medical screening IP
+# - AI training bots are blocked to protect proprietary classification IP
 # - Service workers are excluded from indexing
 # - The app itself (/) is a PWA -- crawlers see the shell, not dynamic content
 # - /welcome is the marketing landing page -- primary SEO target

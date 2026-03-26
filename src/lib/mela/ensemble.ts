@@ -131,7 +131,7 @@ export function ensembleClassify(
 	let disagreementWarning: string | null = null;
 	if (melDisagreement) {
 		disagreementWarning =
-			"Models disagree: one suggests melanoma. See a dermatologist to be safe.";
+			"Models disagree: one shows elevated melanoma pattern similarity. Consider consulting a healthcare provider.";
 	} else if (!modelsAgree) {
 		disagreementWarning =
 			`Models disagree: V1 suggests ${LESION_LABELS[v1Top]}, V2 suggests ${LESION_LABELS[v2Top]}. Consider clinical correlation.`;

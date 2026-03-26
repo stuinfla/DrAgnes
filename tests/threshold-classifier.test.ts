@@ -35,12 +35,12 @@ describe("applyThresholds", () => {
 		expect(result.topClass).toBe("nv"); // highest raw value
 	});
 
-	it("uses screening thresholds when mode is screening", () => {
-		const thresholds = getThresholds("screening");
+	it("uses cautious thresholds when mode is cautious", () => {
+		const thresholds = getThresholds("cautious");
 		expect(thresholds.mel).toBe(0.25);
 		const probs = makeProbs({ mel: 0.30, nv: 0.50 });
-		const result = applyThresholds(probs, "screening");
-		// mel exceeds 0.25 in screening, nv also exceeds 0.15; highest wins
+		const result = applyThresholds(probs, "cautious");
+		// mel exceeds 0.25 in cautious mode, nv also exceeds 0.15; highest wins
 		expect(["mel", "nv"]).toContain(result.topClass);
 	});
 
@@ -67,7 +67,7 @@ describe("applyThresholds", () => {
 
 	it("includes thresholdMode in output", () => {
 		const probs = makeProbs({});
-		expect(applyThresholds(probs, "screening").thresholdMode).toBe("screening");
+		expect(applyThresholds(probs, "cautious").thresholdMode).toBe("cautious");
 		expect(applyThresholds(probs, "triage").thresholdMode).toBe("triage");
 		expect(applyThresholds(probs, "default").thresholdMode).toBe("default");
 	});

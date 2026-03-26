@@ -74,8 +74,8 @@ const UNCERTAIN_LOW_MM = 4;
 const UNCERTAIN_HIGH_MM = 8;
 
 const SAFETY_WARNING =
-	"Measurement uncertain near the 6mm clinical threshold. " +
-	"See a dermatologist if this spot is growing.";
+	"Measurement uncertain near the 6mm reference threshold. " +
+	"Consider consulting a healthcare provider if this spot is changing.";
 
 /**
  * If confidence is low and the measured diameter straddles the 6 mm

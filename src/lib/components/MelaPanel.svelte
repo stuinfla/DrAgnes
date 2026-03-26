@@ -1260,7 +1260,7 @@
 									</div>
 								{:else if recommendation === "biopsy"}
 									<div class="rounded-2xl border border-orange-500/30 bg-orange-500/10 p-4 text-center">
-										<p class="text-sm font-bold text-orange-300">Biopsy Recommended</p>
+										<p class="text-sm font-bold text-orange-300">Professional Review Suggested</p>
 										{#if classificationResult.clinicalRecommendation}
 											<p class="mt-1.5 text-[11px] text-orange-400/70 leading-relaxed">{classificationResult.clinicalRecommendation.reasoning}</p>
 										{/if}
@@ -1916,7 +1916,7 @@
 					<p class="text-[11px] text-gray-500 mb-3">How cautious should Mela be?</p>
 					<div class="flex flex-col gap-2">
 						{#each [
-							{ value: "screening", label: "Extra cautious", desc: "Flags more spots for review — catches more, but may over-flag some benign spots" },
+							{ value: "cautious", label: "Extra cautious", desc: "Flags more patterns for review — catches more, but may over-flag some benign patterns" },
 							{ value: "triage", label: "Balanced", desc: "Best balance between catching real issues and avoiding false alarms" },
 							{ value: "default", label: "Default", desc: "Standard argmax classification" },
 						] as opt (opt.value)}

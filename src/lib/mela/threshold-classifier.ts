@@ -6,7 +6,7 @@
  * validation data.  Three modes are available:
  *
  *  - "default"   -- ADR-123 optimal thresholds (best Youden J per class)
- *  - "screening" -- lowered thresholds for malignant classes to maximise
+ *  - "cautious" -- lowered thresholds for malignant classes to maximise
  *                   cancer sensitivity (fewer missed cancers, more false alarms)
  *  - "triage"    -- same as default; explicit alias for clinical workflows
  *
@@ -56,11 +56,11 @@ const TRIAGE_THRESHOLDS: Record<LesionClass, number> = {
 // Public API
 // ---------------------------------------------------------------------------
 
-export type ThresholdMode = "screening" | "triage" | "default";
+export type ThresholdMode = "cautious" | "triage" | "default";
 
 /** Return the threshold table for the requested mode. */
 export function getThresholds(mode: ThresholdMode): Record<LesionClass, number> {
-	if (mode === "screening") return SCREENING_THRESHOLDS;
+	if (mode === "cautious") return SCREENING_THRESHOLDS;
 	if (mode === "triage") return TRIAGE_THRESHOLDS;
 	return OPTIMAL_THRESHOLDS;
 }
