@@ -1,6 +1,9 @@
+// ICD-10 codes are provided as educational medical reference data only.
+// They are not intended for clinical coding or billing purposes.
+
 /**
  * ICD-10-CM code mapping for HAM10000 lesion classes.
- * Maps each classification to the appropriate billing/diagnostic code.
+ * Maps each classification to the corresponding reference code for educational purposes.
  */
 
 export interface ICD10Code {

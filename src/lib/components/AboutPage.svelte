@@ -80,10 +80,10 @@
 	}
 
 	const LIMITATIONS: { title: string; detail: string }[] = [
-		{ title: "Screening tool, not a diagnosis", detail: "This is a research prototype. It must not replace a dermatologist's judgment. Not FDA-cleared." },
-		{ title: "Skin tone equity: DANGEROUS gaps detected", detail: "Fitzpatrick validation found a 30 percentage-point melanoma sensitivity gap between skin types. The model was tested primarily on dermoscopy images, not clinical photos. Dark skin performance on dermoscopy data is unverified. Until this gap is closed, results for darker skin tones should be treated with extra caution." },
-		{ title: "95.97% is on external data", detail: "Combined-dataset training on 37,484 images (HAM10000 + ISIC 2019). 95.97% melanoma sensitivity validated on 3,901 external ISIC 2019 images. This is real generalization, not same-distribution performance. If in doubt, always see a dermatologist." },
-		{ title: "Deliberate false positive rate", detail: "About 1 in 5 benign moles are flagged (80% melanoma specificity). This is by design -- in cancer screening, false negatives kill and false positives inconvenience." },
+		{ title: "Educational tool, not a medical device", detail: "This is a research prototype for educational purposes. It is not FDA-cleared, CE-marked, or approved for clinical use." },
+		{ title: "Significant accuracy variation across skin tones detected", detail: "Fitzpatrick validation found a 30 percentage-point melanoma sensitivity gap between skin types. The model was tested primarily on dermoscopy images, not clinical photos. Dark skin performance on dermoscopy data is unverified. Until this gap is closed, results for darker skin tones should be treated with extra caution." },
+		{ title: "95.97% is on external data", detail: "Combined-dataset training on 37,484 images (HAM10000 + ISIC 2019). 95.97% melanoma sensitivity validated on 3,901 external ISIC 2019 images. This is real generalization, not same-distribution performance." },
+		{ title: "Deliberate false positive rate", detail: "About 1 in 5 benign moles are flagged (80% melanoma specificity). This is by design -- in pattern analysis, missed patterns of concern are more costly than false alarms." },
 	];
 
 	// Animated counter values
@@ -158,14 +158,13 @@
 			<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
 				<h3 class="text-lg font-semibold text-white tracking-tight">What is Mela?</h3>
 				<p class="mt-3 text-[13px] text-gray-300 leading-relaxed">
-					Mela is a free AI skin screening tool. It helps you decide if a spot on your skin
-					is worth seeing a doctor about.
+					Mela is a free AI skin analysis tool. It uses pattern recognition to help you learn about spots on your skin. It is not a medical device.
+					Regular skin checks by a healthcare provider are recommended for everyone.
 				</p>
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
-					It is not a diagnosis. Think of it like a thermometer for your skin. A thermometer tells
-					you if you might have a fever. Mela tells you if a spot might need professional attention.
-					Always see a doctor for a definitive answer.
-				</p>
+					It is not a medical device or diagnosis tool. Think of it like a learning aid for your skin awareness. Mela helps you understand patterns in skin spots using AI trained on medical imagery.
+					Regular skin checks by a healthcare provider are recommended for everyone.
+									</p>
 			</div>
 
 			<!-- Who it's for -->
@@ -186,9 +185,9 @@
 					99% survival rate. Caught late, it drops to 30%.
 				</p>
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
-					The tools that detect it cost $7,000 and require a specialist visit. We believe
-					everyone deserves access to an initial screening — not just people who can
-					afford a dermatologist.
+					Professional analysis tools are expensive and require specialist access. We believe
+					everyone deserves access to educational skin awareness tools — not just people who can
+					afford specialized care.
 				</p>
 			</div>
 
@@ -210,7 +209,7 @@
 					</li>
 					<li class="flex gap-3">
 						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">4</span>
-						<span>You get a clear result: <strong class="text-gray-300">"Looks healthy"</strong>, <strong class="text-gray-300">"Worth monitoring"</strong>, or <strong class="text-gray-300">"See a dermatologist"</strong>.</span>
+						<span>You get a clear result: <strong class="text-gray-300">"Looks healthy"</strong>, <strong class="text-gray-300">"Worth monitoring"</strong>, or <strong class="text-gray-300">"Elevated concern"</strong>.</span>
 					</li>
 					<li class="flex gap-3">
 						<span class="flex h-6 w-6 items-center justify-center rounded-full bg-teal-500/15 text-[11px] font-bold text-teal-400 shrink-0 mt-0.5">5</span>
@@ -254,9 +253,9 @@
 			<div class="mt-3 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-5">
 				<h3 class="text-sm font-semibold text-amber-300">What Mela is NOT</h3>
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
-					Mela is not a medical diagnosis. It is a screening aid. It tells you if a spot
-					<em>might</em> be worth professional evaluation. It does not replace a dermatologist.
-					If a result says "See a dermatologist," please do.
+					Mela is not a medical device or diagnosis tool. It is an educational awareness aid. It analyzes patterns in a spot
+					<em>might</em> warrant further awareness. It does not replace professional medical evaluation.
+					Regular skin checks by a healthcare provider are recommended for everyone.
 				</p>
 				<p class="mt-3 text-[13px] text-gray-400 leading-relaxed">
 					<strong class="text-gray-300">Our commitment to honesty:</strong> We publish our accuracy numbers,
@@ -271,7 +270,7 @@
 				<p class="mt-2 text-[13px] text-gray-400 leading-relaxed">
 					Mela uses a Vision Transformer — an AI that learned to recognize skin conditions
 					by studying 37,484 images from multiple hospitals. Every result goes through Bayesian
-					risk calibration and multi-layer safety gates so you get honest, actionable information.
+					risk calibration and multi-layer safety gates so you get honest, educational information.
 					Not false alarms. Not false reassurance.
 				</p>
 				<p class="mt-2 text-[11px] text-gray-500 leading-relaxed">
@@ -288,7 +287,7 @@
 					<p class="text-5xl font-bold text-teal-400 tabular-nums leading-none {mounted ? 'animate-countUp' : ''}">
 						{displayAccuracy.toFixed(1)}%
 					</p>
-					<p class="mt-2 text-[15px] text-gray-300">melanoma detection accuracy</p>
+					<p class="mt-2 text-[15px] text-gray-300">melanoma pattern detection accuracy</p>
 				</div>
 
 				<!-- Secondary stats row -->
@@ -322,46 +321,40 @@
 			</div>
 		</section>
 
-		<!-- SECTION 2: COMPARISON TABLE -->
+		<!-- SECTION 2: PERFORMANCE METRICS -->
 		<section class="mt-8">
 			<h3 class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-500">The Numbers That Matter</h3>
 			<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
-				<div class="grid grid-cols-3 gap-px border-b border-white/[0.04]">
+				<div class="grid grid-cols-2 gap-px border-b border-white/[0.04]">
 					<div class="px-3 py-2.5 text-[10px] font-medium text-gray-500">Metric</div>
 					<div class="px-3 py-2.5 text-center text-[10px] font-medium text-teal-400">Mela</div>
-					<div class="px-3 py-2.5 text-center text-[10px] font-medium text-gray-500">DermaSensor ($7K)</div>
 				</div>
 				<div class="divide-y divide-white/[0.04]">
-					<div class="grid grid-cols-3 gap-px">
+					<div class="grid grid-cols-2 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Mel. Sensitivity</div>
 						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">95.97%</div>
-						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">90.2-95.5%</div>
 					</div>
-					<div class="grid grid-cols-3 gap-px">
+					<div class="grid grid-cols-2 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Mel. Specificity</div>
 						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">80.0%</div>
-						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">20.7-32.5%</div>
 					</div>
-					<div class="grid grid-cols-3 gap-px">
+					<div class="grid grid-cols-2 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">AUROC</div>
 						<div class="px-3 py-3 text-center text-sm font-bold text-teal-400">0.960</div>
-						<div class="px-3 py-3 text-center text-sm font-medium text-gray-400">0.758</div>
 					</div>
-					<div class="grid grid-cols-3 gap-px">
+					<div class="grid grid-cols-2 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Cost</div>
 						<div class="px-3 py-3 text-center text-[11px] font-semibold text-emerald-400">Free</div>
-						<div class="px-3 py-3 text-center text-[11px] text-gray-500">$7,000 + per-test</div>
 					</div>
-					<div class="grid grid-cols-3 gap-px">
+					<div class="grid grid-cols-2 gap-px">
 						<div class="px-3 py-3 text-[11px] text-gray-400">Validation</div>
 						<div class="px-3 py-3 text-center text-[11px] font-medium text-gray-300">37,484 training images</div>
-						<div class="px-3 py-3 text-center text-[11px] text-gray-500">1,579 lesions</div>
 					</div>
 				</div>
 			</div>
 			<p class="mt-3 text-[11px] text-gray-600 leading-relaxed">
-				DermaSensor's 95.5% comes from DERM-ASSESS III (440 lesions). Its broader trial measured 90.2% on 1,579 lesions.
-				Our 80.0% specificity advantage means 2.5x fewer unnecessary biopsies.
+				Source: combined-training-results.json. 95.97% melanoma sensitivity on 3,901 external ISIC 2019 holdout images.
+				80.0% specificity helps reduce false alarms.
 			</p>
 		</section>
 
@@ -369,7 +362,7 @@
 		<section class="mt-8">
 			<h3 class="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-500">How We Proved It</h3>
 			<p class="mb-5 text-[11px] text-gray-400 leading-relaxed">
-				Six stages from zero to clinical-grade. Every failure is documented because
+				Six stages from zero to research-grade. Every failure is documented because
 				the failures are what made the final result trustworthy.
 			</p>
 			<div class="relative space-y-3 pl-5">
@@ -479,7 +472,7 @@
 					</div>
 					<p class="text-[11px] text-gray-500 leading-relaxed pl-10">
 						Hard-coded dermatology rules (TDS formula, 7-point checklist) that override the AI
-						if suspicious features are present. If in doubt, we err toward biopsy.
+						if suspicious features are present. If in doubt, the system errs toward elevated concern.
 					</p>
 				</div>
 				<div class="card">
@@ -590,8 +583,8 @@
 		<!-- Research disclaimer -->
 		<div class="mt-6 mb-4 rounded-2xl border border-red-500/15 bg-red-500/5 p-5 text-center">
 			<p class="text-[11px] text-red-400/80 leading-relaxed">
-				<strong>RESEARCH USE ONLY.</strong> Mela is not FDA-cleared and must not be used
-				for clinical decision-making without appropriate regulatory authorization and professional medical oversight.
+				<strong>EDUCATIONAL USE ONLY.</strong> Mela is not a medical device. It is not FDA-cleared, CE-marked, or TGA-approved.
+				It must not be used for clinical decision-making. This tool is for educational and awareness purposes only.
 			</p>
 		</div>
 	</div>

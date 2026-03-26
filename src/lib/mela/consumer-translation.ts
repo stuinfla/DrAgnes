@@ -1,16 +1,16 @@
 /**
  * Consumer Translation Module
  *
- * Translates medical classification results into plain English
- * that a regular person can understand and act on.
+ * Translates pattern analysis results into plain English
+ * that a regular person can understand.
  *
- * Uses Bayesian risk stratification (risk-stratification.ts) to compute
+ * Uses Bayesian pattern stratification (risk-stratification.ts) to compute
  * post-test probability from the model's continuous output and real-world
  * prevalence, replacing the old binary classification that suffered from
  * a PPV of only 8.9% at real-world 2% melanoma prevalence.
  *
  * The goal: someone with zero medical training should be able to
- * read the output and know exactly what to do next.
+ * read the output and understand the analysis results.
  */
 
 import { assessRisk, type BayesianRiskLevel, type RiskAssessment } from "./risk-stratification";
@@ -59,7 +59,7 @@ const TRANSLATIONS: Record<
 		message: "This looks like a common age spot -- typically harmless.",
 		action: "No action needed unless it bothers you cosmetically.",
 		explanation:
-			"This appears to be a benign keratosis, commonly known as an age spot or liver spot. These are very common and not cancerous.",
+			"This appears to be a benign keratosis, commonly known as an age spot or liver spot. These are patterns typically considered benign in medical literature.",
 		shouldSeeDoctor: false,
 		urgency: "none",
 	},
@@ -78,7 +78,7 @@ const TRANSLATIONS: Record<
 		risk: "green",
 		message:
 			"This appears to be a vascular lesion -- typically harmless.",
-		action: "See a doctor if it bleeds frequently or grows rapidly.",
+		action: "Consider consulting a healthcare provider if it bleeds frequently or grows rapidly.",
 		explanation:
 			"Vascular lesions are caused by blood vessels near the skin surface. Cherry angiomas and spider angiomas are common and benign.",
 		shouldSeeDoctor: false,
@@ -88,9 +88,9 @@ const TRANSLATIONS: Record<
 		name: "Sun damage spot",
 		risk: "yellow",
 		message: "This may be sun damage that should be monitored.",
-		action: "Have a dermatologist check this at your next visit.",
+		action: "Consider having a healthcare provider evaluate this at your next visit.",
 		explanation:
-			"This may be an actinic keratosis -- a rough, scaly patch caused by years of sun exposure. While not cancer itself, some can develop into squamous cell carcinoma if untreated. Easy to treat when caught early.",
+			"This may be an actinic keratosis -- a rough, scaly patch caused by years of sun exposure. In medical literature, while not concerning on its own, some can develop into more serious conditions if untreated. Easy to treat when caught early.",
 		shouldSeeDoctor: true,
 		urgency: "routine",
 	},
@@ -99,20 +99,20 @@ const TRANSLATIONS: Record<
 		risk: "orange",
 		message:
 			"This has features that should be evaluated by a doctor.",
-		action: "Schedule a dermatology appointment within 1 month.",
+		action: "Professional evaluation may be helpful. Consider scheduling an appointment.",
 		explanation:
-			"The AI detected patterns consistent with basal cell carcinoma -- the most common and most treatable form of skin cancer. It almost never spreads to other parts of the body. Early treatment is straightforward and highly effective.",
+			"The analysis found visual similarity to reference patterns for basal cell carcinoma -- described in medical literature as the most common and most treatable form of skin concern. It almost never spreads to other parts of the body. Early treatment is straightforward and highly effective.",
 		shouldSeeDoctor: true,
 		urgency: "soon",
 	},
 	mel: {
-		name: "See a dermatologist",
+		name: "Consider professional evaluation",
 		risk: "red",
 		message:
-			"This has features that need professional evaluation promptly.",
-		action: "Please see a dermatologist within 2 weeks.",
+			"This has features that may warrant professional evaluation.",
+		action: "This pattern may warrant professional evaluation.",
 		explanation:
-			"The AI detected patterns associated with melanoma -- the most serious form of skin cancer. This does NOT mean you have cancer. But these features warrant prompt evaluation by a dermatologist. When caught early, melanoma is highly treatable with a 99% survival rate.",
+			"The analysis found visual similarity to reference patterns associated with melanoma in medical literature -- described as the most serious form of skin concern. This does NOT mean you have a medical condition. But these features may warrant evaluation by a healthcare provider for professional assessment. In medical literature, when caught early, conditions associated with these patterns are highly treatable.",
 		shouldSeeDoctor: true,
 		urgency: "urgent",
 	},
@@ -169,17 +169,17 @@ export function translateForConsumer(
 	// that can't even reach 40% for its top pick is essentially guessing.
 	if (confidence < 0.40) {
 		return {
-			headline: "See a dermatologist to be safe",
+			headline: "Consider professional evaluation",
 			riskLevel: "orange",
 			riskColor: RISK_COLORS["orange"],
 			explanation:
-				"Mela could not classify this spot with enough confidence. " +
+				"Mela could not analyze this spot with enough confidence. " +
 				"This can happen with image quality issues, but it can also happen with " +
-				"unusual or flesh-colored lesions that are difficult for any AI to assess. " +
-				"Some serious conditions, including amelanotic melanoma, have very low visual contrast.",
+				"unusual or flesh-colored features that are difficult for any AI to assess. " +
+				"Some pattern types, including amelanotic variants, have very low visual contrast.",
 			action:
-				"We recommend seeing a dermatologist. When the AI is uncertain, " +
-				"a professional evaluation is the safest path. Try retaking the photo " +
+				"Professional evaluation may be helpful. When the analysis is uncertain, " +
+				"consulting a healthcare provider is the safest path. Try retaking the photo " +
 				"with better lighting and closer framing, but do not rely solely on a re-scan.",
 			shouldSeeDoctor: true,
 			urgency: "routine",
@@ -207,7 +207,7 @@ export function translateForConsumer(
 		let effectiveAction = risk.action;
 		if (confidence < 0.4) {
 			effectiveAction =
-				"The image quality or classification confidence is low. Consider retaking the photo with better lighting, or see a dermatologist for a definitive assessment.";
+				"The image quality or classification confidence is low. Consider retaking the photo with better lighting, or consulting a healthcare provider for professional evaluation.";
 		}
 
 		return {
@@ -228,7 +228,7 @@ export function translateForConsumer(
 	let effectiveAction = translation.action;
 	if (confidence < 0.4) {
 		effectiveAction =
-			"The image quality or classification confidence is low. Consider retaking the photo with better lighting, or see a dermatologist for a definitive assessment.";
+			"The image quality or classification confidence is low. Consider retaking the photo with better lighting, or consulting a healthcare provider for professional evaluation.";
 	}
 
 	return {

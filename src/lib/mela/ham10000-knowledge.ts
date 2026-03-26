@@ -431,9 +431,9 @@ export function getClinicalRecommendation(
 			malignantProbability: malignantProb,
 			melanomaProbability: melProb,
 			reasoning:
-				`Melanoma probability ${(melProb * 100).toFixed(1)}% exceeds urgent referral ` +
+				`Melanoma-associated pattern probability ${(melProb * 100).toFixed(1)}% exceeds elevated concern ` +
 				`threshold (${(thresholds.urgentReferralThreshold * 100).toFixed(0)}%). ` +
-				`Immediate dermatology referral recommended.`,
+				`Elevated pattern concern -- professional evaluation may be appropriate.`,
 		};
 	}
 
@@ -443,9 +443,9 @@ export function getClinicalRecommendation(
 			malignantProbability: malignantProb,
 			melanomaProbability: melProb,
 			reasoning:
-				`Combined malignancy probability ${(malignantProb * 100).toFixed(1)}% exceeds ` +
-				`biopsy threshold (${(thresholds.biopsyThreshold * 100).toFixed(0)}%). ` +
-				`Biopsy recommended for definitive diagnosis.`,
+				`Combined concern-pattern probability ${(malignantProb * 100).toFixed(1)}% exceeds ` +
+				`evaluation threshold (${(thresholds.biopsyThreshold * 100).toFixed(0)}%). ` +
+				`Professional evaluation recommended for definitive assessment.`,
 		};
 	}
 
@@ -455,10 +455,10 @@ export function getClinicalRecommendation(
 			malignantProbability: malignantProb,
 			melanomaProbability: melProb,
 			reasoning:
-				`Malignancy probability ${(malignantProb * 100).toFixed(1)}% is in monitoring ` +
+				`Concern-pattern probability ${(malignantProb * 100).toFixed(1)}% is in monitoring ` +
 				`range (${(thresholds.monitorThreshold * 100).toFixed(0)}-` +
 				`${(thresholds.biopsyThreshold * 100).toFixed(0)}%). ` +
-				`Follow-up dermoscopy in 3 months recommended.`,
+				`Follow-up analysis in 3 months recommended.`,
 		};
 	}
 
@@ -467,8 +467,8 @@ export function getClinicalRecommendation(
 		malignantProbability: malignantProb,
 		melanomaProbability: melProb,
 		reasoning:
-			`Malignancy probability ${(malignantProb * 100).toFixed(1)}% is below monitoring ` +
+			`Concern-pattern probability ${(malignantProb * 100).toFixed(1)}% is below monitoring ` +
 			`threshold (${(thresholds.monitorThreshold * 100).toFixed(0)}%). ` +
-			`Likely benign. Routine skin checks recommended.`,
+			`Patterns typically considered benign in medical literature. Routine skin awareness checks recommended.`,
 	};
 }

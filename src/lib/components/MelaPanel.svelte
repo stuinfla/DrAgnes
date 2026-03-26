@@ -41,7 +41,6 @@
 	import LesionTimeline from "./LesionTimeline.svelte";
 	import ABCDEChart from "./ABCDEChart.svelte";
 	import AnalyticsDashboard from "./AnalyticsDashboard.svelte";
-	import ReferralLetter from "./ReferralLetter.svelte";
 	import ExplainPanel from "./ExplainPanel.svelte";
 	import MethodologyPanel from "./MethodologyPanel.svelte";
 	import AboutPage from "./AboutPage.svelte";
@@ -171,9 +170,6 @@
 	let lowConfidenceWarning: string | null = $state(null);
 	let sevenPointResult: { score: number; recommendation: string; details: string[] } | null = $state(null);
 	let lesionMeasurement: LesionMeasurement | null = $state(null);
-
-	// Referral letter modal state
-	let showReferralLetter: boolean = $state(false);
 
 	// Demographics panel collapsed on mobile
 	let showDemographics: boolean = $state(false);
@@ -899,11 +895,7 @@
 	}
 
 	function handleAction(action: string, payload?: unknown) {
-		if (action === "refer") {
-			showReferralLetter = true;
-			return;
-		}
-		// Other actions are no-ops for now
+		// Actions are no-ops for now
 	}
 
 	function handleNewScan() {
@@ -1171,7 +1163,7 @@
 					<div class="mx-5 mt-3 space-y-2">
 						<div class="rounded-2xl border border-gray-700/40 bg-white/[0.02] px-4 py-2.5">
 							<p class="text-[10px] text-gray-500 leading-relaxed">
-								Skin tone note: Validation found a 30pp sensitivity gap across Fitzpatrick types. Training data is ~95% lighter skin tones (FST I-III). Results for darker skin tones may be less accurate. If you have darker skin and are concerned about a spot, see a dermatologist regardless of this result.
+								Skin tone note: Validation found a 30pp sensitivity gap across Fitzpatrick types. Training data is ~95% lighter skin tones (FST I-III). Results for darker skin tones may be less accurate. If you have darker skin and are concerned about a spot, consider consulting a healthcare provider regardless of this result.
 							</p>
 						</div>
 						{#if patientAge !== undefined && patientAge < 18}
@@ -1185,18 +1177,9 @@
 
 					<!-- Action buttons: clean and spacious -->
 					<div class="mx-5 mt-6 grid grid-cols-2 gap-3">
-						{#if consumerResult?.shouldSeeDoctor}
-							<button
-								onclick={() => handleAction("refer")}
-								class="flex h-13 items-center justify-center gap-2 rounded-full bg-teal-600 px-6 py-3 text-[15px] font-semibold text-white shadow-lg shadow-teal-600/20 hover:bg-teal-500 active:scale-95 transition-all col-span-2"
-							>
-								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-								Generate Referral Letter
-							</button>
-						{/if}
 						<button
 							onclick={handleNewScan}
-							class="flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-6 py-3 text-sm font-medium text-gray-300 hover:bg-white/[0.06] active:scale-95 transition-all {consumerResult?.shouldSeeDoctor ? '' : 'col-span-2'}"
+							class="flex h-12 items-center justify-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-6 py-3 text-sm font-medium text-gray-300 hover:bg-white/[0.06] active:scale-95 transition-all col-span-2"
 						>
 							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
 							New Scan
@@ -1266,12 +1249,12 @@
 								<!-- Biopsy / Urgent referral banner -->
 								{#if recommendation === "urgent_referral"}
 									<div class="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-center">
-										<p class="text-sm font-bold text-red-300">URGENT: Dermatology Referral Recommended</p>
+										<p class="text-sm font-bold text-red-300">Elevated pattern — consider professional evaluation</p>
 										{#if classificationResult.clinicalRecommendation}
 											<p class="mt-1.5 text-[11px] text-red-400/70 leading-relaxed">{classificationResult.clinicalRecommendation.reasoning}</p>
 											<div class="mt-2 flex justify-center gap-4 text-[10px] text-red-400/60">
 												<span>Mel P: {(classificationResult.clinicalRecommendation.melanomaProbability * 100).toFixed(1)}%</span>
-												<span>Malignant P: {(classificationResult.clinicalRecommendation.malignantProbability * 100).toFixed(1)}%</span>
+												<span>Pattern concern level: {(classificationResult.clinicalRecommendation.malignantProbability * 100).toFixed(1)}%</span>
 											</div>
 										{/if}
 									</div>
@@ -1436,11 +1419,11 @@
 									</div>
 								{/if}
 
-								<!-- ICD-10 & Referral -->
+								<!-- ICD-10 Classification -->
 								{#if icd10}
 									<details class="rounded-2xl border border-white/[0.06] overflow-hidden">
 										<summary class="px-4 py-3.5 text-xs text-gray-400 cursor-pointer hover:text-gray-300 transition-colors touch-target font-medium">
-											ICD-10 & Referral
+											ICD-10 Classification
 										</summary>
 										<div class="px-4 pb-4 space-y-2">
 											<div class="flex items-center gap-2 text-xs">
@@ -1630,7 +1613,7 @@
 						</svg>
 					</div>
 					<div>
-						<h2 class="text-xl font-semibold text-emerald-300">{classificationError.replace("healthy_skin:", "Your skin looks healthy! ")}</h2>
+						<h2 class="text-xl font-semibold text-emerald-300">{classificationError.replace("healthy_skin:", "No unusual patterns detected in this image. ")}</h2>
 						<p class="mt-2 text-sm text-gray-400 max-w-xs mx-auto">To check a specific area, photograph a mole or spot you want evaluated.</p>
 					</div>
 					<button
@@ -1649,7 +1632,7 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
 						</svg>
 					</div>
-					<p class="text-sm font-medium text-red-400">{classificationError.replace("healthy_skin:", "Your skin looks healthy! ")}</p>
+					<p class="text-sm font-medium text-red-400">{classificationError.replace("healthy_skin:", "No unusual patterns detected in this image. ")}</p>
 					<button
 						onclick={handleNewScan}
 						class="rounded-full bg-red-500/20 px-6 py-3 text-sm font-medium text-red-300 hover:bg-red-500/30 active:scale-95 transition-all"
@@ -1676,8 +1659,8 @@
 						class="h-24 w-24 rounded-full object-cover shadow-lg shadow-teal-500/20 ring-2 ring-teal-500/20 animate-pulseGlow"
 					/>
 					<div>
-						<h2 class="text-2xl font-semibold text-white leading-tight">Check a skin spot</h2>
-						<p class="mt-2.5 text-[15px] text-gray-400 leading-relaxed max-w-xs mx-auto">Take a photo of what concerns you. We'll analyze it in seconds.</p>
+						<h2 class="text-2xl font-semibold text-white leading-tight">Analyze a skin spot</h2>
+						<p class="mt-2.5 text-[15px] text-gray-400 leading-relaxed max-w-xs mx-auto">Take a photo to learn about your skin. We'll show you what AI pattern analysis finds.</p>
 					</div>
 				</div>
 
@@ -2131,17 +2114,6 @@
 		{/each}
 	</nav>
 </div>
-
-{#if showReferralLetter && classificationResult}
-	<ReferralLetter
-		onclose={() => (showReferralLetter = false)}
-		classification={classificationResult}
-		abcdeScores={abcdeScores}
-		bodyLocation={capturedBodyLocation}
-		patientAge={patientAge}
-		patientSex={patientSex}
-	/>
-{/if}
 
 <svelte:head>
 	<meta name="theme-color" content="#0a0a0f" />

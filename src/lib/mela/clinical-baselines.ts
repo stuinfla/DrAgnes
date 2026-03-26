@@ -49,7 +49,7 @@ export const TDS = {
 	benignCutoff: 4.75,
 	/** TDS 4.75-5.45: suspicious, close monitoring or biopsy */
 	suspiciousCutoff: 5.45,
-	/** TDS > 5.45: probable malignant, biopsy recommended */
+	/** TDS > 5.45: elevated pattern concern, professional evaluation may be warranted */
 	malignantCutoff: 5.45,
 } as const;
 
@@ -122,7 +122,7 @@ export function computeSevenPointScore(structures: {
 	}
 
 	const recommendation = score >= SEVEN_POINT_CHECKLIST.biopsyThreshold
-		? "Biopsy recommended (7-point score >= 3)"
+		? "Professional evaluation may be warranted (7-point score >= 3)"
 		: score >= 2
 			? "Close monitoring recommended"
 			: "No immediate concern from 7-point checklist";
@@ -135,8 +135,8 @@ export const CONFIDENCE_STRATIFICATION = [
 	{ range: [0.00, 0.10] as const, ppv: 0.03, action: "reassurance" as const, label: "Low concern" },
 	{ range: [0.10, 0.30] as const, ppv: 0.06, action: "monitor_3mo" as const, label: "Monitor in 3 months" },
 	{ range: [0.30, 0.60] as const, ppv: 0.18, action: "biopsy_consider" as const, label: "Consider biopsy" },
-	{ range: [0.60, 0.80] as const, ppv: 0.40, action: "biopsy_recommend" as const, label: "Biopsy recommended" },
-	{ range: [0.80, 1.00] as const, ppv: 0.61, action: "urgent_referral" as const, label: "Urgent dermatology referral" },
+	{ range: [0.60, 0.80] as const, ppv: 0.40, action: "biopsy_recommend" as const, label: "Professional evaluation may be warranted" },
+	{ range: [0.80, 1.00] as const, ppv: 0.61, action: "urgent_referral" as const, label: "Elevated pattern assessment" },
 ] as const;
 
 /** Get action recommendation from malignant probability */

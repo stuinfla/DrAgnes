@@ -69,35 +69,35 @@
 		{ metric: "Melanoma AUROC", value: "0.960", source: "combined-training-results.json", detail: "Area under receiver operating characteristic" },
 		{ metric: "All-Cancer Sensitivity", value: "98.3%", source: "combined-training-results.json", detail: "mel + bcc + akiec combined" },
 		{ metric: "NPV", value: "99.06%", source: "clinical-metrics-full.json", detail: "When we say no concern, we're right 99% of the time" },
-		{ metric: "NNB", value: "2.1", source: "clinical-metrics-full.json", detail: "Number Needed to Biopsy (DermaSensor: 6.25)" },
+		{ metric: "NNB", value: "2.1", source: "clinical-metrics-full.json", detail: "Number Needed to Biopsy" },
 		{ metric: "Training Images", value: "37,484", source: "combined-training-results.json", detail: "HAM10000 + ISIC 2019 combined dataset" },
 	];
 
 	const LIMITATIONS = [
-		{ title: "Research tool, not FDA-cleared", desc: "Mela is a screening aid. It does not replace a dermatologist's diagnosis." },
+		{ title: "Educational tool, not a medical device. Not FDA-cleared for any clinical use.", desc: "Mela is a skin awareness tool. It does not diagnose, screen for, or detect any disease. It does not replace a dermatologist's evaluation." },
 		{ title: "Trained on dermoscopic images", desc: "Performance on phone camera photos has not been clinically validated yet." },
 		{ title: "30pp Fitzpatrick equity gap", desc: "Melanoma sensitivity drops significantly for darker skin tones (IV-VI). We're working on it." },
-		{ title: "Deliberate false positive rate", desc: "~20% of benign moles get flagged. By design: false negatives kill, false positives inconvenience." },
+		{ title: "The AI model flags more patterns for awareness rather than fewer", desc: "~20% of benign moles get flagged. The model errs on the side of caution to encourage professional consultation." },
 	];
 </script>
 
 <svelte:head>
-	<title>Mela - AI Skin Cancer Screening | Because catching it early changes everything</title>
-	<meta name="description" content="Free, private AI skin cancer screening on your phone. 95.97% melanoma sensitivity, trained on 37,484 images. No uploads, no accounts. Your photos never leave your device." />
-	<meta name="keywords" content="skin cancer screening, melanoma detection, AI dermatology, mole checker, skin cancer app, ABCDE melanoma, skin lesion analysis, free skin cancer check" />
+	<title>Mela - AI Skin Awareness Tool | Because catching it early changes everything</title>
+	<meta name="description" content="Free, private AI skin awareness on your phone. Research validation: 95.97% melanoma sensitivity, trained on 37,484 images. No uploads, no accounts. Your photos never leave your device." />
+	<meta name="keywords" content="skin awareness, skin pattern analysis, AI dermatology, skin education, skin cancer app, ABCDE melanoma, skin lesion analysis, free skin check" />
 
 	<!-- Open Graph -->
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content="https://mela-app.vercel.app/welcome" />
-	<meta property="og:title" content="Mela - AI Skin Cancer Screening" />
-	<meta property="og:description" content="Free, private AI skin cancer screening on your phone. 95.97% melanoma sensitivity. Your photos never leave your device." />
+	<meta property="og:title" content="Mela - AI Skin Awareness Tool" />
+	<meta property="og:description" content="Free, private AI skin awareness on your phone. 95.97% melanoma sensitivity in research validation. Your photos never leave your device." />
 	<meta property="og:image" content="https://mela-app.vercel.app/og-image.png" />
 	<meta property="og:site_name" content="Mela" />
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:title" content="Mela - AI Skin Cancer Screening" />
-	<meta name="twitter:description" content="Free, private AI screening. 95.97% melanoma sensitivity. Photos never leave your phone." />
+	<meta name="twitter:title" content="Mela - AI Skin Awareness Tool" />
+	<meta name="twitter:description" content="Free, private AI skin awareness. 95.97% melanoma sensitivity in research validation. Photos never leave your phone." />
 	<meta name="twitter:image" content="https://mela-app.vercel.app/og-image.png" />
 
 	<!-- Canonical -->
@@ -106,22 +106,15 @@
 	<!-- Structured Data -->
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		"@context": "https://schema.org",
-		"@type": "MedicalWebPage",
-		"name": "Mela - AI Skin Cancer Screening",
-		"description": "Free, private AI-powered skin cancer screening tool. 95.97% melanoma sensitivity on external validation data.",
+		"@type": "WebPage",
+		"name": "Mela - AI Skin Awareness Tool",
+		"description": "Free, private AI-powered skin awareness and education tool. Research validation: 95.97% melanoma sensitivity on external data.",
 		"url": "https://mela-app.vercel.app/welcome",
-		"about": {
-			"@type": "MedicalCondition",
-			"name": "Melanoma",
-			"alternateName": "Skin Cancer"
-		},
 		"audience": {
 			"@type": "PeopleAudience",
 			"suggestedMinAge": 18
 		},
-		"lastReviewed": "2026-03-26",
-		"medicalDisclaimer": "Research use only. Not FDA-cleared. Does not replace professional medical diagnosis.",
-		"specialty": "Dermatology",
+		"disclaimer": "Educational use only. Not a medical device. Not FDA-cleared. Does not diagnose, screen for, or detect any disease.",
 		"publisher": {
 			"@type": "Organization",
 			"name": "Mela"
@@ -175,7 +168,7 @@
 			</h1>
 
 			<p class="mx-auto mb-10 max-w-xl text-lg leading-relaxed text-gray-400 sm:text-xl">
-				AI skin cancer screening on your phone. Photograph a spot. Get a clear answer.
+				AI-powered skin awareness on your phone. Photograph a spot. Learn about your skin.
 				Your photos never leave your device.
 			</p>
 
@@ -196,6 +189,7 @@
 					<div class="mt-1 text-xs text-gray-500 uppercase tracking-wider">Melanoma AUROC</div>
 				</div>
 			</div>
+			<p class="mt-3 text-xs text-gray-600 text-center">Research validation metrics (Source: scripts/combined-training-results.json). Not clinical diagnostic performance claims.</p>
 
 			<!-- CTAs -->
 			<div class="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -246,7 +240,7 @@
 				</div>
 				<div class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
 					<div class="mb-3 text-3xl font-bold text-teal-400">Free</div>
-					<p class="text-sm text-gray-400">Mela is open-source, runs entirely on your phone, and costs nothing. Because screening shouldn't be a luxury.</p>
+					<p class="text-sm text-gray-400">Mela is open-source, runs entirely on your phone, and costs nothing. Because skin awareness shouldn't be a luxury.</p>
 				</div>
 			</div>
 		</div>
@@ -288,10 +282,10 @@
 					<div class="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-500/10 text-teal-400">
 						<span class="text-xl font-bold">3</span>
 					</div>
-					<h3 class="mb-2 text-lg font-semibold">Get a clear answer</h3>
+					<h3 class="mb-2 text-lg font-semibold">See what AI pattern analysis finds</h3>
 					<p class="text-sm text-gray-400">
-						Green = looks healthy. Amber = worth monitoring. Red = see a dermatologist.
-						With evidence, not just a guess.
+						The analysis shows pattern similarity to reference categories. This is educational, not diagnostic.
+						Always consult a dermatologist for medical concerns.
 					</p>
 				</div>
 			</div>
@@ -319,7 +313,7 @@
 				11 steps between your photo and a recommendation
 			</h2>
 			<p class="mb-12 max-w-2xl text-gray-400">
-				A single neural network isn't trustworthy enough for cancer screening. Mela uses a 4-layer ensemble
+				A single neural network isn't trustworthy enough for skin analysis. Mela uses a 4-layer ensemble
 				with safety gates that catch what any single model misses.
 			</p>
 
@@ -411,6 +405,9 @@
 					</div>
 				{/each}
 			</div>
+			<p class="mt-6 text-xs text-gray-500 leading-relaxed">
+				These metrics reflect research validation on reference datasets. They do not represent clinical diagnostic performance.
+			</p>
 		</div>
 	</section>
 
@@ -436,73 +433,8 @@
 		</div>
 	</section>
 
-	<!-- COMPARISON TABLE -->
-	<section bind:this={sections[6]} class="relative px-6 py-24 transition-all duration-700 {visible.has(6) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
-		<div class="mx-auto max-w-4xl">
-			<div class="mb-4 text-xs font-semibold uppercase tracking-widest text-teal-400">How We Compare</div>
-			<h2 class="mb-12 text-3xl font-bold tracking-tight sm:text-4xl">
-				Mela vs. FDA-cleared devices
-			</h2>
-
-			<div class="overflow-x-auto rounded-2xl border border-white/[0.06]">
-				<table class="w-full text-sm">
-					<thead>
-						<tr class="border-b border-white/[0.06] bg-white/[0.02]">
-							<th class="p-4 text-left font-semibold text-gray-400"></th>
-							<th class="p-4 text-center font-semibold text-teal-400">Mela</th>
-							<th class="p-4 text-center font-semibold text-gray-400">DermaSensor</th>
-							<th class="p-4 text-center font-semibold text-gray-400">Nevisense</th>
-						</tr>
-					</thead>
-					<tbody class="divide-y divide-white/[0.04]">
-						<tr>
-							<td class="p-4 text-gray-400">Cost</td>
-							<td class="p-4 text-center font-semibold text-teal-400">Free</td>
-							<td class="p-4 text-center text-gray-500">$199/use</td>
-							<td class="p-4 text-center text-gray-500">~$150/use</td>
-						</tr>
-						<tr>
-							<td class="p-4 text-gray-400">Melanoma sensitivity</td>
-							<td class="p-4 text-center font-semibold text-teal-400">95.97%</td>
-							<td class="p-4 text-center text-gray-500">95.5%</td>
-							<td class="p-4 text-center text-gray-500">96.6%</td>
-						</tr>
-						<tr>
-							<td class="p-4 text-gray-400">NNB</td>
-							<td class="p-4 text-center font-semibold text-teal-400">2.1</td>
-							<td class="p-4 text-center text-gray-500">6.25</td>
-							<td class="p-4 text-center text-gray-500">8.3</td>
-						</tr>
-						<tr>
-							<td class="p-4 text-gray-400">Equipment needed</td>
-							<td class="p-4 text-center font-semibold text-teal-400">Phone</td>
-							<td class="p-4 text-center text-gray-500">$7,500 device</td>
-							<td class="p-4 text-center text-gray-500">$12,000 device</td>
-						</tr>
-						<tr>
-							<td class="p-4 text-gray-400">FDA cleared</td>
-							<td class="p-4 text-center text-amber-400">No*</td>
-							<td class="p-4 text-center text-gray-500">Yes</td>
-							<td class="p-4 text-center text-gray-500">Yes</td>
-						</tr>
-						<tr>
-							<td class="p-4 text-gray-400">Privacy</td>
-							<td class="p-4 text-center font-semibold text-teal-400">On-device</td>
-							<td class="p-4 text-center text-gray-500">Cloud</td>
-							<td class="p-4 text-center text-gray-500">Cloud</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
-			<p class="mt-4 text-xs text-gray-600">
-				* Mela is a research tool, not FDA-cleared. Comparison data from DermaSensor DEN230008 and published Nevisense studies.
-				Mela metrics from scripts/combined-training-results.json and scripts/clinical-metrics-full.json.
-			</p>
-		</div>
-	</section>
-
 	<!-- OPEN SOURCE & CONTRIBUTE -->
-	<section bind:this={sections[7]} class="relative px-6 py-24 transition-all duration-700 {visible.has(7) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
+	<section bind:this={sections[6]} class="relative px-6 py-24 transition-all duration-700 {visible.has(6) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
 		<div class="mx-auto max-w-4xl">
 			<div class="mb-4 text-xs font-semibold uppercase tracking-widest text-teal-400">Open Source</div>
 			<h2 class="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -510,7 +442,7 @@
 			</h2>
 			<p class="mx-auto mb-12 max-w-2xl text-gray-400">
 				Mela's source code, training data references, evidence files, and architecture decisions are all public on GitHub.
-				We believe medical AI should be auditable.
+				We believe health-related AI should be auditable.
 			</p>
 
 			<div class="grid gap-6 sm:grid-cols-2">
@@ -540,7 +472,7 @@
 					</div>
 					<p class="mb-4 text-sm text-gray-400">
 						We need help from dermatologists, ML engineers, designers, and anyone who cares about
-						making cancer screening accessible. Check the README for contribution guidelines.
+						making skin awareness accessible. Check the README for contribution guidelines.
 					</p>
 					<a
 						href="https://github.com/stuinfla/Mela#contributing"
@@ -557,7 +489,7 @@
 	</section>
 
 	<!-- SEND TO YOUR PHONE -->
-	<section bind:this={sections[8]} class="relative px-6 py-24 transition-all duration-700 {visible.has(8) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
+	<section bind:this={sections[7]} class="relative px-6 py-24 transition-all duration-700 {visible.has(7) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
 		<div class="mx-auto max-w-xl text-center">
 			<div class="mb-4 text-xs font-semibold uppercase tracking-widest text-teal-400">Get It On Your Phone</div>
 			<h2 class="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -574,7 +506,7 @@
 					const input = form.querySelector('input') as HTMLInputElement;
 					const phone = input.value.replace(/\D/g, '');
 					if (phone.length >= 10) {
-						const smsBody = encodeURIComponent('Check out Mela - free AI skin cancer screening on your phone: https://mela-app.vercel.app');
+						const smsBody = encodeURIComponent('Check out Mela - AI skin awareness tool on your phone: https://mela-app.vercel.app');
 						window.open(`sms:${phone}?body=${smsBody}`, '_self');
 						textSent = true;
 					}
@@ -607,7 +539,7 @@
 	</section>
 
 	<!-- FEEDBACK & REVIEWS -->
-	<section bind:this={sections[9]} class="relative px-6 py-24 transition-all duration-700 {visible.has(9) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
+	<section bind:this={sections[8]} class="relative px-6 py-24 transition-all duration-700 {visible.has(8) ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}">
 		<div class="mx-auto max-w-4xl">
 			<div class="mb-4 text-xs font-semibold uppercase tracking-widest text-teal-400">Help Us Improve</div>
 			<h2 class="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
@@ -685,12 +617,12 @@
 				<div class="flex items-center gap-6 text-xs text-gray-600">
 					<a href="https://github.com/stuinfla/Mela" target="_blank" rel="noopener noreferrer" class="hover:text-gray-400">GitHub</a>
 					<a href="/how-it-works.html" class="hover:text-gray-400">How It Works</a>
-					<span>Research Use Only</span>
+					<span>Educational Use Only</span>
 				</div>
 			</div>
 			<div class="mt-8 rounded-xl border border-white/[0.04] bg-white/[0.01] p-4 text-center text-xs text-gray-600 leading-relaxed">
-				Mela is a research prototype and screening aid. It is not FDA-cleared and does not provide medical diagnosis.
-				Always consult a qualified dermatologist for definitive evaluation.
+				Mela is an educational skin awareness tool, not a medical device. It is not FDA-cleared for any clinical use.
+				Mela does not diagnose, screen for, or detect any disease. Always consult a qualified dermatologist for medical evaluation.
 				Performance numbers cite JSON evidence files in the source repository.
 			</div>
 		</div>

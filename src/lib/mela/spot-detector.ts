@@ -112,7 +112,7 @@ export function detectSpots(imageData: ImageData): SpotDetection {
 
 	if (tailMass <= TAIL_MIN) return {
 		hasSpot: false, confidence: 0.92, spotCount: 0, largestSpotArea: 0,
-		reason: "Your skin looks healthy here. No spots or moles detected.",
+		reason: "No unusual patterns detected in this area. No distinct skin features detected for analysis.",
 	};
 
 	// Pass 2: build dark mask -> morph close -> find & validate blobs

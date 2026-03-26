@@ -53,10 +53,10 @@ describe("translateForConsumer", () => {
 		}
 	});
 
-	it("recommends dermatologist when confidence < 0.4", () => {
+	it("recommends professional evaluation when confidence < 0.4", () => {
 		const result = translateForConsumer("nv", 0.2);
 		expect(result.shouldSeeDoctor).toBe(true);
-		expect(result.action).toContain("dermatologist");
+		expect(result.action).toContain("Professional evaluation");
 	});
 
 	it("upgrades green to yellow when cancer probs exceed 30%", () => {

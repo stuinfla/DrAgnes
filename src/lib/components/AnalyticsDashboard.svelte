@@ -2,7 +2,7 @@
 	import { computeMetrics, clearAnalytics, type PracticeMetrics } from "$lib/stores/analytics";
 	import { LESION_LABELS } from "$lib/mela/types";
 	import type { LesionClass } from "$lib/mela/types";
-	import { DERMASENSOR_BENCHMARKS, MELA_TARGETS } from "$lib/mela/clinical-baselines";
+	import { MELA_TARGETS } from "$lib/mela/clinical-baselines";
 
 	import CalibrationChart from "./CalibrationChart.svelte";
 	import TrendChart from "./TrendChart.svelte";
@@ -88,9 +88,9 @@
 			<p class="text-[10px] text-gray-500 mt-1">n={metrics.nnbN}</p>
 		</div>
 
-		<!-- Scans Analyzed -->
+		<!-- Analyses Completed -->
 		<div class="rounded-xl border border-gray-800 bg-gray-900/80 p-4">
-			<p class="text-xs text-gray-500 mb-1">Scans Analyzed</p>
+			<p class="text-xs text-gray-500 mb-1">Analyses Completed</p>
 			<p class="text-2xl font-bold text-gray-200">{metrics.totalScans}</p>
 			<p class="text-[10px] text-gray-500 mt-1">total</p>
 		</div>
@@ -248,7 +248,7 @@
 	<div class="rounded-xl border border-gray-800 bg-gray-900/80 p-4">
 		<h3 class="text-sm font-semibold text-gray-400 mb-3">30-Day Rolling Concordance</h3>
 		{#if metrics.rolling30Day.length === 0}
-			<p class="text-xs text-gray-600">Record feedback on scans to see concordance trends over time.</p>
+			<p class="text-xs text-gray-600">Record feedback on analyses to see concordance trends over time.</p>
 		{:else}
 			<TrendChart data={metrics.rolling30Day} />
 		{/if}
@@ -262,27 +262,6 @@
 		</div>
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-			<!-- DermaSensor FDA benchmark -->
-			<div class="flex flex-col gap-2">
-				<h4 class="text-xs font-medium text-gray-500">DermaSensor (FDA DEN230008)</h4>
-				<div class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-					<span class="text-gray-500">Melanoma Sens.</span>
-					<span class="text-gray-300 font-mono">{(DERMASENSOR_BENCHMARKS.sensitivity.melanoma * 100).toFixed(1)}%</span>
-					<span class="text-gray-500">BCC Sens.</span>
-					<span class="text-gray-300 font-mono">{(DERMASENSOR_BENCHMARKS.sensitivity.bcc * 100).toFixed(1)}%</span>
-					<span class="text-gray-500">Overall Spec.</span>
-					<span class="text-gray-300 font-mono">{(DERMASENSOR_BENCHMARKS.specificity.overall * 100).toFixed(1)}%</span>
-					<span class="text-gray-500">NPV</span>
-					<span class="text-gray-300 font-mono">{(DERMASENSOR_BENCHMARKS.npv * 100).toFixed(1)}%</span>
-					<span class="text-gray-500">AUROC</span>
-					<span class="text-gray-300 font-mono">{DERMASENSOR_BENCHMARKS.auroc.toFixed(3)}</span>
-					<span class="text-gray-500">FST I-III Sens.</span>
-					<span class="text-gray-300 font-mono">{(DERMASENSOR_BENCHMARKS.fitzpatrick.fst_1_3.sensitivity * 100).toFixed(0)}%</span>
-					<span class="text-gray-500">FST IV-VI Sens.</span>
-					<span class="text-gray-300 font-mono">{(DERMASENSOR_BENCHMARKS.fitzpatrick.fst_4_6.sensitivity * 100).toFixed(0)}%</span>
-				</div>
-			</div>
-
 			<!-- Mela targets -->
 			<div class="flex flex-col gap-2">
 				<h4 class="text-xs font-medium text-gray-500">Mela Targets</h4>

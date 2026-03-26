@@ -142,7 +142,8 @@
 			{/if}
 		</div>
 		<p class="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100">
-			{LESION_LABELS[result.topClass]}
+			<span class="font-mono">{result.topClass.toUpperCase()}</span>
+			<span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">{LESION_LABELS[result.topClass]}</span>
 			{#if icd10}
 				<span class="ml-2 rounded bg-gray-800 px-1.5 py-0.5 text-[10px] font-mono text-gray-400">{icd10.code}</span>
 			{/if}
@@ -394,14 +395,14 @@
 				onclick={() => handleAction("biopsy")}
 				class="flex h-11 items-center justify-center rounded-lg bg-orange-600 text-sm font-medium text-white hover:bg-orange-700 active:bg-orange-800"
 			>
-				Biopsy
+				Flag for Review
 			</button>
 
 			<button
 				onclick={() => handleAction("refer")}
 				class="flex h-11 items-center justify-center rounded-lg bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800"
 			>
-				Refer
+				Save Note
 			</button>
 		</div>
 

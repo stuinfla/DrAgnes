@@ -132,40 +132,40 @@ const RISK_TIERS: RiskTier[] = [
 	{
 		level: "very-high",
 		minProbability: 0.50,
-		headline: "Urgent: see a dermatologist",
-		action: "Schedule within 1 week",
-		urgency: "within 1 week",
+		headline: "Elevated patterns detected -- professional evaluation may be appropriate",
+		action: "Consider scheduling a professional evaluation soon",
+		urgency: "consider soon",
 		color: "#ef4444", // red
 	},
 	{
 		level: "high",
 		minProbability: 0.20,
-		headline: "See a dermatologist",
-		action: "Schedule within 2 weeks",
-		urgency: "within 2 weeks",
+		headline: "Consider professional evaluation",
+		action: "Consider scheduling a professional evaluation",
+		urgency: "consider evaluation",
 		color: "#f97316", // orange
 	},
 	{
 		level: "moderate",
 		minProbability: 0.05,
 		headline: "Worth monitoring",
-		action: "Photograph monthly, see doctor if changes",
+		action: "Photograph monthly, consider professional evaluation if changes occur",
 		urgency: "monitor monthly",
 		color: "#f59e0b", // yellow
 	},
 	{
 		level: "low",
 		minProbability: 0.01,
-		headline: "Low concern",
-		action: "Continue routine skin checks",
+		headline: "Low pattern concern",
+		action: "Continue routine skin awareness checks",
 		urgency: "routine schedule",
 		color: "#10b981", // green
 	},
 	{
 		level: "minimal",
 		minProbability: 0,
-		headline: "No concerning features",
-		action: "Normal skin check schedule",
+		headline: "No concerning patterns detected",
+		action: "Normal skin awareness schedule",
 		urgency: "normal schedule",
 		color: "#14b8a6", // teal
 	},

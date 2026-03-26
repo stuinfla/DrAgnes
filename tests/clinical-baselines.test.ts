@@ -65,7 +65,7 @@ describe("computeSevenPointScore", () => {
 			hasStreaks: false, hasIrregularGlobules: false, hasRegressionStructures: false,
 		});
 		expect(r.score).toBe(4);
-		expect(r.recommendation).toContain("Biopsy recommended");
+		expect(r.recommendation).toContain("Professional evaluation may be warranted");
 	});
 
 	it("scores minor criteria at 1 point each", () => {
