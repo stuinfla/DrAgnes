@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from "svelte";
 	import type {
 		ClassificationResult,
 		ABCDEScores,
@@ -53,6 +54,60 @@
 	import CarbonInformation from "~icons/carbon/information";
 
 	const classifier = new DermClassifier();
+
+	// PWA Install Prompt
+	let deferredInstallPrompt: any = $state(null);
+	let showInstallBanner: boolean = $state(false);
+	let installDismissed: boolean = $state(false);
+
+	onMount(() => {
+		// Check if already installed as PWA
+		const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+			|| (window.navigator as any).standalone === true;
+
+		if (isStandalone) return; // Already installed
+
+		// Check if user previously dismissed
+		if (localStorage.getItem("mela-install-dismissed")) {
+			installDismissed = true;
+			return;
+		}
+
+		// Listen for the browser's install prompt
+		window.addEventListener("beforeinstallprompt", (e: Event) => {
+			e.preventDefault();
+			deferredInstallPrompt = e;
+			showInstallBanner = true;
+		});
+
+		// On iOS (no beforeinstallprompt), show manual instructions after a delay
+		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+		if (isIOS) {
+			setTimeout(() => {
+				if (!installDismissed) showInstallBanner = true;
+			}, 3000);
+		}
+	});
+
+	async function handleInstallClick() {
+		if (deferredInstallPrompt) {
+			deferredInstallPrompt.prompt();
+			const result = await deferredInstallPrompt.userChoice;
+			if (result.outcome === "accepted") {
+				showInstallBanner = false;
+			}
+			deferredInstallPrompt = null;
+		} else {
+			// iOS — can't programmatically install, show instructions
+			// The banner already shows the iOS instructions
+		}
+	}
+
+	function dismissInstallBanner() {
+		showInstallBanner = false;
+		installDismissed = true;
+		localStorage.setItem("mela-install-dismissed", "true");
+	}
 
 	/** Svelte action: draw ImageData onto a canvas element */
 	function drawImageToCanvas(canvas: HTMLCanvasElement, imageData: ImageData) {
@@ -922,6 +977,44 @@
 {/if}
 
 <div class="flex h-full w-full flex-col bg-[#0a0a0f]">
+	<!-- PWA Install Banner -->
+	{#if showInstallBanner && !installDismissed}
+		<div class="shrink-0 bg-gradient-to-r from-teal-500/15 to-emerald-500/10 border-b border-teal-500/20 px-4 py-3">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
+					<div class="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/20">
+						<svg class="h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+					</div>
+					<div class="min-w-0">
+						<div class="text-sm font-semibold text-white">Add Mela to your home screen</div>
+						{#if deferredInstallPrompt}
+							<div class="text-xs text-gray-400">Quick access, works offline, no app store needed</div>
+						{:else}
+							<div class="text-xs text-gray-400">Tap the share button, then "Add to Home Screen"</div>
+						{/if}
+					</div>
+				</div>
+				<div class="flex items-center gap-2 shrink-0">
+					{#if deferredInstallPrompt}
+						<button
+							onclick={handleInstallClick}
+							class="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-teal-400 active:scale-95"
+						>
+							Install
+						</button>
+					{/if}
+					<button
+						onclick={dismissInstallBanner}
+						class="rounded-lg p-1.5 text-gray-500 transition hover:bg-white/5 hover:text-gray-300"
+						aria-label="Dismiss install banner"
+					>
+						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	{#if activeView === "scan"}
 		<!-- ===== PRIMARY SCAN FLOW ===== -->
 		<div
