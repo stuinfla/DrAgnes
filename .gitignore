@@ -19,3 +19,4 @@ ruvector/
 .claude-flow/
 .mcp.json
 # v0.9.4
+.vercel
