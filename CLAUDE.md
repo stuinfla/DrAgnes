@@ -153,11 +153,11 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 
 3. **Duplicate implementations.** segmentLesion exists in both preprocessing.ts and image-analysis.ts. cosineSimilarity exists in both classifier.ts and multi-image.ts. Morphological ops duplicated.
 
-4. **`any` type in classify-local/+server.ts.** The ONNX session uses `let ortSession: any`.
+4. ~~**`any` type in classify-local/+server.ts.**~~ FIXED. ONNX session properly typed in inference-offline.ts.
 
-5. **No file upload validation on API endpoints.** No size limit, no type check, no header validation.
+5. ~~**No file upload validation on API endpoints.**~~ FIXED. Magic byte validation, MIME checks, size limits.
 
-6. **No CSP or CORS headers.** No rate limiting on classify endpoints.
+6. ~~**No CSP or CORS headers.**~~ FIXED. hooks.server.ts adds CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy. Rate limiting on all classify endpoints.
 
 ---
 
@@ -189,13 +189,15 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 
 ---
 
-## Priority Work (as of v0.9.4)
+## Priority Work (as of v1.0.0)
 
-1. **Wire V2 model to production** -- ADR-127, Gap 1. Every user today gets the V1 model (61.6% external mel sens) instead of V2 (95.97%).
-2. **Fix failing tests** -- 13 of ~104 tests failing.
-3. **Add upload validation to API endpoints** -- file size, content type, image header checks.
-4. **Decompose large files** -- image-analysis.ts and MelaPanel.svelte.
-5. **Wire V1+V2 ensemble to production** -- ensemble.ts exists but is not in the inference path.
+1. ~~**Wire V2 model to production**~~ -- DONE. V2 ONNX (85MB INT8) is Priority 1 in classifier.ts. 70% ONNX + 15% trained-weights + 15% rules.
+2. ~~**Fix failing tests**~~ -- DONE. 170/170 tests passing (14 files).
+3. ~~**Add upload validation to API endpoints**~~ -- DONE. Magic byte validation, rate limiting, size limits on all endpoints.
+4. **Decompose large files** -- image-analysis.ts (~2000 lines) and MelaPanel.svelte (~2000 lines) still need splitting.
+5. **Wire V1+V2 ensemble to production** -- ensemble.ts exists but is not in the inference path. Would boost to 99.4% mel sensitivity.
+6. **Validate ONNX INT8 model** -- Run full ISIC 2019 validation suite against the deployed INT8 model specifically.
+7. **Fix remaining 5 type errors** -- ort null check, customModelAvailable declaration ordering.
 
 ---
 
