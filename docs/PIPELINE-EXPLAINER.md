@@ -1,7 +1,9 @@
-Updated: 2026-03-25 | Version 1.0.0
+Updated: 2026-03-26 | Version 1.0.0
 Created: 2026-03-25
 
 # Mela Image Processing Pipeline -- Complete Technical Explainer
+
+> **Disclaimer:** This document describes the technical architecture of Mela's AI pattern analysis pipeline. Mela is an educational tool, not a medical device. It does not diagnose, screen for, or detect any disease.
 
 This document traces every step a photograph takes from the moment it is captured
 to the moment a consumer-friendly result is displayed. Every function, threshold,
@@ -746,9 +748,9 @@ in HAM10000 (nv = 67% of training data).
 | nv | 0.068 | Very low (it's the dominant class) |
 | vasc | 0.782 | Highest (very rare, very distinctive) |
 
-**Screening mode** (line 34-42) -- lowered thresholds for malignant classes:
+**Awareness mode** (line 34-42) -- lowered thresholds for malignant classes:
 
-| Class | Screening Threshold | Default Threshold | Change |
+| Class | Awareness Threshold | Default Threshold | Change |
 |-------|-------------------|-------------------|--------|
 | mel | 0.25 | 0.6204 | -60% (catch more melanomas) |
 | bcc | 0.08 | 0.1454 | -45% |
@@ -770,7 +772,7 @@ Default thresholds: mel needs 0.6204, nv needs 0.068, bkl needs 0.2913, bcc need
 Classes exceeding threshold: nv (0.30 > 0.068), bkl (0.25 < 0.2913? NO)
 Only nv passes -> topClass = nv (not mel, even though mel had highest raw prob)
 
-In screening mode: mel threshold = 0.25 -> mel 0.35 > 0.25 -> mel PASSES
+In awareness mode: mel threshold = 0.25 -> mel 0.35 > 0.25 -> mel PASSES
 Highest passing class = mel -> topClass = mel
 ```
 
@@ -924,8 +926,8 @@ Post-test probability      = postTestOdds / (1 + postTestOdds)
 
 | Tier | Post-test Probability | Headline | Action | Color |
 |------|----------------------|----------|--------|-------|
-| very-high | >= 50% | "Urgent: see a dermatologist" | Within 1 week | Red |
-| high | >= 20% | "See a dermatologist" | Within 2 weeks | Orange |
+| very-high | >= 50% | "Urgent: consider consulting a healthcare provider" | Within 1 week | Red |
+| high | >= 20% | "Consider consulting a healthcare provider" | Within 2 weeks | Orange |
 | moderate | >= 5% | "Worth monitoring" | Photo monthly | Yellow |
 | low | >= 1% | "Low concern" | Routine checks | Green |
 | minimal | < 1% | "No concerning features" | Normal schedule | Teal |
@@ -964,7 +966,7 @@ into plain English that someone with zero medical training can understand.
 **Output**: `ConsumerResult`:
 ```typescript
 {
-  headline: string;         // "Common mole" or "See a dermatologist"
+  headline: string;         // "Common mole" or "Consider consulting a healthcare provider"
   riskLevel: "green" | "yellow" | "orange" | "red";
   riskColor: string;        // Hex color for UI
   explanation: string;      // What this condition is, in plain English
@@ -983,7 +985,7 @@ If the top class confidence is below 0.40, the system refuses to classify:
 ```
 headline: "Unable to classify"
 riskLevel: "yellow"
-action: "Try a closer photo... If you have a mole that concerns you, see a dermatologist"
+action: "Try a closer photo... If you have a mole that concerns you, consider consulting a healthcare provider"
 ```
 
 This prevents spurious results when the model is essentially guessing.
@@ -998,7 +1000,7 @@ This prevents spurious results when the model is essentially guessing.
 | `vasc` | "Blood vessel spot" | green | none | No |
 | `akiec` | "Sun damage spot" | yellow | routine | Yes |
 | `bcc` | "Needs evaluation" | orange | soon | Yes |
-| `mel` | "See a dermatologist" | red | urgent | Yes |
+| `mel` | "Consider consulting a healthcare provider" | red | urgent | Yes |
 
 ### Bayesian override (line 192-223)
 
@@ -1111,7 +1113,7 @@ Four calibration strategies in priority order:
 **Safety annotation** (line 70-97): If confidence is "low" AND the measured
 diameter falls between 4mm and 8mm (straddling the 6mm clinical threshold),
 a safety warning is appended: "Measurement uncertain near the 6mm clinical
-threshold. See a dermatologist if this spot is growing."
+threshold. Consider consulting a healthcare provider if this spot is growing."
 
 **Area to diameter conversion** (line 59-64):
 ```
@@ -1210,7 +1212,7 @@ retraining on a more representative dataset (e.g., Fitzpatrick17k, DDI).
 
 **What happens**: The HAM10000 test set has ~11% melanoma prevalence.
 At that prevalence, a model with 90% sensitivity and 90% specificity has
-a PPV of ~47.6%. But in real-world screening, melanoma prevalence is ~2%.
+a PPV of ~47.6%. But in real-world population analysis, melanoma prevalence is ~2%.
 At 2% prevalence, the same model has PPV of only **8.9%** -- meaning
 91 out of 100 "melanoma detected" results are false positives.
 
@@ -1373,7 +1375,7 @@ All magic numbers in one place for quick lookup.
 
 ### Threshold Classifier (ADR-123)
 
-| Class | Default | Screening | File:Line |
+| Class | Default | Awareness | File:Line |
 |-------|---------|-----------|-----------|
 | akiec | 0.0586 | 0.03 | threshold-classifier.ts:23-42 |
 | bcc | 0.1454 | 0.08 | threshold-classifier.ts:23-42 |

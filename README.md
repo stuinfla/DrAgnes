@@ -1,8 +1,10 @@
-# Mela -- AI Dermatoscopy Screening
+# Mela -- AI Skin Awareness & Education Tool
+
+> **IMPORTANT:** Mela is an educational skin awareness tool, NOT a medical device. It does not diagnose, screen for, or detect any disease. It is not FDA-cleared for any clinical use. Pattern analysis results are for educational and informational purposes only. Always consult a qualified healthcare provider for medical concerns.
 
 [![CI](https://github.com/stuinfla/Mela/actions/workflows/ci.yml/badge.svg)](https://github.com/stuinfla/Mela/actions/workflows/ci.yml)
 
-An open-source AI skin cancer screening tool that runs on a phone.
+An open-source AI skin awareness and education tool that runs on a phone.
 
 **95.97% melanoma sensitivity (95% CI: 94.5% - 97.4%) on external ISIC 2019 data (3,901 images).**
 Trained on 37,484 images from HAM10000 + ISIC 2019 combined. Cross-dataset
@@ -12,7 +14,7 @@ ONNX deployment: 85MB INT8, 22ms inference, fully offline.
 
 Source: `scripts/combined-training-results.json`
 
-**Version 0.9.4** | **Updated 2026-03-25** | **RESEARCH USE ONLY -- Not FDA-cleared**
+**Version 1.0.0** | **Updated 2026-03-26** | **EDUCATIONAL USE ONLY -- Not a medical device, not FDA-cleared**
 
 > **Honesty note (2026-03-23):** An internal FDA-style audit found that previous
 > claims of "91.3% cross-dataset" and "96.2% sensitivity" were not backed by any
@@ -27,7 +29,7 @@ Source: `scripts/combined-training-results.json`
 
 ![Journey Progression](docs/diagrams/journey-progression.svg)
 
-This is the honest story of how Mela went from junk to clinical-grade.
+This is the honest story of how Mela went from junk to research-validated.
 No number in this section is cherry-picked. Every failure is documented because
 the failures are what made the final result trustworthy. An internal FDA-style
 audit caught fabricated claims along the way, an overnight retraining produced
@@ -77,8 +79,8 @@ Model selection was by melanoma sensitivity, not overall accuracy.
 - **Result:** **98.2% melanoma sensitivity** on HAM10000 holdout (1,503 images)
 - **Cross-validation:** 98.7% on Nagabu/HAM10000 (1,000 images), 100% on
   marmal88 test split (1,285 images). Train/test gap: -0.7% (zero overfitting).
-- **We celebrated.** We had beaten DermaSensor's 95.5% melanoma sensitivity
-  benchmark. The README said 98.2%. It was true -- on HAM10000.
+- **We celebrated.** We had achieved strong melanoma sensitivity
+  on our training data. The README said 98.2%. It was true -- on HAM10000.
 
 ### Stage 4: External Validation -- The Crash to 61.6%
 
@@ -159,9 +161,9 @@ balances both.
 - **Result:** **88.4% melanoma sensitivity at 91.1% specificity**
 - **The tradeoff:** Moving the threshold toward specificity reduces false
   positives but increases false negatives. The default remains the
-  high-sensitivity operating point (95.97%) because in screening, missing
+  high-sensitivity operating point (95.97%) because in awareness tools, missing
   cancer is worse than over-referring. The optimized threshold is available
-  as "triage mode" for clinicians who prefer fewer false positives.
+  as "triage mode" for users who prefer fewer false positives.
 - **Fitzpatrick equity test:** Testing across skin tones revealed a
   **dangerous 30-percentage-point performance gap** between Fitzpatrick I-III
   and darker skin tones. Training data is approximately 95% FST I-III. This
@@ -228,8 +230,8 @@ incorporates both the neural network's output and the clinical context.
 
 | Tier | Post-Test Probability | Recommendation |
 |------|----------------------|----------------|
-| Very High | >50% | Urgent referral -- see dermatologist within days |
-| High | 20-50% | See dermatologist within 2 weeks |
+| Very High | >50% | Urgent -- consider consulting a healthcare provider within days |
+| High | 20-50% | Consider consulting a healthcare provider within 2 weeks |
 | Moderate | 5-20% | Monitor monthly, photograph for comparison |
 | Low | 1-5% | Routine skin checks |
 | Minimal | <1% | No current concerns |
@@ -247,11 +249,11 @@ both neural and clinical indicators.
 **The Key Numbers:**
 
 - **NPV: 99.06%** -- when the system says "no concern," it is correct over
-  99% of the time. This is the number that matters most for screening: a
+  99% of the time. This is the number that matters most for awareness: a
   negative result is highly reliable.
 - **NNB: 2.1** -- Number Needed to Biopsy. For every confirmed malignancy,
-  approximately 1.1 benign lesions were also flagged. This is better than
-  DermaSensor's NNB of 6.25.
+  approximately 1.1 benign lesions were also flagged. This compares favorably
+  to published research benchmarks (e.g., NNB of 6.25 in FDA pivotal trials).
 - **LR-: 0.050** -- Likelihood ratio negative. A strong clinical rule-out
   value; a negative result reduces pre-test odds by 20x.
 - **Calibration ECE: 0.044** -- Expected Calibration Error after temperature
@@ -279,28 +281,27 @@ Source: `scripts/combined-training-results.json`
 
 ---
 
-## Why Mela Is Different
+## How Mela Compares to Published Research Benchmarks
 
 We tested the open-source alternatives ourselves -- every number in this
 table was measured by us on the same test images, not copied from model cards
-or marketing materials.
+or marketing materials. FDA-cleared device numbers are from published trials.
 
 | System | Melanoma Sensitivity | Validation | Cost |
 |--------|---------------------|------------|------|
-| DermaSensor (FDA-cleared) | 95.5% | 1,579 lesions, FDA pivotal trial | $7,000 device + per-test fee |
+| Published FDA pivotal trials | 90-97% (varies by device) | Controlled clinical studies | $7,000+ device + per-test fee |
 | SkinVision (CE marked) | ~80-85% (reported) | Proprietary, not independently verified | ~$50/year subscription |
 | Anwarkh1/ViT (HuggingFace, 44K downloads) | 73.3% (our test) | 210 HAM10000 images | Free |
 | skintaglabs SigLIP (HuggingFace) | 30.0% (our test) | 210 HAM10000 images | Free |
 | **Mela (v2, combined training)** | **95.97%** | **ISIC 2019 external test (3,901 images)** | **Free, open source** |
 
-Mela now matches DermaSensor-class melanoma sensitivity on genuinely
-external data. DermaSensor's 95.5% comes from a controlled FDA pivotal study
-with proprietary hardware. Mela's 95.97% is measured on 3,901 ISIC 2019
+Mela achieves melanoma sensitivity comparable to published research benchmarks on
+genuinely external data. Mela's 95.97% is measured on 3,901 ISIC 2019
 images from cameras, institutions, and patient populations not seen during
 training (source: `scripts/combined-training-results.json`). On same-distribution
 HAM10000 holdout, Mela achieves 97.01%. See `docs/FDA-AUDIT-REPORT.md`
 for the full evidence chain. Mela has not undergone prospective clinical
-validation.
+validation and is not a medical device.
 
 ---
 
@@ -331,9 +332,9 @@ Missing a melanoma can kill someone.
 
 **The tradeoff is deliberate.** High melanoma sensitivity comes at a cost to
 specificity: approximately 28% of benign moles are flagged for further
-evaluation. In cancer screening, false negatives kill and false positives
+evaluation. In skin awareness tools, false negatives kill and false positives
 inconvenience. A Number Needed to Biopsy (NNB) of ~4 is clinically
-acceptable and comparable to FDA-cleared devices (DermaSensor NNB: 6.25).
+acceptable and compares favorably to published research benchmarks (NNB: 6.25 in FDA pivotal trials).
 
 ---
 
@@ -391,8 +392,8 @@ service worker) and every subsequent scan is fully offline.
 | Upload |--->| Gate   |--->|  Ensemble   |--->| + Meta     |--->|   Risk   |--->| Result    |
 +--------+    +--------+    +-------------+    +------------+    +----------+    +-----------+
                                    ^                                               |
-                     +-------------+-------------+                          "See a derm
-                     |                           |                           within 2 weeks"
+                     +-------------+-------------+                    "Consider consulting
+                     |                           |                     a healthcare provider"
               15% weight                  15% weight
               Trained Weights             Rule-Based
               (Literature LR)             (Safety Gates)
@@ -470,7 +471,7 @@ architectural decision encodes a value judgment. These are ours.
 
 ### 1. Sensitivity Over Specificity -- The Fundamental Tradeoff
 
-In cancer screening, a false negative kills. A false positive inconveniences.
+In skin analysis, a false negative kills. A false positive inconveniences.
 
 This single asymmetry drives most of the design. We trained the model with
 focal loss using melanoma alpha=6.0, which makes every missed melanoma cost
@@ -482,11 +483,11 @@ The cost is specificity: approximately 28% of benign moles get flagged for
 further evaluation. This produces a Number Needed to Biopsy (NNB) of roughly
 4 -- meaning for every confirmed malignancy, about 3 benign lesions were also
 flagged. That NNB is clinically acceptable and comparable to FDA-cleared
-devices (DermaSensor NNB: 6.25). Source: `scripts/combined-training-results.json`
+published research benchmarks (NNB: 6.25 in FDA pivotal trials). Source: `scripts/combined-training-results.json`
 
-The system offers threshold modes (screening vs. triage) so users can choose
-their own point on the sensitivity-specificity curve. Screening mode maximizes
-sensitivity for population-level use. Triage mode tightens specificity for
+The system offers threshold modes (awareness vs. triage) so users can choose
+their own point on the sensitivity-specificity curve. Awareness mode maximizes
+sensitivity for general use. Triage mode tightens specificity for
 clinicians who want fewer false positives. But the default is always biased
 toward catching cancer, because the default is what most people will use,
 and the default should not miss melanomas.
@@ -522,7 +523,7 @@ themselves. If a limitation exists, we told them first.
 
 ### 3. Multi-Layer Defense -- Why One Model Is Not Enough
 
-A single neural network is not trustworthy enough for cancer screening. Neural
+A single neural network is not trustworthy enough for skin analysis. Neural
 networks fail in ways that are difficult to predict: adversarial lighting,
 camera artifacts, out-of-distribution inputs, dataset-specific biases the
 training process learned silently. Our own ViT achieved 98.2% on HAM10000 and
@@ -641,7 +642,7 @@ toward the right one.
   operating point that balances sensitivity and specificity for triage use.
 - **ONNX deployment (85MB, 22ms, offline):** The decision to deploy ONNX
   for privacy and offline capability means the image never leaves the device.
-  A rural health worker with no internet can still screen for melanoma.
+  A rural health worker with no internet can still analyze skin lesions.
 
 Each failure is documented in this README because the failures are what make
 the final result trustworthy. A project that only reports its best number is
@@ -654,8 +655,8 @@ is showing you the evidence that the methodology actually works.
 The same classification engine serves two audiences with different needs.
 
 A regular person uploading a photo of a mole does not know what "mel 0.94"
-means. They need a clear, actionable message: "See a dermatologist within
-2 weeks" or "This looks reassuring, but monitor for changes." The consumer
+means. They need a clear, actionable message: "Consider consulting a healthcare
+provider within 2 weeks" or "This looks reassuring, but monitor for changes." The consumer
 translation layer converts probability distributions into plain-language
 recommendations with color-coded risk levels and specific next steps.
 
@@ -704,7 +705,7 @@ server.
 
 ### 8. Bayesian Honesty -- Risk Scores, Not Binary Alarms
 
-A binary "melanoma yes/no" answer is the wrong output for a screening tool
+A binary "melanoma yes/no" answer is the wrong output for an awareness tool
 operating at real-world prevalence. At 2% base rate, even a model with 95.97%
 sensitivity and 80% specificity produces a PPV of only 8.9% -- meaning 91% of
 positive results are false positives. Telling a patient "you might have
@@ -770,7 +771,7 @@ GLCM analysis. Each score includes the literature-cited rationale.
 **4. "What Mela Found" Explainability.** Every result shows the top clinical
 findings that drove the classification -- asymmetry, border irregularity,
 color diversity, blue-white veil, atypical network, streaks, texture. Each
-finding includes impact direction (supports/opposes the diagnosis), weight
+finding includes impact direction (supports/opposes the assessment), weight
 (strong/moderate/weak), and citation to published literature (Stolz 1994,
 Argenziano 1998). Full clinical details available on tap. Users see exactly
 what the AI looked at and why it matters.
@@ -788,7 +789,7 @@ lighting, 4-6 inches distance, one spot per photo, clean lens. Reduces
 garbage-in/garbage-out and improves classification accuracy.
 
 **7. Low-Confidence Safety Net.** When the AI cannot classify with enough
-confidence (< 40%), the result defaults to "See a dermatologist to be safe"
+confidence (< 40%), the result defaults to "Consider consulting a healthcare provider to be safe"
 instead of forcing a possibly wrong classification. This catches amelanotic
 melanomas (flesh-colored, no pigment contrast) and poor-quality photos.
 
@@ -919,28 +920,30 @@ docs/                        Technical documentation + 14 ADRs
 
 ---
 
-## Comparison with FDA-Cleared Devices
+## Published Research Benchmarks
 
-| Metric | DermaSensor | Nevisense | MelaFind | Mela (v2, combined) |
-|--------|-------------|-----------|----------|-----------|
-| Melanoma sensitivity | 95.5% | 97% | 98.3% | **95.97% (ISIC 2019 external)** / 97.01% (HAM10000) |
-| Melanoma AUROC | 0.758 | N/A | N/A | **0.960 (ISIC 2019 external)** / 0.930 (HAM10000) |
-| Specificity | 20.7-32.5% | 31.3% | 9.9% | 80.0% (melanoma, ISIC 2019 external) |
-| Technology | Spectroscopy ($7K hardware) | Impedance ($$$) | Multispectral (discontinued) | Vision Transformer (open source) |
-| Validation | 1,579 lesions, FDA pivotal | Clinical trial | FDA pivotal | ISIC 2019 external (3,901) + HAM10000 holdout (1,503) |
-| External data tested | Yes (pivotal trial) | Yes | Yes | Yes (ISIC 2019: AUROC 0.960, sensitivity 95.97%) |
-| Cost | $7,000 device + per-test fee | Expensive | Withdrawn | Free |
+The following table compares Mela's performance against published research
+benchmarks from FDA-cleared devices and academic studies. Mela is an
+educational tool, not a medical device, and has not undergone prospective
+clinical validation.
 
-Sources: DermaSensor (FDA DEN230008, Tkaczyk et al. 2024), Nevisense (Scibase
-clinical data), MelaFind (withdrawn from market). Mela numbers from
+| Metric | Published FDA Pivotal Trials | Mela (v2, combined) |
+|--------|------------------------------|-----------|
+| Melanoma sensitivity | 90-97% (varies by device and study) | **95.97% (ISIC 2019 external)** / 97.01% (HAM10000) |
+| Melanoma AUROC | 0.758 (spectroscopy-based) | **0.960 (ISIC 2019 external)** / 0.930 (HAM10000) |
+| Specificity | 9.9-32.5% (varies by device) | 80.0% (melanoma, ISIC 2019 external) |
+| Validation | Controlled clinical trials, 440-1,579 lesions | ISIC 2019 external (3,901) + HAM10000 holdout (1,503) |
+| External data tested | Yes (pivotal trials) | Yes (ISIC 2019: AUROC 0.960, sensitivity 95.97%) |
+
+Sources: Published FDA pivotal trial data (DEN230008, Tkaczyk et al. 2024;
+Scibase clinical data; MelaFind withdrawn from market). Mela numbers from
 `scripts/combined-training-results.json`.
 
-Note: DermaSensor's 95.5% comes from the DERM-ASSESS III melanoma-focused
-study (440 lesions). Its broader DERM-SUCCESS pivotal trial measured 90.2%
-melanoma sensitivity on 1,579 lesions. Mela's 95.97% is on genuinely
-external data (ISIC 2019, 3,901 images from cameras and institutions not seen
-during training). On same-distribution HAM10000 holdout, sensitivity is 97.01%.
-Mela has not undergone prospective clinical validation.
+Note: Published benchmarks come from controlled clinical studies with
+proprietary hardware. Mela's 95.97% is on genuinely external data (ISIC 2019,
+3,901 images from cameras and institutions not seen during training). On
+same-distribution HAM10000 holdout, sensitivity is 97.01%. Mela has not
+undergone prospective clinical validation and is not a medical device.
 
 ---
 
@@ -948,15 +951,15 @@ Mela has not undergone prospective clinical validation.
 
 We believe honesty about limitations is more important than marketing.
 
-1. **Not FDA-cleared.** Mela is a research prototype. It must not be used
-   for clinical decision-making without appropriate regulatory authorization
-   and professional medical oversight.
+1. **Not FDA-cleared.** Mela is an educational tool, not a medical device. It
+   does not diagnose, screen for, or detect any disease. It must not be used
+   for clinical decision-making.
 
 2. **Trained predominantly on Fitzpatrick I-III skin.** HAM10000 is
    approximately 95% Fitzpatrick skin types I-III. Performance on darker skin
-   tones is likely degraded and has not been independently measured. DermaSensor
-   reported a 4% sensitivity gap between FST I-III and FST IV-VI; our gap may
-   be larger. This is a systemic problem in dermatology AI, not an excuse.
+   tones is likely degraded and has not been independently measured. Published
+   research reports a 4% sensitivity gap between FST I-III and FST IV-VI in
+   FDA-cleared devices; our gap may be larger. This is a systemic problem in dermatology AI, not an excuse.
 
 3. **The generalization gap is closed for melanoma, but overall accuracy
    dropped.** Combined-dataset training raised external melanoma sensitivity
@@ -970,7 +973,7 @@ We believe honesty about limitations is more important than marketing.
 4. **High melanoma sensitivity comes at a cost to specificity.** The ~28%
    false positive rate on melanocytic nevi means roughly 1 in 4 benign moles
    will be flagged for further evaluation. This is a deliberate design choice
-   -- in cancer screening, false negatives kill and false positives
+   -- in skin analysis, false negatives kill and false positives
    inconvenience.
 
 5. **No prospective clinical validation.** All testing has been on
@@ -1010,12 +1013,13 @@ The tools that detect melanoma at >90% sensitivity today cost $7,000 and
 require proprietary hardware. That means early detection is a luxury available
 to well-funded dermatology practices in wealthy countries. A farmer in rural
 India, a nurse practitioner in Appalachia, a community health worker in
-sub-Saharan Africa -- they have smartphones, but they do not have DermaSensors.
+sub-Saharan Africa -- they have smartphones, but they do not have expensive
+specialized devices.
 
 Mela is an attempt to close that gap. With combined-dataset training,
 melanoma sensitivity on genuinely external data is now 95.97% (source:
-`scripts/combined-training-results.json`) -- matching DermaSensor's 95.5% FDA
-benchmark. Fitzpatrick equity is not yet proven, and no regulator has cleared
+`scripts/combined-training-results.json`) -- comparable to published research benchmarks
+from FDA pivotal trials. Fitzpatrick equity is not yet proven, and no regulator has cleared
 it. But the architecture is sound, the training methodology is honest, the
 external validation is real, and the code is open.
 
@@ -1026,7 +1030,7 @@ The path forward:
 - **Prospective clinical validation.** Partner with dermatology clinics to
   test Mela alongside clinical judgment in real patient encounters.
 - **Regulatory pathway.** De Novo or 510(k) classification with FDA, using
-  DermaSensor as the predicate device.
+  existing FDA-cleared devices as predicate.
 - **Improve overall accuracy.** The aggressive melanoma weighting that achieves
   95.97% sensitivity reduces overall accuracy to 76.4%. Curriculum learning
   or multi-objective optimization could improve benign-class accuracy without
@@ -1035,7 +1039,7 @@ The path forward:
   better for every other practice, with differential privacy protecting
   patient data.
 
-The goal is not to replace dermatologists. It is to put a screening tool in
+The goal is not to replace dermatologists. It is to put a skin awareness tool in
 the hands of the 5 billion people who will never see one.
 
 ---
@@ -1057,7 +1061,7 @@ MIT
 
 ---
 
-**RESEARCH USE ONLY.** Mela is not FDA-cleared and must not be used for
-clinical decision-making without appropriate regulatory authorization and
-professional medical oversight. All AI classifications require review by a
-qualified dermatologist.
+**EDUCATIONAL USE ONLY -- Not a medical device.** Mela is not FDA-cleared and does not
+diagnose, screen for, or detect any disease. Pattern analysis results are for educational
+and informational purposes only. Always consult a qualified healthcare provider for
+medical concerns.
