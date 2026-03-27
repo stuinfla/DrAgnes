@@ -14,6 +14,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { env } from "$env/dynamic/private";
+import { rateLimit } from "$lib/server/rate-limit";
 
 const DEFAULT_MODEL_1 = "stuartkerr/mela-classifier";
 
@@ -31,7 +32,10 @@ function getApiKey(): string | undefined {
 	return env.HF_TOKEN || env.HUGGINGFACE_TOKEN;
 }
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	const limited = rateLimit(getClientAddress(), '/api/classify', 30, 60000);
+	if (limited) return new Response('Too many requests', { status: 429 });
+
 	const formData = await request.formData();
 	const imageFile = formData.get("image");
 
@@ -52,6 +56,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(415, `Unsupported image type: ${imageFile.type}. Use JPEG, PNG, WebP, or BMP.`);
 	}
 
+	// Security: validate image magic bytes
+	const buf = new Uint8Array(await imageFile.arrayBuffer());
+	if (buf.length < 4) throw error(400, "File too small to be a valid image");
+	const isJPEG = buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
+	const isPNG = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+	const isWEBP = buf[0] === 0x52 && buf[1] === 0x49 && buf[2] === 0x46 && buf[3] === 0x46;
+	if (!isJPEG && !isPNG && !isWEBP) {
+		throw error(400, "Invalid image format");
+	}
+
 	const apiKey = getApiKey();
 	const headers: Record<string, string> = {};
 	if (apiKey) {
@@ -65,13 +79,13 @@ export const POST: RequestHandler = async ({ request }) => {
 		const response = await fetch(apiUrl, {
 			method: "POST",
 			headers,
-			body: imageFile,
+			body: buf,
 		});
 
 		if (!response.ok) {
 			const text = await response.text();
 			console.error(`[mela/classify] HF API error: ${response.status} ${text}`);
-			throw error(response.status, `Classification service error: ${text}`);
+			throw error(502, 'Classification service temporarily unavailable');
 		}
 
 		const results = await response.json();

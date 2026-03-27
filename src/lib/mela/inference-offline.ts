@@ -61,7 +61,9 @@ export async function initOfflineModel(): Promise<boolean> {
 		ort = await import(/* @vite-ignore */ moduleName);
 
 		// Prefer WASM backend (works everywhere), fall back to WebGL
-		session = await ort.InferenceSession.create(MODEL_URL, {
+		const ortModule = ort;
+		if (!ortModule) return false;
+		session = await ortModule.InferenceSession.create(MODEL_URL, {
 			executionProviders: ["wasm"],
 			graphOptimizationLevel: "all",
 		});

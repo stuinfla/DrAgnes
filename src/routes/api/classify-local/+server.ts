@@ -15,6 +15,7 @@
 
 import { json, error } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { rateLimit } from "$lib/server/rate-limit";
 import { existsSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -146,7 +147,10 @@ export const GET: RequestHandler = async () => {
  * Classify an image using the local trained ViT model.
  * Tries ONNX first (Node.js native, works on Vercel), falls back to Python.
  */
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	const limited = rateLimit(getClientAddress(), '/api/classify-local', 30, 60000);
+	if (limited) return new Response('Too many requests', { status: 429 });
+
 	const formData = await request.formData();
 	const imageFile = formData.get("image");
 

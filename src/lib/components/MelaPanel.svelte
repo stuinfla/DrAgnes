@@ -38,7 +38,7 @@
 
 	import DermCapture from "./DermCapture.svelte";
 	import GradCamOverlay from "./GradCamOverlay.svelte";
-	import LesionTimeline from "./LesionTimeline.svelte";
+	// LesionTimeline removed — history tab removed for v1.0.0
 	import ABCDEChart from "./ABCDEChart.svelte";
 	import AnalyticsDashboard from "./AnalyticsDashboard.svelte";
 	import ExplainPanel from "./ExplainPanel.svelte";
@@ -48,7 +48,6 @@
 	import { recordClassification, recordFeedback } from "$lib/stores/analytics";
 
 	import CarbonCamera from "~icons/carbon/camera";
-	import CarbonTime from "~icons/carbon/time";
 	import CarbonSettings from "~icons/carbon/settings";
 	import CarbonInformation from "~icons/carbon/information";
 
@@ -144,13 +143,7 @@
 	let patientFitzpatrick: number | undefined = $state(undefined);
 	let demographicsEnabled: boolean = $state(true);
 
-	// Clinical history (ADR-130, Dr. Chang feedback)
-	let showClinicalHistory: boolean = $state(false);
-	let clinicalIsNew: "new" | "months" | "years" | "unsure" = $state("unsure");
-	let clinicalHasChanged: "yes" | "no" | "unsure" = $state("unsure");
-	let clinicalPreviouslyBiopsied: "yes" | "no" = $state("no");
-	let clinicalFamilyHistory: "yes" | "no" | "unsure" = $state("unsure");
-	let clinicalSymptoms: ("itching" | "bleeding" | "pain" | "none")[] = $state(["none"]);
+	// Clinical history form removed for v1.0.0 — will be re-added when wired to risk-stratification.ts
 
 	// Results state
 	let classificationResult: (ClassificationResult & {
@@ -197,6 +190,9 @@
 	// History state
 	let records: DiagnosisRecord[] = $state([]);
 
+	// Custom model status (must be declared before $derived that uses it)
+	let customModelAvailable: boolean | null = $state(null);
+
 	// Settings state -- model version derived from actual detection
 	let modelVersion: string = $derived(
 		customModelAvailable === true
@@ -205,9 +201,7 @@
 				? "Offline mode (literature-based)"
 				: "Checking model..."
 	);
-	let brainSyncEnabled: boolean = $state(false);
-	let privacyStripExif: boolean = $state(true);
-	let privacyLocalOnly: boolean = $state(true);
+	// brainSyncEnabled, privacyStripExif, privacyLocalOnly removed for v1.0.0 — privacy is always-on
 	let thresholdMode: ThresholdMode = $state("triage");
 
 	// Inference strategy (ADR-122 Phase 5)
@@ -217,9 +211,6 @@
 
 	// Offline indicator
 	let isOffline: boolean = $state(false);
-
-	// Custom model status
-	let customModelAvailable: boolean | null = $state(null);
 
 	// Track the last event ID for feedback binding
 	let lastEventId: string | null = $state(null);
@@ -380,10 +371,9 @@
 		"Generating recommendation...",
 	];
 
-	// Bottom nav items -- simplified to 4
+	// Bottom nav items -- simplified to 3 (history removed for v1.0.0)
 	const NAV_ITEMS: { id: ViewId; label: string; icon: typeof CarbonCamera }[] = [
 		{ id: "scan", label: "Scan", icon: CarbonCamera },
-		{ id: "history", label: "History", icon: CarbonTime },
 		{ id: "learn", label: "Learn", icon: CarbonInformation },
 		{ id: "settings", label: "Settings", icon: CarbonSettings },
 	];
@@ -1770,97 +1760,7 @@
 					{/if}
 				</div>
 
-				<!-- Clinical context (ADR-130, Dr. Chang) -->
-				<div class="mx-5 mt-3">
-					<button
-						onclick={() => (showClinicalHistory = !showClinicalHistory)}
-						class="flex w-full items-center justify-between rounded-2xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-left transition-colors hover:bg-white/[0.04] touch-target"
-					>
-						<span class="text-[11px] font-medium text-gray-400">Clinical Context (optional)</span>
-						<svg
-							class="h-4 w-4 text-gray-500 transition-transform duration-300 {showClinicalHistory ? 'rotate-180' : ''}"
-							fill="none" stroke="currentColor" viewBox="0 0 24 24"
-						>
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-						</svg>
-					</button>
-					{#if showClinicalHistory}
-						<div class="mt-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 animate-fadeIn">
-							<p class="text-[10px] text-gray-500 mb-3">These questions help Mela give you a more accurate risk assessment.</p>
-
-							<div class="flex flex-col gap-3">
-								<div>
-									<label class="mb-1 block text-[11px] text-gray-400">Is this spot new?</label>
-									<div class="flex gap-2">
-										{#each [["new", "New"], ["months", "Months"], ["years", "Years"], ["unsure", "Not sure"]] as [val, label]}
-											<button
-												onclick={() => clinicalIsNew = val as any}
-												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalIsNew === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
-											>{label}</button>
-										{/each}
-									</div>
-								</div>
-
-								<div>
-									<label class="mb-1 block text-[11px] text-gray-400">Has it changed recently?</label>
-									<div class="flex gap-2">
-										{#each [["yes", "Yes"], ["no", "No"], ["unsure", "Not sure"]] as [val, label]}
-											<button
-												onclick={() => clinicalHasChanged = val as any}
-												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalHasChanged === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
-											>{label}</button>
-										{/each}
-									</div>
-								</div>
-
-								<div>
-									<label class="mb-1 block text-[11px] text-gray-400">Previously biopsied?</label>
-									<div class="flex gap-2">
-										{#each [["no", "No"], ["yes", "Yes"]] as [val, label]}
-											<button
-												onclick={() => clinicalPreviouslyBiopsied = val as any}
-												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalPreviouslyBiopsied === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
-											>{label}</button>
-										{/each}
-									</div>
-								</div>
-
-								<div>
-									<label class="mb-1 block text-[11px] text-gray-400">Family history of melanoma?</label>
-									<div class="flex gap-2">
-										{#each [["no", "No"], ["yes", "Yes"], ["unsure", "Not sure"]] as [val, label]}
-											<button
-												onclick={() => clinicalFamilyHistory = val as any}
-												class="flex-1 rounded-lg px-2 py-1.5 text-[10px] border transition-colors {clinicalFamilyHistory === val ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
-											>{label}</button>
-										{/each}
-									</div>
-								</div>
-
-								<div>
-									<label class="mb-1 block text-[11px] text-gray-400">Any symptoms?</label>
-									<div class="flex gap-2 flex-wrap">
-										{#each [["none", "None"], ["itching", "Itching"], ["bleeding", "Bleeding"], ["pain", "Pain"]] as [val, label]}
-											<button
-												onclick={() => {
-													if (val === "none") { clinicalSymptoms = ["none"]; }
-													else {
-														const filtered = clinicalSymptoms.filter(s => s !== "none");
-														if (filtered.includes(val as any)) { clinicalSymptoms = filtered.filter(s => s !== val); if (!clinicalSymptoms.length) clinicalSymptoms = ["none"]; }
-														else { clinicalSymptoms = [...filtered, val as any]; }
-													}
-												}}
-												class="rounded-lg px-3 py-1.5 text-[10px] border transition-colors {clinicalSymptoms.includes(val as any) ? 'bg-teal-500/20 border-teal-500/40 text-teal-300' : 'bg-white/[0.03] border-white/[0.06] text-gray-400'}"
-											>{label}</button>
-										{/each}
-									</div>
-								</div>
-							</div>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Captured — waiting for analysis to start (fallback if auto-analyze didn't fire) -->
+					<!-- Captured — waiting for analysis to start (fallback if auto-analyze didn't fire) -->
 			{:else}
 				<div class="flex flex-col items-center gap-5 px-5 py-12 text-center animate-fadeIn">
 					<div class="h-8 w-8 animate-spin rounded-full border-2 border-teal-500 border-t-transparent"></div>
@@ -1875,11 +1775,6 @@
 					{/if}
 				</div>
 			{/if}
-		</div>
-
-	{:else if activeView === "history"}
-		<div class="scrollbar-thin flex-1 overflow-y-auto px-5 pt-5 pb-24 overscroll-none">
-			<LesionTimeline {records} />
 		</div>
 
 	{:else if activeView === "learn"}
@@ -2006,22 +1901,7 @@
 					</div>
 				</div>
 
-				<div class="card">
-					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Brain Sync</h3>
-					<div class="flex flex-col gap-3">
-						<label class="flex items-center justify-between">
-							<span class="text-[15px] text-gray-300">Enable sync</span>
-							<input
-								type="checkbox"
-								bind:checked={brainSyncEnabled}
-								class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
-							/>
-						</label>
-						<p class="text-[11px] text-gray-500">
-							{brainSyncEnabled ? "Connected" : "Local-only mode"}
-						</p>
-					</div>
-				</div>
+				<!-- Brain Sync card removed for v1.0.0 -->
 
 				<div class="card">
 					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Network</h3>
@@ -2046,22 +1926,20 @@
 				<div class="card">
 					<h3 class="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500">Privacy</h3>
 					<div class="flex flex-col gap-3">
-						<label class="flex items-center justify-between">
-							<span class="text-[15px] text-gray-300">Strip EXIF data</span>
-							<input
-								type="checkbox"
-								bind:checked={privacyStripExif}
-								class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
-							/>
-						</label>
-						<label class="flex items-center justify-between">
-							<span class="text-[15px] text-gray-300">Local processing only</span>
-							<input
-								type="checkbox"
-								bind:checked={privacyLocalOnly}
-								class="h-4 w-4 rounded border-white/[0.08] bg-white/[0.03] text-teal-500 focus:ring-teal-500/40"
-							/>
-						</label>
+						<div class="flex items-center justify-between">
+							<span class="text-[15px] text-gray-300">EXIF Data</span>
+							<span class="flex items-center gap-1.5 text-emerald-400 text-[13px]">
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+								Automatically stripped
+							</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-[15px] text-gray-300">On-Device Processing</span>
+							<span class="flex items-center gap-1.5 text-emerald-400 text-[13px]">
+								<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+								Always on
+							</span>
+						</div>
 					</div>
 				</div>
 

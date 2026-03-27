@@ -20,7 +20,7 @@ export interface MelaConfig {
 }
 
 export const MELA_CONFIG: MelaConfig = {
-	modelVersion: "v1.0.0-demo",
+	modelVersion: "v1.0.0",
 	cnnBackbone: "MobileNetV3-Small",
 	inputSize: 224,
 	classes: ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"],

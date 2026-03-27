@@ -1,15 +1,11 @@
 <script lang="ts">
 	import type {
 		ClassificationResult,
-		LesionClass,
 		RiskLevel,
 	} from "$lib/mela/types";
 	import { LESION_LABELS } from "$lib/mela/types";
 	import type { ABCDEScores } from "$lib/mela/types";
 	import { getPrimaryICD10 } from "$lib/mela/icd10";
-	import { recordFeedback } from "$lib/stores/analytics";
-	import CarbonCheckmark from "~icons/carbon/checkmark";
-	import CarbonEdit from "~icons/carbon/edit";
 
 	interface Props {
 		result: ClassificationResult;
@@ -22,8 +18,6 @@
 
 	const icd10 = $derived(getPrimaryICD10(result.topClass));
 
-	let showCorrectDropdown: boolean = $state(false);
-	let showPathologyInput: boolean = $state(false);
 	let showModelProvenance: boolean = $state(false);
 
 	type EnsembleWeight = { label: string; pct: number; color: string };
@@ -36,44 +30,7 @@
 					? []
 					: [{ label: "Trained", pct: 60, color: "bg-amber-500" }, { label: "Rules", pct: 40, color: "bg-orange-500" }]
 	);
-	let pathologyClass: LesionClass | "" = $state("");
-	let feedbackRecorded: string | null = $state(null);
-
-	function handleFeedback(opts: {
-		concordant: boolean;
-		discordanceReason?: "overcalled" | "missed" | "artifact" | "edge_case" | "other";
-		biopsied: boolean;
-		malignant?: boolean;
-		pathologyResult?: string;
-	}) {
-		if (!eventId) return;
-		recordFeedback({
-			eventId,
-			...opts,
-		});
-		feedbackRecorded = opts.concordant ? "Agreed" :
-			opts.discordanceReason === "overcalled" ? "Overcalled" :
-			opts.discordanceReason === "missed" ? "Missed" :
-			opts.pathologyResult ? "Pathology recorded" :
-			"Feedback recorded";
-	}
-
-	function submitPathology() {
-		if (!eventId || !pathologyClass) return;
-		const isMalignant = pathologyClass === "mel" || pathologyClass === "bcc" || pathologyClass === "akiec";
-		const isCorrect = pathologyClass === result.topClass;
-		recordFeedback({
-			eventId,
-			concordant: isCorrect,
-			biopsied: true,
-			malignant: isMalignant,
-			pathologyResult: pathologyClass,
-		});
-		feedbackRecorded = "Pathology: " + LESION_LABELS[pathologyClass];
-		showPathologyInput = false;
-	}
-
-	const ALL_CLASSES: LesionClass[] = ["akiec", "bcc", "bkl", "df", "mel", "nv", "vasc"];
+	// Feedback/pathology/correction functions removed for v1.0.0
 
 	function confidenceColor(confidence: number): string {
 		if (confidence >= 0.9) return "bg-green-500";
@@ -121,10 +78,7 @@
 		onaction?.(action, payload);
 	}
 
-	function correctTo(cls: LesionClass) {
-		showCorrectDropdown = false;
-		handleAction("correct", cls);
-	}
+	// correctTo removed for v1.0.0
 </script>
 
 <div class="flex flex-col gap-3 sm:gap-5 w-full">
@@ -348,65 +302,9 @@
 		{/if}
 	</div>
 
-	<!-- Similar Cases placeholder -->
-	<div class="rounded-xl border border-dashed border-gray-600 bg-gray-800/30 p-4 text-center">
-		<div class="flex items-center justify-center gap-2 text-sm text-gray-400">
-			<svg class="h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-			Similar Case Matching
-		</div>
-		<p class="mt-1 text-xs text-gray-500">Requires pi.ruv.io brain connection</p>
-	</div>
-
-	<!-- Action buttons -->
+	<!-- Action buttons — only Dismiss kept for v1.0.0 -->
 	<div class="sticky bottom-0 bg-gray-950/95 backdrop-blur-sm border-t border-gray-800 p-3 -mx-3 sm:-mx-4 mt-4">
-		<div class="grid grid-cols-2 gap-1.5 sm:gap-2 sm:grid-cols-4">
-			<button
-				onclick={() => handleAction("confirm")}
-				class="flex h-11 items-center justify-center gap-1.5 rounded-lg bg-green-600 text-sm font-medium text-white hover:bg-green-700 active:bg-green-800"
-			>
-				<CarbonCheckmark class="h-4 w-4" /> Confirm
-			</button>
-
-			<div class="relative">
-				<button
-					onclick={() => (showCorrectDropdown = !showCorrectDropdown)}
-					class="flex h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-yellow-600 text-sm font-medium text-white hover:bg-yellow-700 active:bg-yellow-800"
-				>
-					<CarbonEdit class="h-4 w-4" /> Correct
-				</button>
-				{#if showCorrectDropdown}
-					<div
-						class="absolute left-0 bottom-12 z-10 w-56 rounded-lg border border-gray-600 bg-gray-800 p-1 shadow-lg"
-					>
-						{#each ALL_CLASSES as cls}
-							<button
-								onclick={() => correctTo(cls)}
-								class="flex w-full items-center rounded px-3 py-2 text-left text-sm hover:bg-gray-700
-									{cls === result.topClass ? 'font-semibold text-blue-400' : 'text-gray-300'}"
-							>
-								{cls} &mdash; {LESION_LABELS[cls]}
-							</button>
-						{/each}
-					</div>
-				{/if}
-			</div>
-
-			<button
-				onclick={() => handleAction("biopsy")}
-				class="flex h-11 items-center justify-center rounded-lg bg-orange-600 text-sm font-medium text-white hover:bg-orange-700 active:bg-orange-800"
-			>
-				Flag for Review
-			</button>
-
-			<button
-				onclick={() => handleAction("refer")}
-				class="flex h-11 items-center justify-center rounded-lg bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800"
-			>
-				Save Note
-			</button>
-		</div>
-
-		<div class="mt-2 text-center">
+		<div class="text-center">
 			<button
 				onclick={() => handleAction("dismiss")}
 				class="text-sm text-gray-400 underline hover:text-gray-300"
@@ -414,82 +312,5 @@
 				Dismiss
 			</button>
 		</div>
-
-		<!-- Outcome Feedback -->
-		{#if eventId}
-			<div class="border-t border-gray-800 pt-3 mt-3">
-				{#if feedbackRecorded}
-					<div class="flex items-center gap-2 text-xs text-teal-400">
-						<svg class="h-3.5 w-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-						<span>{feedbackRecorded}</span>
-						<button
-							onclick={() => (feedbackRecorded = null)}
-							class="ml-auto text-gray-500 hover:text-gray-400 text-[10px]"
-						>
-							Change
-						</button>
-					</div>
-				{:else}
-					<h4 class="text-xs font-medium text-gray-400 mb-2">Record Outcome</h4>
-					<div class="flex gap-2 flex-wrap">
-						<button
-							class="rounded-lg border border-teal-500/30 bg-teal-500/10 px-3 py-1.5 text-xs text-teal-400 hover:bg-teal-500/20 transition-colors"
-							onclick={() => handleFeedback({ concordant: true, biopsied: false })}
-						>
-							AI Agreed
-						</button>
-						<button
-							class="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-400 hover:bg-amber-500/20 transition-colors"
-							onclick={() => handleFeedback({ concordant: false, discordanceReason: "overcalled", biopsied: false })}
-						>
-							Overcalled
-						</button>
-						<button
-							class="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-400 hover:bg-red-500/20 transition-colors"
-							onclick={() => handleFeedback({ concordant: false, discordanceReason: "missed", biopsied: true })}
-						>
-							AI Missed
-						</button>
-						<button
-							class="rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-400 hover:bg-blue-500/20 transition-colors"
-							onclick={() => (showPathologyInput = true)}
-						>
-							Record Pathology
-						</button>
-					</div>
-
-					{#if showPathologyInput}
-						<div class="mt-3 flex items-end gap-2">
-							<div class="flex-1">
-								<label class="mb-1 block text-[10px] text-gray-500" for="pathology-select">Pathology Result</label>
-								<select
-									id="pathology-select"
-									bind:value={pathologyClass}
-									class="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-1.5 text-xs text-gray-200"
-								>
-									<option value="">Select class...</option>
-									{#each ALL_CLASSES as cls}
-										<option value={cls}>{cls} -- {LESION_LABELS[cls]}</option>
-									{/each}
-								</select>
-							</div>
-							<button
-								onclick={submitPathology}
-								disabled={!pathologyClass}
-								class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-40"
-							>
-								Save
-							</button>
-							<button
-								onclick={() => (showPathologyInput = false)}
-								class="rounded-lg bg-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-600"
-							>
-								Cancel
-							</button>
-						</div>
-					{/if}
-				{/if}
-			</div>
-		{/if}
 	</div>
 </div>

@@ -11,6 +11,7 @@
 
 import { error, json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
+import { rateLimit } from "$lib/server/rate-limit";
 import { shareDiagnosis } from "$lib/mela/brain-client";
 import type { LesionClass, BodyLocation } from "$lib/mela/types";
 
@@ -41,7 +42,10 @@ interface FeedbackRequest {
 
 const VALID_ACTIONS: FeedbackAction[] = ["confirm", "correct", "biopsy"];
 
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+	const limited = rateLimit(getClientAddress(), '/api/feedback', 60, 60000);
+	if (limited) return new Response('Too many requests', { status: 429 });
+
 	let body: FeedbackRequest;
 	try {
 		body = (await request.json()) as FeedbackRequest;
