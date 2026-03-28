@@ -55,35 +55,39 @@
 
 	// PWA Install Prompt
 	let deferredInstallPrompt: any = $state(null);
-	let showInstallBanner: boolean = $state(false);
-	let installDismissed: boolean = $state(false);
+	let showInstallModal: boolean = $state(false);
+	let iosStep: number = $state(0);
+	let isIOS: boolean = $state(false);
+	let isAndroid: boolean = $state(false);
 
 	onMount(() => {
-		// Check if already installed as PWA
 		const isStandalone = window.matchMedia("(display-mode: standalone)").matches
 			|| (window.navigator as any).standalone === true;
+		if (isStandalone) return;
 
-		if (isStandalone) return; // Already installed
-
-		// Check if user previously dismissed
-		if (localStorage.getItem("mela-install-dismissed")) {
-			installDismissed = true;
-			return;
+		// Check dismiss cooldown (7 days)
+		const dismissed = localStorage.getItem("mela-install-dismissed-at");
+		if (dismissed) {
+			const daysSince = (Date.now() - parseInt(dismissed)) / (1000 * 60 * 60 * 24);
+			if (daysSince < 7) return;
 		}
 
-		// Listen for the browser's install prompt
+		isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+		isAndroid = /Android/.test(navigator.userAgent);
+
+		// Listen for browser install prompt (Chrome, Edge, Samsung Internet)
 		window.addEventListener("beforeinstallprompt", (e: Event) => {
 			e.preventDefault();
 			deferredInstallPrompt = e;
-			showInstallBanner = true;
+			// Show after a short delay so it doesn't compete with the disclaimer
+			setTimeout(() => { showInstallModal = true; }, 1500);
 		});
 
-		// On iOS (no beforeinstallprompt), show manual instructions after a delay
-		const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+		// iOS Safari: no beforeinstallprompt, show guided install after delay
 		if (isIOS) {
 			setTimeout(() => {
-				if (!installDismissed) showInstallBanner = true;
-			}, 3000);
+				if (!showInstallModal) { showInstallModal = true; }
+			}, 2000);
 		}
 	});
 
@@ -91,20 +95,26 @@
 		if (deferredInstallPrompt) {
 			deferredInstallPrompt.prompt();
 			const result = await deferredInstallPrompt.userChoice;
-			if (result.outcome === "accepted") {
-				showInstallBanner = false;
-			}
+			showInstallModal = false;
 			deferredInstallPrompt = null;
-		} else {
-			// iOS — can't programmatically install, show instructions
-			// The banner already shows the iOS instructions
+		} else if (isIOS) {
+			// Start the iOS step-by-step guide
+			iosStep = 1;
 		}
 	}
 
-	function dismissInstallBanner() {
-		showInstallBanner = false;
-		installDismissed = true;
-		localStorage.setItem("mela-install-dismissed", "true");
+	function nextIosStep() {
+		if (iosStep < 3) {
+			iosStep += 1;
+		} else {
+			showInstallModal = false;
+			localStorage.setItem("mela-install-dismissed-at", Date.now().toString());
+		}
+	}
+
+	function dismissInstallModal() {
+		showInstallModal = false;
+		localStorage.setItem("mela-install-dismissed-at", Date.now().toString());
 	}
 
 	/** Svelte action: draw ImageData onto a canvas element */
@@ -959,40 +969,137 @@
 {/if}
 
 <div class="flex h-full w-full flex-col bg-[#0a0a0f]">
-	<!-- PWA Install Banner -->
-	{#if showInstallBanner && !installDismissed}
-		<div class="shrink-0 bg-gradient-to-r from-teal-500/15 to-emerald-500/10 border-b border-teal-500/20 px-4 py-3">
-			<div class="flex items-center justify-between gap-3">
-				<div class="flex items-center gap-3 min-w-0">
-					<div class="shrink-0 flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/20">
-						<svg class="h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+	<!-- PWA Install Modal -->
+	{#if showInstallModal}
+		<div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn" role="dialog" aria-modal="true" aria-label="Install Mela app">
+			<div class="w-full max-w-md mx-4 mb-4 sm:mb-0 rounded-2xl bg-[#141420] border border-white/10 shadow-2xl overflow-hidden">
+
+				{#if iosStep === 0}
+					<!-- Initial prompt (Android + iOS) -->
+					<div class="px-6 pt-6 pb-2 text-center">
+						<div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-500/15 ring-1 ring-teal-500/30">
+							<img src="/icons/icon-96x96.png" alt="Mela" class="h-10 w-10 rounded-xl" />
+						</div>
+						<h2 class="text-lg font-semibold text-white">Get the Mela app</h2>
+						<p class="mt-2 text-sm text-gray-400 leading-relaxed">
+							Install Mela on your phone for instant access. No app store, no download — it works just like a real app.
+						</p>
 					</div>
-					<div class="min-w-0">
-						<div class="text-sm font-semibold text-white">Add Mela to your home screen</div>
-						{#if deferredInstallPrompt}
-							<div class="text-xs text-gray-400">Quick access, works offline, no app store needed</div>
-						{:else}
-							<div class="text-xs text-gray-400">Tap the share button, then "Add to Home Screen"</div>
-						{/if}
+					<div class="px-6 py-2">
+						<div class="flex flex-col gap-2 text-xs text-gray-500">
+							<div class="flex items-center gap-2"><svg class="h-4 w-4 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> Opens full-screen like a native app</div>
+							<div class="flex items-center gap-2"><svg class="h-4 w-4 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> One tap from your home screen</div>
+							<div class="flex items-center gap-2"><svg class="h-4 w-4 text-teal-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg> Free, private, no account needed</div>
+						</div>
 					</div>
-				</div>
-				<div class="flex items-center gap-2 shrink-0">
-					{#if deferredInstallPrompt}
+					<div class="px-6 pt-3 pb-6 flex flex-col gap-2">
 						<button
 							onclick={handleInstallClick}
-							class="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-teal-400 active:scale-95"
+							class="w-full rounded-xl bg-teal-500 py-3.5 text-sm font-semibold text-black transition hover:bg-teal-400 active:scale-[0.98]"
 						>
-							Install
+							{deferredInstallPrompt ? "Install Mela" : "Show me how"}
 						</button>
-					{/if}
-					<button
-						onclick={dismissInstallBanner}
-						class="rounded-lg p-1.5 text-gray-500 transition hover:bg-white/5 hover:text-gray-300"
-						aria-label="Dismiss install banner"
-					>
-						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-					</button>
-				</div>
+						<button
+							onclick={dismissInstallModal}
+							class="w-full rounded-xl py-2.5 text-sm text-gray-500 transition hover:text-gray-300"
+						>
+							Maybe later
+						</button>
+					</div>
+
+				{:else if iosStep === 1}
+					<!-- iOS Step 1: Tap Share -->
+					<div class="px-6 pt-6 pb-2 text-center">
+						<div class="text-xs text-teal-400 font-medium mb-3">Step 1 of 3</div>
+						<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-500/10 ring-1 ring-blue-500/20">
+							<!-- iOS Share icon -->
+							<svg class="h-10 w-10 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M12 2.25v10.5M12 2.25l3 3M12 2.25l-3 3" />
+							</svg>
+						</div>
+						<h2 class="text-lg font-semibold text-white">Tap the Share button</h2>
+						<p class="mt-2 text-sm text-gray-400">
+							Find the <span class="inline-flex items-center align-middle mx-0.5"><svg class="h-4 w-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M12 2.25v10.5M12 2.25l3 3M12 2.25l-3 3" /></svg></span> button at the bottom of Safari
+						</p>
+					</div>
+					<div class="mx-6 my-3 rounded-xl bg-white/5 p-3">
+						<div class="flex items-center justify-center gap-6 text-gray-600">
+							<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+							<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+							<svg class="h-6 w-6 text-blue-400 animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M12 2.25v10.5M12 2.25l3 3M12 2.25l-3 3" /></svg>
+							<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" /></svg>
+							<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6Z" /></svg>
+						</div>
+						<div class="text-center text-[10px] text-gray-500 mt-1">Safari toolbar</div>
+					</div>
+					<div class="px-6 pt-2 pb-6 flex flex-col gap-2">
+						<button onclick={nextIosStep} class="w-full rounded-xl bg-teal-500 py-3.5 text-sm font-semibold text-black transition active:scale-[0.98]">I tapped Share</button>
+						<button onclick={dismissInstallModal} class="w-full rounded-xl py-2.5 text-sm text-gray-500">Cancel</button>
+					</div>
+
+				{:else if iosStep === 2}
+					<!-- iOS Step 2: Add to Home Screen -->
+					<div class="px-6 pt-6 pb-2 text-center">
+						<div class="text-xs text-teal-400 font-medium mb-3">Step 2 of 3</div>
+						<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-500/10 ring-1 ring-gray-500/20">
+							<svg class="h-10 w-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+							</svg>
+						</div>
+						<h2 class="text-lg font-semibold text-white">Tap "Add to Home Screen"</h2>
+						<p class="mt-2 text-sm text-gray-400">
+							Scroll down in the share menu and tap <span class="text-white font-medium">"Add to Home Screen"</span>
+						</p>
+					</div>
+					<div class="mx-6 my-3 rounded-xl bg-white/5 overflow-hidden">
+						<div class="flex items-center gap-3 px-4 py-3 border-b border-white/5">
+							<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375" /></svg>
+							<span class="text-sm text-gray-400">Copy</span>
+						</div>
+						<div class="flex items-center gap-3 px-4 py-3 bg-teal-500/10 border-l-2 border-teal-400">
+							<svg class="h-5 w-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+							<span class="text-sm text-white font-medium">Add to Home Screen</span>
+						</div>
+						<div class="flex items-center gap-3 px-4 py-3 border-t border-white/5">
+							<svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z" /></svg>
+							<span class="text-sm text-gray-400">Add Bookmark</span>
+						</div>
+					</div>
+					<div class="px-6 pt-2 pb-6 flex flex-col gap-2">
+						<button onclick={nextIosStep} class="w-full rounded-xl bg-teal-500 py-3.5 text-sm font-semibold text-black transition active:scale-[0.98]">I found it</button>
+						<button onclick={() => { iosStep = 1; }} class="w-full rounded-xl py-2.5 text-sm text-gray-500">Go back</button>
+					</div>
+
+				{:else if iosStep === 3}
+					<!-- iOS Step 3: Confirm -->
+					<div class="px-6 pt-6 pb-2 text-center">
+						<div class="text-xs text-teal-400 font-medium mb-3">Step 3 of 3</div>
+						<div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-teal-500/15 ring-1 ring-teal-500/30">
+							<img src="/icons/icon-96x96.png" alt="Mela" class="h-12 w-12 rounded-xl" />
+						</div>
+						<h2 class="text-lg font-semibold text-white">Tap "Add" in the top right</h2>
+						<p class="mt-2 text-sm text-gray-400">
+							You'll see a preview with the Mela icon. Tap <span class="text-white font-medium">"Add"</span> to finish.
+						</p>
+					</div>
+					<div class="mx-6 my-3 rounded-xl bg-white/5 p-4">
+						<div class="flex items-center justify-between mb-3">
+							<span class="text-sm text-blue-400">Cancel</span>
+							<span class="text-sm text-white font-medium">Add to Home Screen</span>
+							<span class="text-sm text-blue-400 font-semibold animate-pulse">Add</span>
+						</div>
+						<div class="flex items-center gap-3">
+							<img src="/icons/icon-96x96.png" alt="Mela" class="h-10 w-10 rounded-xl" />
+							<div>
+								<div class="text-sm text-white">Mela</div>
+								<div class="text-xs text-gray-500">mela-app.vercel.app</div>
+							</div>
+						</div>
+					</div>
+					<div class="px-6 pt-2 pb-6">
+						<button onclick={nextIosStep} class="w-full rounded-xl bg-teal-500 py-3.5 text-sm font-semibold text-black transition active:scale-[0.98]">Done!</button>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/if}
