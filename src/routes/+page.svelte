@@ -9,7 +9,7 @@
 			<div class="flex items-center gap-2.5">
 				<img src="/icons/icon-32x32.png" alt="Mela" class="h-8 w-8 rounded-full object-cover ring-1 ring-white/[0.08]" />
 				<span class="text-[15px] font-semibold text-white tracking-tight">Mela</span>
-				<span class="text-[13px] text-teal-400 font-semibold">v1.0.5</span>
+				<span class="text-[13px] text-teal-400 font-semibold">v1.0.6</span>
 			</div>
 			<span class="text-[10px] text-gray-500 uppercase tracking-widest font-medium">Research Preview</span>
 		</header>
