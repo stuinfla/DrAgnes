@@ -184,6 +184,9 @@ fi
 # ============================================================
 step 4 "Commit + push"
 
+# Snapshot the latest Vercel deployment BEFORE pushing (for step 6 comparison)
+PRE_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | head -1 || echo "")
+
 git add package.json src/routes/+page.svelte README.md
 git commit -m "chore(mela): bump version to $NEW_VERSION
 
@@ -239,9 +242,7 @@ echo "GitHub: commit ${LOCAL_SHA:0:8} pushed, CI: ${CI_STATUS} checks" >> "$REPO
 # ============================================================
 step 6 "Vercel deployment verification"
 
-# vercel ls outputs bare URLs (no table) when piped, so we compare URL lists.
-# The first URL is always the most recent deployment.
-PRE_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | head -1 || echo "")
+# PRE_DEPLOY_URL was captured in step 4 BEFORE the push, so we can detect the new one.
 echo "   Pre-push latest: ${PRE_DEPLOY_URL:-none}"
 echo "   Waiting for Vercel to pick up the push..."
 
@@ -342,10 +343,11 @@ echo "   Checking JS bundle for version..."
 APP_JS_URL=$(curl -s "$VERCEL_URL/" 2>/dev/null | grep -oE '/_app/immutable/entry/app\.[^"]+\.js' | head -1 || echo "")
 if [ -n "$APP_JS_URL" ]; then
   # Get the page node chunk (node 2 = main page in SvelteKit)
-  PAGE_CHUNK=$(curl -s "${VERCEL_URL}${APP_JS_URL}" 2>/dev/null | grep -oE '"../nodes/2\.[^"]+\.js"' | tr -d '"' || echo "")
+  PAGE_CHUNK=$(curl -s "${VERCEL_URL}${APP_JS_URL}" 2>/dev/null | grep -oE '"../nodes/2\.[^"]+\.js"' | head -1 | tr -d '"' || echo "")
   if [ -n "$PAGE_CHUNK" ]; then
-    # Convert relative path to absolute
-    CHUNK_URL="${VERCEL_URL}/_app/immutable/${PAGE_CHUNK#../}"
+    # Convert relative path: "../nodes/2.xxx.js" -> "nodes/2.xxx.js"
+    PAGE_CHUNK_CLEAN="${PAGE_CHUNK#../}"
+    CHUNK_URL="${VERCEL_URL}/_app/immutable/${PAGE_CHUNK_CLEAN}"
     CHUNK_CONTENT=$(curl -s "$CHUNK_URL" 2>/dev/null || echo "")
 
     if echo "$CHUNK_CONTENT" | grep -q "v${NEW_VERSION}"; then
