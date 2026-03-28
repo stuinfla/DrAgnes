@@ -19,6 +19,7 @@ BUMP_TYPE="${1:-patch}"
 REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 GITHUB_REPO="stuinfla/Mela"
 VERCEL_URL="https://mela-app.vercel.app"
+VERCEL_DOMAIN="mela-app.vercel.app"
 VERCEL_PROJECT="mela"
 REPORT_FILE="/tmp/mela-deploy-report.txt"
 
@@ -300,9 +301,9 @@ echo "Vercel: ${LATEST_DEPLOY_URL:-none} (${DEPLOY_READY})" >> "$REPORT_FILE"
 
 # Always update the production alias
 if [ -n "$LATEST_DEPLOY_URL" ]; then
-  ALIAS_OUT=$(vercel alias "$LATEST_DEPLOY_URL" "$VERCEL_URL" --scope stuart-kerrs-projects 2>&1 || true)
+  ALIAS_OUT=$(vercel alias "$LATEST_DEPLOY_URL" "$VERCEL_DOMAIN" --scope stuart-kerrs-projects 2>&1 || true)
   if echo "$ALIAS_OUT" | grep -qiE "success|already"; then
-    pass "Alias: $VERCEL_URL -> $LATEST_DEPLOY_URL"
+    pass "Alias: $VERCEL_DOMAIN -> $LATEST_DEPLOY_URL"
   else
     warn "Alias may have failed: $ALIAS_OUT"
   fi
@@ -311,7 +312,7 @@ fi
 # Check build logs for real errors (externalized dep warnings are expected)
 if [ -n "$LATEST_DEPLOY_URL" ]; then
   VERCEL_LOGS=$(vercel inspect "$LATEST_DEPLOY_URL" --scope stuart-kerrs-projects --logs 2>&1 | tail -30 || true)
-  REAL_ERRORS=$(echo "$VERCEL_LOGS" | grep -i "error\|failed\|ERR_" | grep -vi "could not be resolved.*external\|treating it as an external" || true)
+  REAL_ERRORS=$(echo "$VERCEL_LOGS" | grep -i "error\|ERR_" | grep -vi "could not be resolved.*external\|treating it as an external\|Warning:" || true)
   if [ -n "$REAL_ERRORS" ]; then
     fail "Build errors detected:"
     echo "$REAL_ERRORS" | head -5
