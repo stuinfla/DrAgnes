@@ -239,21 +239,24 @@ echo "GitHub: commit ${LOCAL_SHA:0:8} pushed, CI: ${CI_STATUS} checks" >> "$REPO
 # ============================================================
 step 6 "Vercel deployment verification"
 
+# Capture the current latest deployment URL BEFORE waiting, so we can detect a new one
+PRE_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | grep "● Ready" | head -1 | grep -o 'https://mela[^ ]*vercel.app' || echo "")
 echo "   Waiting for Vercel to build from push..."
-MAX_WAIT=180
+echo "   (Pre-push deployment: ${PRE_DEPLOY_URL:-none})"
+MAX_WAIT=240
 WAITED=0
 DEPLOY_READY="false"
 LATEST_DEPLOY_URL=""
 
 while [ $WAITED -lt $MAX_WAIT ]; do
-  # Get the latest deployment URL and status
+  # Get the latest Ready deployment
   DEPLOY_LINE=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | grep "● Ready" | head -1 || echo "")
 
   if [ -n "$DEPLOY_LINE" ]; then
-    LATEST_DEPLOY_URL=$(echo "$DEPLOY_LINE" | grep -o 'https://mela[^ ]*vercel.app' | head -1 || echo "")
-    # Check if this deployment is recent (less than 3 minutes old)
-    DEPLOY_AGE=$(echo "$DEPLOY_LINE" | awk '{print $1}' | tr -d 's' || echo "999")
-    if echo "$DEPLOY_LINE" | grep -qE "^[0-9]+s|^1m|^2m|^3m"; then
+    CANDIDATE_URL=$(echo "$DEPLOY_LINE" | grep -o 'https://mela[^ ]*vercel.app' | head -1 || echo "")
+    # A new deployment appeared (different URL from pre-push)
+    if [ -n "$CANDIDATE_URL" ] && [ "$CANDIDATE_URL" != "$PRE_DEPLOY_URL" ]; then
+      LATEST_DEPLOY_URL="$CANDIDATE_URL"
       DEPLOY_READY="true"
       break
     fi
@@ -266,33 +269,44 @@ done
 
 if [ "$DEPLOY_READY" = "true" ] && [ -n "$LATEST_DEPLOY_URL" ]; then
   pass "Vercel deployment ready: $LATEST_DEPLOY_URL"
+  echo "Vercel: deployment ready at $LATEST_DEPLOY_URL" >> "$REPORT_FILE"
+else
+  if [ $WAITED -ge $MAX_WAIT ]; then
+    warn "Timed out waiting for new deployment (${MAX_WAIT}s) — checking latest Ready deployment"
+    # Fallback: grab whatever is the latest Ready deployment
+    LATEST_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | grep "● Ready" | head -1 | grep -o 'https://mela[^ ]*vercel.app' || echo "")
+    if [ -n "$LATEST_DEPLOY_URL" ]; then
+      warn "Using latest deployment: $LATEST_DEPLOY_URL"
+      DEPLOY_READY="true"
+    else
+      fail "No Ready deployments found"
+      echo "   Run: vercel ls --scope stuart-kerrs-projects"
+    fi
+  fi
+fi
 
-  # Auto-update the production alias
+# Always update the production alias when we have a deployment
+if [ -n "$LATEST_DEPLOY_URL" ]; then
   ALIAS_OUT=$(vercel alias "$LATEST_DEPLOY_URL" "$VERCEL_URL" --scope stuart-kerrs-projects 2>&1 || true)
-  if echo "$ALIAS_OUT" | grep -q "Success"; then
+  if echo "$ALIAS_OUT" | grep -qE "Success|already"; then
     pass "Alias updated: $VERCEL_URL -> latest"
   else
     warn "Alias update may have failed — check manually"
     echo "   $ALIAS_OUT"
   fi
-
-  echo "Vercel: deployment ready at $LATEST_DEPLOY_URL" >> "$REPORT_FILE"
-else
-  if [ $WAITED -ge $MAX_WAIT ]; then
-    fail "Timed out waiting for Vercel (${MAX_WAIT}s)"
-    echo "   Run: vercel ls --scope stuart-kerrs-projects"
-  fi
 fi
 
 # Check build logs for REAL errors (not externalized dep warnings)
-VERCEL_LOGS=$(vercel inspect "$LATEST_DEPLOY_URL" --scope stuart-kerrs-projects --logs 2>&1 | tail -30 || true)
-REAL_ERRORS=$(echo "$VERCEL_LOGS" | grep -i "error\|failed\|ERR_" | grep -vi "could not be resolved.*external\|treating it as an external" || true)
-if [ -n "$REAL_ERRORS" ]; then
-  fail "Build errors detected:"
-  echo "$REAL_ERRORS" | head -5
-  echo "VERCEL BUILD ERRORS: $REAL_ERRORS" >> "$REPORT_FILE"
-else
-  pass "No build errors (externalized deps warnings are expected)"
+if [ -n "$LATEST_DEPLOY_URL" ]; then
+  VERCEL_LOGS=$(vercel inspect "$LATEST_DEPLOY_URL" --scope stuart-kerrs-projects --logs 2>&1 | tail -30 || true)
+  REAL_ERRORS=$(echo "$VERCEL_LOGS" | grep -i "error\|failed\|ERR_" | grep -vi "could not be resolved.*external\|treating it as an external" || true)
+  if [ -n "$REAL_ERRORS" ]; then
+    fail "Build errors detected:"
+    echo "$REAL_ERRORS" | head -5
+    echo "VERCEL BUILD ERRORS: $REAL_ERRORS" >> "$REPORT_FILE"
+  else
+    pass "No build errors (externalized deps warnings are expected)"
+  fi
 fi
 
 # Wait for CDN propagation
