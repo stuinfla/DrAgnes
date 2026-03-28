@@ -239,26 +239,37 @@ echo "GitHub: commit ${LOCAL_SHA:0:8} pushed, CI: ${CI_STATUS} checks" >> "$REPO
 # ============================================================
 step 6 "Vercel deployment verification"
 
-# Capture the current latest deployment URL BEFORE waiting, so we can detect a new one
-PRE_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | grep "● Ready" | head -1 | grep -o 'https://mela[^ ]*vercel.app' || echo "")
-echo "   Waiting for Vercel to build from push..."
-echo "   (Pre-push deployment: ${PRE_DEPLOY_URL:-none})"
+# vercel ls outputs bare URLs (no table) when piped, so we compare URL lists.
+# The first URL is always the most recent deployment.
+PRE_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | head -1 || echo "")
+echo "   Pre-push latest: ${PRE_DEPLOY_URL:-none}"
+echo "   Waiting for Vercel to pick up the push..."
+
 MAX_WAIT=240
 WAITED=0
 DEPLOY_READY="false"
 LATEST_DEPLOY_URL=""
 
 while [ $WAITED -lt $MAX_WAIT ]; do
-  # Get the latest Ready deployment
-  DEPLOY_LINE=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | grep "● Ready" | head -1 || echo "")
+  CANDIDATE_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | head -1 || echo "")
 
-  if [ -n "$DEPLOY_LINE" ]; then
-    CANDIDATE_URL=$(echo "$DEPLOY_LINE" | grep -o 'https://mela[^ ]*vercel.app' | head -1 || echo "")
-    # A new deployment appeared (different URL from pre-push)
-    if [ -n "$CANDIDATE_URL" ] && [ "$CANDIDATE_URL" != "$PRE_DEPLOY_URL" ]; then
+  # A new URL appeared at the top of the list (new deployment triggered)
+  if [ -n "$CANDIDATE_URL" ] && [ "$CANDIDATE_URL" != "$PRE_DEPLOY_URL" ]; then
+    echo "   New deployment detected: $CANDIDATE_URL"
+    # Now wait for it to be Ready (vercel inspect shows status)
+    INSPECT_STATUS=$(vercel inspect "$CANDIDATE_URL" --scope stuart-kerrs-projects 2>&1 | grep -oE "Ready|Building|Error|Canceled" | head -1 || echo "unknown")
+
+    if [ "$INSPECT_STATUS" = "Ready" ]; then
       LATEST_DEPLOY_URL="$CANDIDATE_URL"
       DEPLOY_READY="true"
+      pass "Deployment ready: $LATEST_DEPLOY_URL"
       break
+    elif [ "$INSPECT_STATUS" = "Error" ] || [ "$INSPECT_STATUS" = "Canceled" ]; then
+      fail "Deployment failed with status: $INSPECT_STATUS"
+      echo "   Run: vercel inspect $CANDIDATE_URL --scope stuart-kerrs-projects --logs"
+      break
+    else
+      echo "   Status: $INSPECT_STATUS — still building..."
     fi
   fi
 
@@ -267,36 +278,36 @@ while [ $WAITED -lt $MAX_WAIT ]; do
   echo "   Waiting... ${WAITED}s / ${MAX_WAIT}s"
 done
 
-if [ "$DEPLOY_READY" = "true" ] && [ -n "$LATEST_DEPLOY_URL" ]; then
-  pass "Vercel deployment ready: $LATEST_DEPLOY_URL"
-  echo "Vercel: deployment ready at $LATEST_DEPLOY_URL" >> "$REPORT_FILE"
-else
-  if [ $WAITED -ge $MAX_WAIT ]; then
-    warn "Timed out waiting for new deployment (${MAX_WAIT}s) — checking latest Ready deployment"
-    # Fallback: grab whatever is the latest Ready deployment
-    LATEST_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | grep "● Ready" | head -1 | grep -o 'https://mela[^ ]*vercel.app' || echo "")
-    if [ -n "$LATEST_DEPLOY_URL" ]; then
-      warn "Using latest deployment: $LATEST_DEPLOY_URL"
+# Timeout fallback: use whatever is at the top of the list
+if [ "$DEPLOY_READY" != "true" ] && [ $WAITED -ge $MAX_WAIT ]; then
+  warn "Timed out (${MAX_WAIT}s) — using latest deployment"
+  LATEST_DEPLOY_URL=$(vercel ls --scope stuart-kerrs-projects 2>/dev/null | head -1 || echo "")
+  if [ -n "$LATEST_DEPLOY_URL" ]; then
+    INSPECT_STATUS=$(vercel inspect "$LATEST_DEPLOY_URL" --scope stuart-kerrs-projects 2>&1 | grep -oE "Ready|Building|Error" | head -1 || echo "unknown")
+    if [ "$INSPECT_STATUS" = "Ready" ]; then
       DEPLOY_READY="true"
+      warn "Latest deployment is Ready: $LATEST_DEPLOY_URL"
     else
-      fail "No Ready deployments found"
-      echo "   Run: vercel ls --scope stuart-kerrs-projects"
+      fail "Latest deployment status: $INSPECT_STATUS"
     fi
+  else
+    fail "No deployments found"
   fi
 fi
 
-# Always update the production alias when we have a deployment
+echo "Vercel: ${LATEST_DEPLOY_URL:-none} (${DEPLOY_READY})" >> "$REPORT_FILE"
+
+# Always update the production alias
 if [ -n "$LATEST_DEPLOY_URL" ]; then
   ALIAS_OUT=$(vercel alias "$LATEST_DEPLOY_URL" "$VERCEL_URL" --scope stuart-kerrs-projects 2>&1 || true)
-  if echo "$ALIAS_OUT" | grep -qE "Success|already"; then
-    pass "Alias updated: $VERCEL_URL -> latest"
+  if echo "$ALIAS_OUT" | grep -qiE "success|already"; then
+    pass "Alias: $VERCEL_URL -> $LATEST_DEPLOY_URL"
   else
-    warn "Alias update may have failed — check manually"
-    echo "   $ALIAS_OUT"
+    warn "Alias may have failed: $ALIAS_OUT"
   fi
 fi
 
-# Check build logs for REAL errors (not externalized dep warnings)
+# Check build logs for real errors (externalized dep warnings are expected)
 if [ -n "$LATEST_DEPLOY_URL" ]; then
   VERCEL_LOGS=$(vercel inspect "$LATEST_DEPLOY_URL" --scope stuart-kerrs-projects --logs 2>&1 | tail -30 || true)
   REAL_ERRORS=$(echo "$VERCEL_LOGS" | grep -i "error\|failed\|ERR_" | grep -vi "could not be resolved.*external\|treating it as an external" || true)
@@ -305,16 +316,15 @@ if [ -n "$LATEST_DEPLOY_URL" ]; then
     echo "$REAL_ERRORS" | head -5
     echo "VERCEL BUILD ERRORS: $REAL_ERRORS" >> "$REPORT_FILE"
   else
-    pass "No build errors (externalized deps warnings are expected)"
+    pass "No build errors"
   fi
 fi
 
-# Wait for CDN propagation
-echo "   Waiting 15s for CDN propagation..."
-sleep 15
+echo "   Waiting 10s for CDN propagation..."
+sleep 10
 
 # ============================================================
-# Step 7: Agent-browser live verification
+# Step 7: Live site verification (JS bundle check)
 # ============================================================
 step 7 "Live site verification"
 
@@ -323,50 +333,78 @@ VERSION_OK="false"
 HEADER_OK="false"
 SCREENSHOT=""
 
-if command -v agent-browser &> /dev/null; then
-  echo "   Using agent-browser for verification..."
+# Primary method: check the JS bundle directly.
+# SvelteKit is a client-rendered SPA — the version badge is in the JS, not raw HTML.
+# This works regardless of agent-browser or service workers.
+echo "   Checking JS bundle for version..."
 
-  # Open the site
-  agent-browser open "$VERCEL_URL" 2>/dev/null || true
-  sleep 5
+# Find the page chunk URL from the app entry point
+APP_JS_URL=$(curl -s "$VERCEL_URL/" 2>/dev/null | grep -oE '/_app/immutable/entry/app\.[^"]+\.js' | head -1 || echo "")
+if [ -n "$APP_JS_URL" ]; then
+  # Get the page node chunk (node 2 = main page in SvelteKit)
+  PAGE_CHUNK=$(curl -s "${VERCEL_URL}${APP_JS_URL}" 2>/dev/null | grep -oE '"../nodes/2\.[^"]+\.js"' | tr -d '"' || echo "")
+  if [ -n "$PAGE_CHUNK" ]; then
+    # Convert relative path to absolute
+    CHUNK_URL="${VERCEL_URL}/_app/immutable/${PAGE_CHUNK#../}"
+    CHUNK_CONTENT=$(curl -s "$CHUNK_URL" 2>/dev/null || echo "")
 
-  # Take a snapshot to check content
-  SNAPSHOT=$(agent-browser snapshot 2>/dev/null || echo "")
+    if echo "$CHUNK_CONTENT" | grep -q "v${NEW_VERSION}"; then
+      VERSION_OK="true"
+      pass "Version v${NEW_VERSION} confirmed in JS bundle"
+    else
+      # Show what version IS in the bundle
+      FOUND_VERSION=$(echo "$CHUNK_CONTENT" | grep -oE 'font-semibold">[^<]+</span>' | head -1 || echo "none found")
+      fail "Version v${NEW_VERSION} NOT in JS bundle. Found: $FOUND_VERSION"
+    fi
 
-  if echo "$SNAPSHOT" | grep -q "v${NEW_VERSION}"; then
-    VERSION_OK="true"
-  fi
-
-  if echo "$SNAPSHOT" | grep -q "Mela\|Dr Agnes"; then
-    HEADER_OK="true"
-  fi
-
-  # Take screenshot for the record
-  SCREENSHOT="/tmp/mela-deploy-v${NEW_VERSION}.png"
-  agent-browser screenshot "$SCREENSHOT" 2>/dev/null || true
-
-  # Close
-  agent-browser close 2>/dev/null || true
-
-  if [ "$VERSION_OK" = "true" ] && [ "$HEADER_OK" = "true" ]; then
-    SITE_OK="true"
+    if echo "$CHUNK_CONTENT" | grep -q "Mela"; then
+      HEADER_OK="true"
+      pass "Mela branding confirmed in JS bundle"
+    fi
+  else
+    warn "Could not find page chunk in app.js"
   fi
 else
-  echo "   agent-browser not available, using curl fallback..."
+  warn "Could not find app.js entry point"
+fi
 
-  SITE_HTML=$(curl -s --max-time 15 "$VERCEL_URL" 2>/dev/null || echo "FETCH_FAILED")
-
-  if echo "$SITE_HTML" | grep -q "v${NEW_VERSION}"; then
-    VERSION_OK="true"
+# Secondary: agent-browser screenshot (visual record, not for pass/fail)
+if command -v agent-browser &> /dev/null; then
+  echo "   Taking screenshot for visual record..."
+  SCREENSHOT="/tmp/mela-deploy-v${NEW_VERSION}.png"
+  (
+    agent-browser close 2>/dev/null || true
+    sleep 1
+    agent-browser open "$VERCEL_URL" 2>/dev/null || true
+    sleep 3
+    # Dismiss disclaimer if present
+    SNAP=$(agent-browser snapshot -i 2>/dev/null || echo "")
+    if echo "$SNAP" | grep -q "I Understand"; then
+      DISMISS_REF=$(echo "$SNAP" | grep "I Understand" | grep -oE 'ref=e[0-9]+' | head -1 | sed 's/ref=//')
+      if [ -n "$DISMISS_REF" ]; then
+        agent-browser click "$DISMISS_REF" 2>/dev/null || true
+        sleep 2
+      fi
+    fi
+    agent-browser screenshot "$SCREENSHOT" 2>/dev/null || true
+    agent-browser close 2>/dev/null || true
+  ) 2>/dev/null
+  if [ -f "$SCREENSHOT" ]; then
+    pass "Screenshot: $SCREENSHOT"
   fi
+fi
 
-  if echo "$SITE_HTML" | grep -q "Mela\|Dr Agnes"; then
+# Curl fallback for header check if JS bundle method didn't work
+if [ "$HEADER_OK" != "true" ]; then
+  SITE_HTML=$(curl -s --max-time 10 "$VERCEL_URL" 2>/dev/null || echo "")
+  if echo "$SITE_HTML" | grep -q "Mela"; then
     HEADER_OK="true"
+    pass "Mela branding confirmed in HTML"
   fi
+fi
 
-  if [ "$VERSION_OK" = "true" ] && [ "$HEADER_OK" = "true" ]; then
-    SITE_OK="true"
-  fi
+if [ "$VERSION_OK" = "true" ] && [ "$HEADER_OK" = "true" ]; then
+  SITE_OK="true"
 fi
 
 # ============================================================
