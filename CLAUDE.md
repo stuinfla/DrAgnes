@@ -1,4 +1,4 @@
-Updated: 2026-03-25 | Version 1.0.0
+Updated: 2026-03-29 | Version 1.0.7
 Created: 2026-03-25
 
 # Mela -- Claude Code Project Instructions
@@ -68,9 +68,11 @@ vercel inspect <deployment-url> --logs
 
 Or use the deploy script: `bash scripts/deploy-verified.sh patch`
 
-**ALWAYS check `vercel ls` after pushing.** The build was broken for hours because of a bad import and nobody checked.
+The deploy script (7 steps) handles everything: pre-flight checks, version bump in all 3 places, local build, commit + push, GitHub verification, Vercel deployment detection (polls `vercel inspect` for Ready status), production alias to `mela-app.vercel.app`, and JS bundle verification to confirm the correct version is live. It exits 0 only when all checks pass.
 
-The 85MB ONNX model makes git pushes slow. For small changes, consider using the GitHub API for individual file updates instead of pushing the entire tree.
+**Note:** `mela-app.vercel.app` is a custom alias, NOT an auto-assigned Vercel domain. The deploy script must explicitly run `vercel alias` after each deployment. Without the script, pushes deploy but the alias doesn't update.
+
+The 85MB ONNX model is only pushed once (git sends deltas after the initial commit). Subsequent pushes are fast. Vercel builds take ~47s regardless.
 
 ### 5. Testing
 
@@ -122,6 +124,16 @@ Full details: `docs/PIPELINE-EXPLAINER.md`
 3. **Single HF API** (one model responds): 60% HF + 25% trained-weights + 15% rules
 4. **Offline fallback** (no API, no ONNX): 60% trained-weights + 40% rules
 
+### Offline / PWA Architecture
+
+The app works fully offline after first use:
+
+- **Service workers**: `static/sw.js` (app shell + model caching) and `static/sw-model-cache.js` (ONNX-specific). Registered in `+layout.svelte`.
+- **Model caching**: The 85MB ONNX model (`/models/mela-v2-int8.onnx`) is cached by the service worker on first download using a cache-first strategy. Subsequent loads serve from cache in <200ms.
+- **Offline queue**: `offline-queue.ts` uses IndexedDB (`mela-offline-queue`) to queue brain contributions when offline, with auto-sync on reconnect (exponential backoff, 8 retries max).
+- **PWA install**: Full-screen modal in `MelaPanel.svelte` — triggers native install on Android/Chrome, 3-step guided walkthrough on iOS Safari. Re-shows after 7 days if dismissed.
+- **Background sync**: SW handles `mela-brain-sync` tag for queued POST requests.
+
 ### Safety Gates (always run)
 
 - Melanoma floor: 2+ suspicious ABCDE criteria -> melanoma >= 15%
@@ -140,6 +152,9 @@ Full details: `docs/PIPELINE-EXPLAINER.md`
 | `threshold-classifier.ts` | Per-class ROC-optimized thresholds |
 | `spot-detector.ts` | Two-pass lesion presence detection |
 | `MelaPanel.svelte` | Main UI orchestrator |
+| `inference-offline.ts` | ONNX Runtime Web browser inference |
+| `inference-orchestrator.ts` | Routes between ONNX local vs fallback |
+| `offline-queue.ts` | IndexedDB queue for offline brain sync |
 
 ---
 
@@ -189,15 +204,18 @@ These are documented in `docs/CODE-DIAGNOSTIC-REPORT.md` and `docs/QUALITY-SCORE
 
 ---
 
-## Priority Work (as of v1.0.0)
+## Priority Work (as of v1.0.7)
 
 1. ~~**Wire V2 model to production**~~ -- DONE. V2 ONNX (85MB INT8) is Priority 1 in classifier.ts. 70% ONNX + 15% trained-weights + 15% rules.
-2. ~~**Fix failing tests**~~ -- DONE. 170/170 tests passing (14 files).
+2. ~~**Fix failing tests**~~ -- DONE. 199/199 tests passing (15 files).
 3. ~~**Add upload validation to API endpoints**~~ -- DONE. Magic byte validation, rate limiting, size limits on all endpoints.
-4. **Decompose large files** -- image-analysis.ts (~2000 lines) and MelaPanel.svelte (~2000 lines) still need splitting.
-5. **Wire V1+V2 ensemble to production** -- ensemble.ts exists but is not in the inference path. Would boost to 99.4% mel sensitivity.
-6. **Validate ONNX INT8 model** -- Run full ISIC 2019 validation suite against the deployed INT8 model specifically.
-7. **Fix remaining 5 type errors** -- ort null check, customModelAvailable declaration ordering.
+4. ~~**Fix deploy script**~~ -- DONE (v1.0.4). Uses `vercel ls` URL comparison + `vercel inspect` for status, JS bundle verification for SPA version check, auto-aliases to `mela-app.vercel.app`.
+5. ~~**Register service workers**~~ -- DONE (v1.0.7). `sw.js` and `sw-model-cache.js` now registered in `+layout.svelte`. 85MB ONNX model cached offline after first download.
+6. ~~**PWA install experience**~~ -- DONE (v1.0.6). Full-screen modal with native install on Android, 3-step iOS Safari walkthrough.
+7. **Decompose large files** -- image-analysis.ts (~2000 lines) and MelaPanel.svelte (~2000 lines) still need splitting.
+8. **Wire V1+V2 ensemble to production** -- ensemble.ts exists but is not in the inference path. Would boost to 99.4% mel sensitivity.
+9. **Validate ONNX INT8 model** -- Run full ISIC 2019 validation suite against the deployed INT8 model specifically.
+10. **Fix Svelte warnings** -- Modal.svelte ARIA role, ReferralLetter.svelte stale state refs (4 warnings, 0 errors).
 
 ---
 

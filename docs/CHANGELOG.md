@@ -2,6 +2,30 @@
 
 All notable changes to Mela are documented in this file.
 
+## [1.0.7] - 2026-03-29
+
+### Fixed
+- Service workers (`sw.js`, `sw-model-cache.js`) now registered in `+layout.svelte` — they existed in `static/` but the browser was never told to install them
+- Deploy script rewritten: uses `vercel ls` URL comparison + `vercel inspect` for status detection (pipe-safe), JS bundle verification for SPA version check, auto-aliases to `mela-app.vercel.app`, captures pre-push baseline before `git push` to avoid race conditions
+
+### Added
+- PWA install modal: full-screen bottom sheet replaces tiny banner. On Android/Chrome triggers native install prompt. On iOS Safari walks users through 3-step guided install (share button → Add to Home Screen → confirm). Re-shows after 7 days if dismissed.
+- Offline model caching: 85MB ONNX model cached by service worker after first download (cache-first strategy). Full classification runs on-device with zero network after first use.
+
+## [1.0.0] - 2026-03-25
+
+### Changed
+- Rebranded from Dr. Agnes to Mela ("Because catching it early changes everything")
+- Reframed as educational skin awareness tool (not medical device, not FDA-cleared)
+- Added Important Notice disclaimer modal on first visit
+- V2 ONNX model (85MB INT8) wired as Priority 1 classifier (70% ONNX + 15% trained-weights + 15% rules)
+- 199 tests passing across 15 test files
+- Upload validation on all API endpoints (magic byte validation, MIME checks, size limits)
+- Security headers (CSP, HSTS, X-Frame-Options, nosniff, Referrer-Policy, Permissions-Policy)
+- Rate limiting on all classify endpoints
+- Referral letter cleaned: removed "biopsy recommended" and "screening software" language
+- All FDA compliance issues resolved per audit findings
+
 ## [0.3.0] - 2026-03-22
 
 ### Added
