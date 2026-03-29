@@ -1061,6 +1061,15 @@ MIT
 
 ---
 
+## Contributors
+
+| | Name | GitHub |
+|---|---|---|
+| <img src="https://github.com/stuinfla.png" width="40" height="40" style="border-radius:50%"> | Stuart Kerr | [@stuinfla](https://github.com/stuinfla) |
+| <img src="https://github.com/MAMD69.png" width="40" height="40" style="border-radius:50%"> | MAMD69 | [@MAMD69](https://github.com/MAMD69) |
+
+---
+
 **EDUCATIONAL USE ONLY -- Not a medical device.** Mela is not FDA-cleared and does not
 diagnose, screen for, or detect any disease. Pattern analysis results are for educational
 and informational purposes only. Always consult a qualified healthcare provider for
